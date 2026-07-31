@@ -1,74 +1,70 @@
-# Configuração (`settings.json`)
+# Configuração de premiação (presets)
 
-Arquivo: `config/settings.json`
+A premiação usa **presets** armazenados em `backend/config/premiacao_presets.json`. A UI em **Premiação → Presets** edita esse arquivo via API.
+
+## Formato do arquivo
+
+```json
+{
+  "version": 1,
+  "default_preset": "standard",
+  "presets": {
+    "standard": {
+      "label": "Standard semanal",
+      "min_jogadores": 4,
+      "min_premiados": 3,
+      "max_premiados": 8,
+      "crescimento": 4,
+      "r": 0.72,
+      "casas_decimais": 2
+    }
+  }
+}
+```
+
+| Campo | Descrição |
+|-------|-----------|
+| `default_preset` | ID usado quando nenhum preset é informado na API ou na UI |
+| `label` | Nome exibido na interface |
+| `min_jogadores` | Mínimo de jogadores aceito no cálculo e na tabela |
+| `min_premiados` | Mínimo de colocados premiados |
+| `max_premiados` | Teto de colocados premiados |
+| `crescimento` | Escala `floor((N + 1) / crescimento)` — ver [modelo_premiacao.md](modelo_premiacao.md) |
+| `r` | Razão da curva exponencial (0 < r < 1) |
+| `casas_decimais` | Precisão dos prêmios (0–4); com Créditos na Loja, 2 casas |
 
 ## Comportamento
 
 | Situação | Ação |
 |----------|------|
-| Arquivo não existe | Criado a partir dos defaults de `core/config.py` |
-| Arquivo inválido ou corrompido | Removido, recriado, mensagem no console |
-| Alteração pelo menu | Grava somente se o conteúdo mudou |
-| Execução normal | Lê **somente** o arquivo; defaults não são mesclados |
+| Arquivo ausente | Criado com preset `standard` padrão |
+| Preset inválido | API retorna HTTP 422 com mensagem em português |
+| Alteração via UI ou `PUT /api/v1/premiacao/presets/{id}` | Grava o JSON completo no disco |
 
-## Campos
+## Migração legada
 
-### `min_jogadores` (int, ≥ 1)
-
-Quantidade mínima de jogadores aceita nas opções de cálculo e na geração de tabela.
-
-### `min_premiados` (int, ≥ 1)
-
-Mínimo de colocados que recebem prêmio, independentemente de `N`.
-
-### `max_premiados` (int, ≥ min_premiados)
-
-Teto de colocados premiados.
-
-### `crescimento` (int, ≥ 1)
-
-Controla quando aumenta o número de premiados:
-
-```
-floor((N + 1) / crescimento)
-```
-
-Quanto **menor**, mais cedo novos lugares passam a ser premiados.
-
-### `r` (float, 0 < r < 1)
-
-Razão da curva exponencial de pesos. Valores típicos: 0,70–0,80.
-
-### `casas_decimais` (int, 0–4)
-
-Casas decimais dos prêmios. Com Créditos na Loja, 2 casas (centavos) é o usual.
-
-## Valores padrão (somente para criação do arquivo)
-
-```json
-{
-  "min_jogadores": 4,
-  "min_premiados": 3,
-  "max_premiados": 8,
-  "crescimento": 4,
-  "r": 0.72,
-  "casas_decimais": 2
-}
-```
-
-> O `settings.json` existente no repositório pode divergir (ex.: `crescimento: 3`). Isso é intencional — o arquivo vivo prevalece.
-
-## Guardrails
-
-- Campos desconhecidos ou ausentes invalidam o arquivo.
-- `max_premiados` deve ser ≥ `min_premiados`.
-- `N` informado deve ser ≥ `min_jogadores` e ≥ `min_premiados`.
-- Valor de inscrição, quando informado, deve ser > 0.
+Na primeira carga, se existir `config/settings.json` (formato flat da CLI antiga) e ainda não houver presets, o sistema importa esses valores para o preset `default`. Esse arquivo **não** é a fonte da verdade após a migração — apenas facilita a transição.
 
 ## Exports (`exports/`)
 
-| Situação | Comportamento |
-|----------|---------------|
-| Exportar CSV com nome já existente | Arquivo substituído |
-| Salvar alteração de configuração | Pergunta se deseja limpar exports antigos |
-| Opção `limpar_exports` no menu | Remove todos os CSVs de `exports/` após confirmação |
+CSV gerados pelo botão **Exportar CSV** (aba Tabela ou via `POST /api/v1/premiacao/export`):
+
+- Encoding UTF-8 com BOM (`utf-8-sig`) para Excel
+- Separador `;`
+- Nome: `premiacao_{min_jogadores}_a_{limite}.csv`
+- Arquivo existente com o mesmo nome é **substituído**
+- A pasta `exports/` também recebe cópia opcional no servidor (gitignored)
+
+## Torneios
+
+Ao criar um evento, o preset escolhido é copiado para `events.premiacao_preset` (snapshot). Alterações posteriores nos presets globais **não** afetam torneios já criados. O resultado final fica em `events.premiacao_resultado` após finalizar.
+
+## Variáveis de ambiente
+
+| Variável | Efeito |
+|----------|--------|
+| `TCGTOOLS_PRESETS_FILE` | Caminho alternativo ao JSON de presets |
+| `TCGTOOLS_EXPORTS_DIR` | Pasta de CSV exportados |
+| `TCGTOOLS_DATA_DIR` | Pasta de dados (SQLite em dev/produção) |
+
+Consulte também [INSTALACAO.md](INSTALACAO.md) e o [README](../README.md).

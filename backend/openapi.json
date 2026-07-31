@@ -1,0 +1,1649 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "TCG Tools",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Api V1 Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/premiacao/presets": {
+      "get": {
+        "tags": [
+          "premiacao"
+        ],
+        "summary": "List Presets",
+        "operationId": "list_presets_api_v1_premiacao_presets_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresetsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/premiacao/presets/{preset_id}": {
+      "get": {
+        "tags": [
+          "premiacao"
+        ],
+        "summary": "Get Preset",
+        "operationId": "get_preset_api_v1_premiacao_presets__preset_id__get",
+        "parameters": [
+          {
+            "name": "preset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Preset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresetBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "premiacao"
+        ],
+        "summary": "Update Preset",
+        "operationId": "update_preset_api_v1_premiacao_presets__preset_id__put",
+        "parameters": [
+          {
+            "name": "preset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Preset Id"
+            }
+          },
+          {
+            "name": "X-Presets-Mtime",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Presets-Mtime"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PresetBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresetBody"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/premiacao/calcular": {
+      "post": {
+        "tags": [
+          "premiacao"
+        ],
+        "summary": "Calcular Endpoint",
+        "operationId": "calcular_endpoint_api_v1_premiacao_calcular_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalcularRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalcularResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/premiacao/tabela": {
+      "get": {
+        "tags": [
+          "premiacao"
+        ],
+        "summary": "Tabela",
+        "operationId": "tabela_api_v1_premiacao_tabela_get",
+        "parameters": [
+          {
+            "name": "ate",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Ate"
+            }
+          },
+          {
+            "name": "preset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Preset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TabelaResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/premiacao/export": {
+      "post": {
+        "tags": [
+          "premiacao"
+        ],
+        "summary": "Export Csv",
+        "operationId": "export_csv_api_v1_premiacao_export_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/torneios": {
+      "get": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "List Torneios",
+        "operationId": "list_torneios_api_v1_torneios_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "Create Torneio",
+        "operationId": "create_torneio_api_v1_torneios_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TorneioCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/torneios/{event_id}": {
+      "get": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "Get Torneio",
+        "operationId": "get_torneio_api_v1_torneios__event_id__get",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "Update Torneio",
+        "operationId": "update_torneio_api_v1_torneios__event_id__patch",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TorneioUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/torneios/{event_id}/jogadores": {
+      "post": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "Add Jogador",
+        "operationId": "add_jogador_api_v1_torneios__event_id__jogadores_post",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JogadorCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/torneios/{event_id}/jogadores/{player_id}": {
+      "delete": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "Remove Jogador",
+        "operationId": "remove_jogador_api_v1_torneios__event_id__jogadores__player_id__delete",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          },
+          {
+            "name": "player_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Player Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/torneios/{event_id}/iniciar": {
+      "post": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "Iniciar",
+        "operationId": "iniciar_api_v1_torneios__event_id__iniciar_post",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/torneios/{event_id}/rodadas": {
+      "get": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "List Rodadas",
+        "operationId": "list_rodadas_api_v1_torneios__event_id__rodadas_get",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/torneios/{event_id}/rodadas/{number}": {
+      "get": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "Get Rodada",
+        "operationId": "get_rodada_api_v1_torneios__event_id__rodadas__number__get",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          },
+          {
+            "name": "number",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/torneios/{event_id}/matches/{match_id}": {
+      "patch": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "Update Match",
+        "operationId": "update_match_api_v1_torneios__event_id__matches__match_id__patch",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          },
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MatchUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/torneios/{event_id}/jogadores/{player_id}/drop": {
+      "post": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "Drop Jogador",
+        "operationId": "drop_jogador_api_v1_torneios__event_id__jogadores__player_id__drop_post",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          },
+          {
+            "name": "player_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Player Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DropRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/torneios/{event_id}/avancar": {
+      "post": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "Avancar",
+        "description": "Conclui a rodada ativa (sem iniciar a pr\u00f3xima).",
+        "operationId": "avancar_api_v1_torneios__event_id__avancar_post",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/torneios/{event_id}/iniciar-proxima-rodada": {
+      "post": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "Iniciar Proxima Rodada",
+        "operationId": "iniciar_proxima_rodada_api_v1_torneios__event_id__iniciar_proxima_rodada_post",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/torneios/{event_id}/rodadas/reabrir": {
+      "post": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "Reabrir Rodada",
+        "description": "Reabre a \u00faltima rodada conclu\u00edda (ou a anterior \u00e0 rodada ativa) para corre\u00e7\u00f5es.",
+        "operationId": "reabrir_rodada_api_v1_torneios__event_id__rodadas_reabrir_post",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          },
+          {
+            "name": "number",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/torneios/{event_id}/finalizar": {
+      "post": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "Finalizar",
+        "operationId": "finalizar_api_v1_torneios__event_id__finalizar_post",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/torneios/{event_id}/premiacao": {
+      "get": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "Get Premiacao",
+        "operationId": "get_premiacao_api_v1_torneios__event_id__premiacao_get",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/torneios/{event_id}/classificacao": {
+      "get": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "Get Classificacao",
+        "operationId": "get_classificacao_api_v1_torneios__event_id__classificacao_get",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "Patch Classificacao",
+        "operationId": "patch_classificacao_api_v1_torneios__event_id__classificacao_patch",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClassificacaoPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/torneios/{event_id}/export-log": {
+      "post": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "Export Log",
+        "operationId": "export_log_api_v1_torneios__event_id__export_log_post",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{full_path}": {
+      "get": {
+        "summary": "Spa Fallback",
+        "operationId": "spa_fallback__full_path__get",
+        "parameters": [
+          {
+            "name": "full_path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Full Path"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CalcularRequest": {
+        "properties": {
+          "jogadores": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Jogadores"
+          },
+          "preset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preset Id"
+          },
+          "valor_inscricao": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valor Inscricao"
+          }
+        },
+        "type": "object",
+        "required": [
+          "jogadores"
+        ],
+        "title": "CalcularRequest"
+      },
+      "CalcularResponse": {
+        "properties": {
+          "jogadores": {
+            "type": "integer",
+            "title": "Jogadores"
+          },
+          "premiados": {
+            "type": "integer",
+            "title": "Premiados"
+          },
+          "premios": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Premios"
+          },
+          "total_inscricoes": {
+            "type": "number",
+            "title": "Total Inscricoes"
+          },
+          "creditos": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Creditos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "jogadores",
+          "premiados",
+          "premios",
+          "total_inscricoes"
+        ],
+        "title": "CalcularResponse"
+      },
+      "ClassificacaoPatch": {
+        "properties": {
+          "updates": {
+            "items": {
+              "$ref": "#/components/schemas/DecklistUpdate"
+            },
+            "type": "array",
+            "title": "Updates"
+          }
+        },
+        "type": "object",
+        "required": [
+          "updates"
+        ],
+        "title": "ClassificacaoPatch"
+      },
+      "DecklistUpdate": {
+        "properties": {
+          "player_id": {
+            "type": "integer",
+            "title": "Player Id"
+          },
+          "decklist": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decklist"
+          }
+        },
+        "type": "object",
+        "required": [
+          "player_id"
+        ],
+        "title": "DecklistUpdate"
+      },
+      "DropRequest": {
+        "properties": {
+          "mid_round": {
+            "type": "boolean",
+            "title": "Mid Round",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "DropRequest"
+      },
+      "ExportRequest": {
+        "properties": {
+          "ate": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Ate"
+          },
+          "preset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preset Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ate"
+        ],
+        "title": "ExportRequest"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "JogadorCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "JogadorCreate"
+      },
+      "MatchUpdate": {
+        "properties": {
+          "score_p1": {
+            "type": "integer",
+            "title": "Score P1"
+          },
+          "score_p2": {
+            "type": "integer",
+            "title": "Score P2"
+          }
+        },
+        "type": "object",
+        "required": [
+          "score_p1",
+          "score_p2"
+        ],
+        "title": "MatchUpdate"
+      },
+      "PresetBody": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "min_jogadores": {
+            "type": "integer",
+            "title": "Min Jogadores"
+          },
+          "min_premiados": {
+            "type": "integer",
+            "title": "Min Premiados"
+          },
+          "max_premiados": {
+            "type": "integer",
+            "title": "Max Premiados"
+          },
+          "crescimento": {
+            "type": "integer",
+            "title": "Crescimento"
+          },
+          "r": {
+            "type": "number",
+            "title": "R"
+          },
+          "casas_decimais": {
+            "type": "integer",
+            "title": "Casas Decimais"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "min_jogadores",
+          "min_premiados",
+          "max_premiados",
+          "crescimento",
+          "r",
+          "casas_decimais"
+        ],
+        "title": "PresetBody"
+      },
+      "PresetsResponse": {
+        "properties": {
+          "default_preset": {
+            "type": "string",
+            "title": "Default Preset"
+          },
+          "presets": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/PresetBody"
+            },
+            "type": "object",
+            "title": "Presets"
+          },
+          "exports_desatualizados": {
+            "type": "boolean",
+            "title": "Exports Desatualizados",
+            "default": false
+          },
+          "presets_updated_at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Presets Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "default_preset",
+          "presets"
+        ],
+        "title": "PresetsResponse"
+      },
+      "TabelaLinha": {
+        "properties": {
+          "jogadores": {
+            "type": "integer",
+            "title": "Jogadores"
+          },
+          "premiados": {
+            "type": "integer",
+            "title": "Premiados"
+          },
+          "premios": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Premios"
+          }
+        },
+        "type": "object",
+        "required": [
+          "jogadores",
+          "premiados",
+          "premios"
+        ],
+        "title": "TabelaLinha"
+      },
+      "TabelaResponse": {
+        "properties": {
+          "linhas": {
+            "items": {
+              "$ref": "#/components/schemas/TabelaLinha"
+            },
+            "type": "array",
+            "title": "Linhas"
+          }
+        },
+        "type": "object",
+        "required": [
+          "linhas"
+        ],
+        "title": "TabelaResponse"
+      },
+      "TorneioCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "event_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Event Date"
+          },
+          "format": {
+            "type": "string",
+            "title": "Format"
+          },
+          "max_rounds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Rounds"
+          },
+          "entry_fee": {
+            "type": "number",
+            "title": "Entry Fee",
+            "default": 0
+          },
+          "best_of": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Best Of",
+            "default": 3
+          },
+          "premiacao_preset_id": {
+            "type": "string",
+            "title": "Premiacao Preset Id",
+            "default": "standard"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "event_date",
+          "format"
+        ],
+        "title": "TorneioCreateRequest"
+      },
+      "TorneioUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "event_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Date"
+          },
+          "entry_fee": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entry Fee"
+          },
+          "best_of": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Of"
+          },
+          "max_rounds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Rounds"
+          }
+        },
+        "type": "object",
+        "title": "TorneioUpdate"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

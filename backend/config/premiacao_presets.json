@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "default_preset": "standard",
+  "presets": {
+    "standard": {
+      "label": "Standard semanal",
+      "min_jogadores": 4,
+      "min_premiados": 3,
+      "max_premiados": 8,
+      "crescimento": 2,
+      "r": 0.72,
+      "casas_decimais": 2
+    }
+  }
+}

@@ -1,0 +1,24 @@
+# Python
+runtime/
+data/
+*.db
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+.venv/
+.coverage
+
+# Tournament export logs (runtime)
+logs/*.json
+
+# Node / frontend build
+frontend/node_modules/
+frontend/dist/
+*.tsbuildinfo
+
+# Generated exports (CSV baixados pela UI)
+exports/*.csv
+
+# IDE / secrets
+.env

@@ -6,7 +6,13 @@ Distribuir 100% das inscrições entre os melhores colocados utilizando um model
 
 ## Fonte dos parâmetros
 
-Os valores usados em cada execução vêm exclusivamente de `config/settings.json`. Os defaults em `core/config.py` servem **apenas** para gerar esse arquivo quando ele não existe ou precisa ser recriado.
+Os valores usados em cada cálculo vêm do **preset** selecionado:
+
+- Arquivo: `backend/config/premiacao_presets.json`
+- API: `GET /api/v1/premiacao/presets/{id}`
+- Torneios: snapshot em `events.premiacao_preset` no momento da criação do evento
+
+Implementação: `backend/app/core/premiacao/calculator.py`
 
 ## Parâmetros
 
@@ -40,7 +46,7 @@ A última linha garante que nunca haja mais premiados do que jogadores.
 | 27–30 | Top 7 |
 | 31+ | Top 8 |
 
-### Exemplo com `crescimento = 3` (configuração atual)
+### Exemplo com `crescimento = 3`
 
 | Jogadores | Premiados |
 |-----------|-----------|
@@ -51,7 +57,7 @@ A última linha garante que nunca haja mais premiados do que jogadores.
 | 18–20 | Top 7 |
 | 21+ | Top 8 |
 
-> A tabela muda conforme `crescimento`. Consulte sempre o `settings.json` ativo.
+> A tabela muda conforme `crescimento`. Consulte o preset ativo na UI ou em [configuracao.md](configuracao.md).
 
 ## Pesos
 
@@ -66,6 +72,8 @@ Implementação: `[r^0, r^1, ..., r^(Y-1)]`
 ```
 premio(i) = N × peso(i) / soma(pesos)
 ```
+
+Quando informado **valor de inscrição** (R$), a UI e a API também exibem **Créditos na Loja** = `premio(i) × valor_inscricao`.
 
 ## Arredondamento (maior resto)
 
@@ -90,10 +98,12 @@ Isso evita concentrar todo o ajuste na última colocação e mantém a soma semp
 
 ## Exportação CSV
 
-Arquivos gerados em `exports/premiacao_{min_jogadores}_a_{limite}.csv`:
+Arquivos gerados em `exports/premiacao_{min_jogadores}_a_{limite}.csv` (download HTTP + cópia local opcional):
 
 - Encoding UTF-8 com BOM (`utf-8-sig`) para Excel.
 - Separador `;`
 - **Substitui** arquivo existente com o mesmo nome ao exportar novamente.
-- Ao **alterar configurações**, o sistema pergunta se deseja limpar exports anteriores (podem estar desatualizados).
-- No menu de configurações, use `limpar_exports` para remover todos os CSVs manualmente.
+
+## Torneios
+
+Ao **finalizar** um torneio, `N` = total de jogadores inscritos (incluindo drops). O resultado é gravado em `premiacao_resultado` e exibido em **Torneios → Resultado**.
