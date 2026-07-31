@@ -30,6 +30,7 @@ def test_export_log_after_finalize(torneio_service: TorneioService, swiss_event,
 
     content, filename = svc.export_log(eid)
     assert b'"standings"' in content
+    assert b'"version": 2' in content
     assert filename.endswith(".json")
     logs_dir = get_settings().resolved_logs_dir
     assert (logs_dir / filename).exists()

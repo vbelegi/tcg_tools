@@ -98,22 +98,22 @@ export const api = {
 
     }),
 
-  calcular: (jogadores: number, presetId?: string, valorInscricao?: number) =>
-
+  calcular: (
+    jogadores: number,
+    presetId?: string,
+    valorInscricao?: number,
+    formato?: "swiss" | "single_elimination",
+    thirdPlaceMatch?: boolean,
+  ) =>
     request<CalcularResponse>("/premiacao/calcular", {
-
       method: "POST",
-
       body: JSON.stringify({
-
         jogadores,
-
         preset_id: presetId,
-
         valor_inscricao: valorInscricao,
-
+        formato: formato ?? "swiss",
+        third_place_match: thirdPlaceMatch ?? false,
       }),
-
     }),
 
   tabela: (ate: number, presetId?: string) =>

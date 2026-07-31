@@ -30,10 +30,20 @@ class PresetUpdateRequest(BaseModel):
     presets_updated_at: float | None = None
 
 
+class PremiacaoBand(BaseModel):
+    label: str
+    pool: float
+    tier_indices: list[int]
+    player_count: int
+    payout_per_player: float | None = None
+
+
 class CalcularRequest(BaseModel):
     jogadores: int = Field(ge=1)
     preset_id: str | None = None
     valor_inscricao: float | None = None
+    formato: str = "swiss"
+    third_place_match: bool = False
 
 
 class CalcularResponse(BaseModel):
@@ -42,6 +52,9 @@ class CalcularResponse(BaseModel):
     premios: list[float]
     total_inscricoes: float
     creditos: list[float] | None = None
+    total_creditos: float | None = None
+    bands: list[PremiacaoBand] | None = None
+    band_creditos: list[float] | None = None
 
 
 class TabelaLinha(BaseModel):

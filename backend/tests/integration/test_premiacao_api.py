@@ -14,6 +14,24 @@ def test_health():
     assert r.json()["status"] == "ok"
 
 
+def test_calcular_se_bands():
+    r = client.post(
+        "/api/v1/premiacao/calcular",
+        json={
+            "jogadores": 16,
+            "preset_id": "standard",
+            "formato": "single_elimination",
+            "valor_inscricao": 35,
+        },
+    )
+    assert r.status_code == 200
+    data = r.json()
+    assert data["bands"] is not None
+    assert len(data["bands"]) >= 3
+    assert sum(b["pool"] for b in data["bands"]) == pytest.approx(16, abs=1e-9)
+    assert data["total_creditos"] == pytest.approx(560.0, abs=1e-9)
+
+
 def test_calcular():
     r = client.post(
         "/api/v1/premiacao/calcular",

@@ -107,3 +107,39 @@ Arquivos gerados em `exports/premiacao_{min_jogadores}_a_{limite}.csv` (download
 ## Torneios
 
 Ao **finalizar** um torneio, `N` = total de jogadores inscritos (incluindo drops). O resultado é gravado em `premiacao_resultado` e exibido em **Torneios → Resultado**.
+
+### Suíço
+
+Cada tier absoluto (`premios[0]`, `premios[1]`, …) corresponde a um jogador na ordem de classificação (1º, 2º, 3º…).
+
+### Eliminatória simples (faixas)
+
+Tiers absolutos do preset são agrupados em **faixas**:
+
+| Faixa | Tiers (índices) |
+|-------|-----------------|
+| 1º | `[0]` |
+| 2º | `[1]` |
+| 3º / 4º (com bronze) | `[2]`, `[3]` |
+| 3–4 (sem bronze) | `[2]` + `[3]` → pool único |
+| 5–8 | `[4..7]` |
+| 9–16 | `[8..15]` | … |
+
+Para cada faixa: `pool = soma(premios[i])`, dividido igualmente entre jogadores elegíveis na faixa (excluindo drops). Se a faixa tiver menos jogadores que o esperado (ex.: drop na semi), o pool inteiro é dividido só entre os presentes.
+
+**Invariante:** `sum(payout_j) = N` inscrições (tolerância = uma unidade na última casa decimal do preset).
+
+Preview standalone em **Premiação → Calcular** com formato Eliminatória usa a mesma lógica de faixas.
+
+### `schema_version` em `premiacao_resultado`
+
+| Versão | Formato | Conteúdo |
+|--------|---------|----------|
+| **1** | Suíço ou SE legado | `premios[]`, `creditos[]` por tier; sem `bands` |
+| **2** | SE (pós-feature) | `bands`, `player_payouts`, `standings_snapshot`, `total_creditos` |
+
+Torneios SE **finalizados antes** da feature permanecem em v1: classificação recalculada via standings Suíço (`compute_standings`). Não há migração automática para v2.
+
+**Créditos:** `total_creditos = jogadores × entry_fee` (todos inscritos são pagantes).
+
+Ver também [export_log.md](export_log.md) e [migration_003.md](migration_003.md).

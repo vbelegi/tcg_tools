@@ -1,6 +1,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { api } from "../../api/client";
+import { PremiacaoBandsTable } from "../../components/PremiacaoBandsTable";
+import { SeFormatOptions, type SeBoConfig } from "../../components/SeFormatOptions";
 import type { Preset } from "../../api/types";
 
 type Tab = "calcular" | "tabela" | "presets";
@@ -30,10 +32,25 @@ function CalcularTab() {
   const [jogadores, setJogadores] = useState(16);
   const [valor, setValor] = useState("");
   const [presetId, setPresetId] = useState("standard");
+  const [formato, setFormato] = useState<"swiss" | "single_elimination">("swiss");
+  const [thirdPlaceMatch, setThirdPlaceMatch] = useState(false);
+  const [bestOf, setBestOf] = useState(3);
+  const [seBoConfig, setSeBoConfig] = useState<SeBoConfig>({});
+
+  const sePhaseRounds = useMemo(
+    () => Math.ceil(Math.log2(Math.max(jogadores, 2))),
+    [jogadores],
+  );
 
   const mutation = useMutation({
     mutationFn: () =>
-      api.calcular(jogadores, presetId, valor ? parseFloat(valor) : undefined),
+      api.calcular(
+        jogadores,
+        presetId,
+        valor ? parseFloat(valor) : undefined,
+        formato,
+        thirdPlaceMatch,
+      ),
   });
 
   const presetIds = presetsData ? Object.keys(presetsData.presets) : ["standard"];
@@ -51,6 +68,36 @@ function CalcularTab() {
         </select>
       </div>
       <div className="form-row">
+        <label>Formato</label>
+        <select value={formato} onChange={(e) => setFormato(e.target.value as typeof formato)}>
+          <option value="swiss">Suíço</option>
+          <option value="single_elimination">Eliminatória</option>
+        </select>
+      </div>
+      {formato === "single_elimination" && (
+        <>
+          <div className="form-row">
+            <label>Melhor de (referência para torneios)</label>
+            <select value={bestOf} onChange={(e) => setBestOf(+e.target.value)}>
+              <option value={1}>1</option>
+              <option value={3}>3</option>
+              <option value={5}>5</option>
+            </select>
+          </div>
+          <SeFormatOptions
+            thirdPlaceMatch={thirdPlaceMatch}
+            onThirdPlaceMatchChange={setThirdPlaceMatch}
+            seBoConfig={seBoConfig}
+            onSeBoConfigChange={setSeBoConfig}
+            defaultBestOf={bestOf}
+            maxRounds={sePhaseRounds}
+          />
+          <p style={{ fontSize: "0.9rem", opacity: 0.85 }}>
+            O cálculo abaixo mostra pools por faixa; Bo por fase vale ao criar um torneio eliminatória.
+          </p>
+        </>
+      )}
+      <div className="form-row">
         <label>Jogadores</label>
         <input type="number" min={4} value={jogadores} onChange={(e) => setJogadores(+e.target.value)} />
       </div>
@@ -65,26 +112,46 @@ function CalcularTab() {
       {mutation.data && (
         <div style={{ marginTop: "1.5rem" }}>
           <p>
-            <strong>Top {mutation.data.premiados}</strong> — Total: {mutation.data.total_inscricoes} inscrições
+            <strong>Top {mutation.data.premiados}</strong> — Total: {mutation.data.total_inscricoes}{" "}
+            inscrições
           </p>
-          <table>
-            <thead>
-              <tr>
-                <th>Colocação</th>
-                <th>Inscrições</th>
-                {mutation.data.creditos && <th>Créditos na Loja</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {mutation.data.premios.map((p, i) => (
-                <tr key={i}>
-                  <td>{i + 1}º</td>
-                  <td>{p.toFixed(2)}</td>
-                  {mutation.data!.creditos && <td>R$ {mutation.data!.creditos![i].toFixed(2)}</td>}
+          {mutation.data.total_creditos != null && (
+            <p>
+              Total em créditos na loja: <strong>R$ {mutation.data.total_creditos.toFixed(2)}</strong>
+              {valor && (
+                <span style={{ opacity: 0.85 }}>
+                  {" "}
+                  (= {jogadores} × R$ {parseFloat(valor).toFixed(2)})
+                </span>
+              )}
+            </p>
+          )}
+          {mutation.data.bands && mutation.data.bands.length > 0 ? (
+            <PremiacaoBandsTable
+              bands={mutation.data.bands}
+              bandCreditos={mutation.data.band_creditos ?? undefined}
+              entryFee={valor ? parseFloat(valor) : undefined}
+            />
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>Colocação</th>
+                  <th>Inscrições</th>
+                  {mutation.data.creditos && <th>Créditos na Loja</th>}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {mutation.data.premios.map((p, i) => (
+                  <tr key={i}>
+                    <td>{i + 1}º</td>
+                    <td>{p.toFixed(2)}</td>
+                    {mutation.data!.creditos && <td>R$ {mutation.data!.creditos![i].toFixed(2)}</td>}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       )}
     </div>

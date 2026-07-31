@@ -1184,6 +1184,16 @@
               }
             ],
             "title": "Valor Inscricao"
+          },
+          "formato": {
+            "type": "string",
+            "title": "Formato",
+            "default": "swiss"
+          },
+          "third_place_match": {
+            "type": "boolean",
+            "title": "Third Place Match",
+            "default": false
           }
         },
         "type": "object",
@@ -1226,6 +1236,45 @@
               }
             ],
             "title": "Creditos"
+          },
+          "total_creditos": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Creditos"
+          },
+          "bands": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/PremiacaoBand"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bands"
+          },
+          "band_creditos": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Band Creditos"
           }
         },
         "type": "object",
@@ -1367,6 +1416,48 @@
           "score_p2"
         ],
         "title": "MatchUpdate"
+      },
+      "PremiacaoBand": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "pool": {
+            "type": "number",
+            "title": "Pool"
+          },
+          "tier_indices": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Tier Indices"
+          },
+          "player_count": {
+            "type": "integer",
+            "title": "Player Count"
+          },
+          "payout_per_player": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payout Per Player"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "pool",
+          "tier_indices",
+          "player_count"
+        ],
+        "title": "PremiacaoBand"
       },
       "PresetBody": {
         "properties": {
@@ -1532,6 +1623,25 @@
             "type": "string",
             "title": "Premiacao Preset Id",
             "default": "standard"
+          },
+          "third_place_match": {
+            "type": "boolean",
+            "title": "Third Place Match",
+            "default": false
+          },
+          "se_bo_config": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Se Bo Config"
           }
         },
         "type": "object",
@@ -1581,7 +1691,9 @@
           "best_of": {
             "anyOf": [
               {
-                "type": "integer"
+                "type": "integer",
+                "maximum": 5.0,
+                "minimum": 1.0
               },
               {
                 "type": "null"
@@ -1599,6 +1711,31 @@
               }
             ],
             "title": "Max Rounds"
+          },
+          "third_place_match": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Third Place Match"
+          },
+          "se_bo_config": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Se Bo Config"
           }
         },
         "type": "object",

@@ -5,13 +5,20 @@ from __future__ import annotations
 import random
 
 from app.core.torneios.models import Pairing, PlayerRecord, TournamentState
+from app.core.torneios.standings.se_bracket import semi_losers
 
 
 class SingleEliminationStrategy:
     def generate_pairings(self, state: TournamentState, round_number: int) -> list[Pairing]:
         if round_number == 1:
             return self._round1(state)
-        return self._advance_winners(state, round_number)
+        pairings = self._advance_winners(state, round_number)
+        max_rounds = state.max_rounds or round_number
+        if round_number == max_rounds and state.third_place_match:
+            bronze = self._bronze_pairing(state, max_rounds)
+            if bronze:
+                pairings.append(bronze)
+        return pairings
 
     def _round1(self, state: TournamentState) -> list[Pairing]:
         active = [p for p in state.players if not p.dropped_at]
@@ -49,7 +56,7 @@ class SingleEliminationStrategy:
         prev_round = round_number - 1
         winners: list[PlayerRecord] = []
         for m in state.matches:
-            if m.round_number != prev_round:
+            if m.round_number != prev_round or m.is_third_place:
                 continue
             if m.is_bye:
                 winners.append(next(p for p in state.players if p.id == m.player1_id))
@@ -62,3 +69,13 @@ class SingleEliminationStrategy:
         if len(winners) % 2 == 1:
             pairings.append(Pairing(player1_id=winners[-1].id, player2_id=None, is_bye=True))
         return pairings
+
+    def _bronze_pairing(self, state: TournamentState, max_rounds: int) -> Pairing | None:
+        losers = semi_losers(state, max_rounds)
+        if len(losers) < 2:
+            return None
+        return Pairing(
+            player1_id=losers[0],
+            player2_id=losers[1],
+            is_third_place=True,
+        )

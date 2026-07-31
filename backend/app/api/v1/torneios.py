@@ -35,6 +35,8 @@ def create_torneio(body: TorneioCreateRequest, svc: TorneioService = Depends(get
             body.entry_fee,
             body.best_of,
             body.premiacao_preset_id,
+            body.third_place_match,
+            body.se_bo_config,
         )
         return svc.get_event(event.id)
     except TorneioError as exc:

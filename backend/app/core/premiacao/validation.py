@@ -30,6 +30,27 @@ class InputError(ValueError):
     """Erro de validação de entrada do usuário."""
 
 
+class PayoutConservationError(ValueError):
+    """Soma dos payouts difere do número de inscrições."""
+
+
+def validate_payout_conservation(
+    n_players: int,
+    payouts: list[float] | dict[int, float],
+    casas_decimais: int,
+) -> None:
+    """Raises PayoutConservationError if sum of payouts != n_players."""
+    if isinstance(payouts, dict):
+        total = sum(payouts.values())
+    else:
+        total = sum(payouts)
+    tolerance = 10 ** (-casas_decimais) if casas_decimais > 0 else 1e-9
+    if abs(total - n_players) > tolerance:
+        raise PayoutConservationError(
+            f"Soma dos prêmios ({total}) difere de N inscrições ({n_players})."
+        )
+
+
 def validar_config(config: dict) -> None:
     """Valida estrutura e valores de preset de premiação."""
     if not isinstance(config, dict):

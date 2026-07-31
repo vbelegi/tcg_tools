@@ -71,6 +71,8 @@ def calcular_endpoint(
             body.jogadores,
             body.preset_id,
             body.valor_inscricao,
+            body.formato,
+            body.third_place_match,
         )
         return CalcularResponse(**result)
     except (InputError, ConfigError) as exc:

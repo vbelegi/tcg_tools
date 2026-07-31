@@ -417,6 +417,16 @@ export interface components {
             preset_id?: string | null;
             /** Valor Inscricao */
             valor_inscricao?: number | null;
+            /**
+             * Formato
+             * @default swiss
+             */
+            formato: string;
+            /**
+             * Third Place Match
+             * @default false
+             */
+            third_place_match: boolean;
         };
         /** CalcularResponse */
         CalcularResponse: {
@@ -430,6 +440,12 @@ export interface components {
             total_inscricoes: number;
             /** Creditos */
             creditos?: number[] | null;
+            /** Total Creditos */
+            total_creditos?: number | null;
+            /** Bands */
+            bands?: components["schemas"]["PremiacaoBand"][] | null;
+            /** Band Creditos */
+            band_creditos?: number[] | null;
         };
         /** ClassificacaoPatch */
         ClassificacaoPatch: {
@@ -476,6 +492,19 @@ export interface components {
             score_p1: number;
             /** Score P2 */
             score_p2: number;
+        };
+        /** PremiacaoBand */
+        PremiacaoBand: {
+            /** Label */
+            label: string;
+            /** Pool */
+            pool: number;
+            /** Tier Indices */
+            tier_indices: number[];
+            /** Player Count */
+            player_count: number;
+            /** Payout Per Player */
+            payout_per_player?: number | null;
         };
         /** PresetBody */
         PresetBody: {
@@ -552,6 +581,15 @@ export interface components {
              * @default standard
              */
             premiacao_preset_id: string;
+            /**
+             * Third Place Match
+             * @default false
+             */
+            third_place_match: boolean;
+            /** Se Bo Config */
+            se_bo_config?: {
+                [key: string]: number;
+            } | null;
         };
         /** TorneioUpdate */
         TorneioUpdate: {
@@ -565,6 +603,12 @@ export interface components {
             best_of?: number | null;
             /** Max Rounds */
             max_rounds?: number | null;
+            /** Third Place Match */
+            third_place_match?: boolean | null;
+            /** Se Bo Config */
+            se_bo_config?: {
+                [key: string]: number;
+            } | null;
         };
         /** ValidationError */
         ValidationError: {

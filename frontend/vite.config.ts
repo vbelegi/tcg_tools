@@ -12,5 +12,21 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: "./src/test/setup.ts",
+    coverage: {
+      provider: "v8",
+      include: ["src/utils/**", "src/components/**"],
+      exclude: [
+        "src/api/openapi.d.ts",
+        "src/main.tsx",
+        "src/**/*.test.{ts,tsx}",
+        "src/test/**",
+      ],
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 75,
+        statements: 80,
+      },
+    },
   },
 });

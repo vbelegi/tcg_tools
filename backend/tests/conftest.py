@@ -96,6 +96,51 @@ def score_all_matches(
         svc.update_match(event_id, m["id"], s1, s2)
 
 
+def create_se_event(
+    svc: TorneioService,
+    player_count: int,
+    *,
+    third_place_match: bool = False,
+    se_bo_config: dict[str, int] | None = None,
+    best_of: int = 1,
+    entry_fee: float = 10.0,
+    name: str = "SE Test",
+):
+    """Draft SE event with `player_count` registered players."""
+    event = svc.create_event(
+        name=name,
+        event_date=date.today(),
+        format="single_elimination",
+        max_rounds=None,
+        entry_fee=entry_fee,
+        best_of=best_of,
+        premiacao_preset_id="standard",
+        third_place_match=third_place_match,
+        se_bo_config=se_bo_config,
+    )
+    for i in range(player_count):
+        svc.add_player(event.id, f"P{i + 1}")
+    return event
+
+
+def run_se_bracket(
+    svc: TorneioService,
+    event_id: int,
+    *,
+    default: tuple[int, int] = (2, 0),
+) -> None:
+    """Start SE event and play through until ready to finalize."""
+    svc.start_event(event_id)
+    while not svc.get_event(event_id)["can_finalize"]:
+        ev = svc.get_event(event_id)
+        if ev["between_rounds"]:
+            svc.start_next_round(event_id)
+            ev = svc.get_event(event_id)
+        rnd = ev["current_round"]
+        score_all_matches(svc, event_id, rnd, default=default)
+        svc.complete_round(event_id)
+
+
 @pytest.fixture
 def api_client(db_session: Session) -> Generator[TestClient, None, None]:
     """FastAPI client with real DB session (Alembic-migrated)."""

@@ -38,6 +38,8 @@ class MatchRecord:
     had_rematch: bool
     scores_submitted: bool
     winner_id: int | None
+    is_third_place: bool = False
+    best_of: int | None = None
 
 
 @dataclass
@@ -46,6 +48,7 @@ class Pairing:
     player2_id: int | None
     is_bye: bool = False
     had_rematch: bool = False
+    is_third_place: bool = False
 
 
 @dataclass
@@ -60,6 +63,16 @@ class TournamentState:
     players: list[PlayerRecord]
     matches: list[MatchRecord]
     played_pairs: set[frozenset[int]] = field(default_factory=set)
+    third_place_match: bool = False
+    se_bo_config: dict[int, int] | None = None
+
+
+@dataclass
+class BandMember:
+    player_id: int
+    band_label: str
+    is_drop: bool = False
+    name: str = ""
 
 
 @dataclass

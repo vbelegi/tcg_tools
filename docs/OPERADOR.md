@@ -42,8 +42,9 @@ Se aparecer aviso de exports desatualizados, os presets foram editados — regen
 
 1. **Torneios** → **Novo torneio**.
 2. Preencha nome, data, formato (Suíço ou Eliminatória), melhor de, inscrição e preset de premiação.
-3. Adicione jogadores (mínimo **4**). Seeds são opcionais.
-4. **Iniciar torneio** — confirme se o número de rodadas está adequado.
+3. **Eliminatória:** opcionalmente marque **Disputa de 3º–4º** e configure **melhor de por fase** (Final, Semi, Quartas…). Bronze usa o Bo da final. Opções editáveis só em rascunho.
+4. Adicione jogadores (mínimo **4**). Seeds são opcionais.
+5. **Iniciar torneio** — confirme se o número de rodadas está adequado.
 
 ### 2. Durante cada rodada
 
@@ -79,6 +80,7 @@ Use quando digitou placar errado **depois** de concluir a rodada:
 
 - Só disponível quando **todas** as rodadas e partidas estão concluídas.
 - Calcula premiação automaticamente com base nos jogadores inscritos.
+- **Eliminatória:** classificação em faixas (1º, 2º, 3–4, 5–8…); premiação exibida por faixa.
 - Acesse **Resultado** para classificação, premiação, decklists e export JSON.
 
 ## Regras de placar (resumo)

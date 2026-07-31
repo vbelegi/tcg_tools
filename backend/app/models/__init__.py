@@ -56,6 +56,8 @@ class Event(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     created_by_user_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     shuffle_seed: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    third_place_match: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    se_bo_config: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
 
     players: Mapped[list[Player]] = relationship(back_populates="event", cascade="all, delete-orphan")
     rounds: Mapped[list[Round]] = relationship(back_populates="event", cascade="all, delete-orphan")
@@ -109,5 +111,7 @@ class Match(Base):
     is_walkover: Mapped[bool] = mapped_column(Boolean, default=False)
     had_rematch: Mapped[bool] = mapped_column(Boolean, default=False)
     scores_submitted: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_third_place: Mapped[bool] = mapped_column(Boolean, default=False)
+    best_of: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     round: Mapped[Round] = relationship(back_populates="matches")

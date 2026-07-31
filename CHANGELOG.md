@@ -2,6 +2,25 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Added
+
+- **Eliminatória simples:** faixas de classificação e premiação (3–4, 5–8…); partida opcional de 3º–4º (bronze); melhor de por fase; invariante `sum(payouts) = N`
+- Migration Alembic `003`: `third_place_match`, `se_bo_config`, `matches.is_third_place`, `matches.best_of`
+- Premiação standalone: seletor Suíço / Eliminatória + preview por faixas
+- Componentes UI `SeFormatOptions`, `PremiacaoBandsTable`, `MatchBadges`
+- Schema tipado `PremiacaoResultado`; export JSON **v2**; `total_creditos`; redistribuição de pool em faixas vazias
+- Docs: [migration_003.md](docs/migration_003.md), [export_log.md](docs/export_log.md)
+- Testes: SE 6/32 jogadores, bronze 16, reopen, drops na semi, `se_bracket`, cobertura frontend ≥80% (utils/components)
+
+### Changed
+
+- Torneios SE finalizados após update gravam `premiacao_resultado.schema_version = 2` com snapshot congelado
+- Torneios finalizados antes da feature: comportamento legado preservado
+- `se_bo_config` inválido para o bracket gera `config_warnings` no rascunho e é podado ao iniciar
+- CI: `npm run test:coverage` com meta 80% no frontend (utils/components)
+
 ## [1.1.0] - 2026-07-31
 
 ### Added

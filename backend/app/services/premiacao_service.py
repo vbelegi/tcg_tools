@@ -11,6 +11,7 @@ from typing import Any
 
 from app import paths
 from app.config import Settings, get_settings
+from app.core.premiacao.build_resultado import build_preview_calcular_response
 from app.core.premiacao.calculator import calcular
 from app.core.premiacao.presets import (
     get_preset_config,
@@ -73,6 +74,8 @@ class PremiacaoService:
         jogadores: int,
         preset_id: str | None = None,
         valor_inscricao: float | None = None,
+        formato: str = "swiss",
+        third_place_match: bool = False,
     ) -> dict[str, Any]:
         store = self._load()
         config = get_preset_config(store, preset_id)
@@ -80,11 +83,21 @@ class PremiacaoService:
         if valor_inscricao is not None:
             validar_valor_inscricao(valor_inscricao)
 
+        if formato == "single_elimination":
+            return build_preview_calcular_response(
+                jogadores,
+                config,
+                formato,
+                third_place_match,
+                valor_inscricao,
+            )
+
         resultado = calcular(jogadores, config)
         total = sum(resultado["premios"])
         response: dict[str, Any] = {
             **resultado,
             "total_inscricoes": total,
+            "bands": None,
         }
         if valor_inscricao is not None:
             casas = config["casas_decimais"]

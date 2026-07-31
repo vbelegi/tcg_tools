@@ -1,7 +1,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../api/client";
+import { SeFormatOptions, type SeBoConfig } from "../../components/SeFormatOptions";
 
 export function TorneioNovoPage() {
   const navigate = useNavigate();
@@ -13,7 +14,16 @@ export function TorneioNovoPage() {
   const [entryFee, setEntryFee] = useState("35");
   const [bestOf, setBestOf] = useState(3);
   const [presetId, setPresetId] = useState("standard");
+  const [thirdPlaceMatch, setThirdPlaceMatch] = useState(false);
+  const [seBoConfig, setSeBoConfig] = useState<SeBoConfig>({});
+  const [expectedPlayers, setExpectedPlayers] = useState("8");
   const [error, setError] = useState("");
+
+  const sePhaseRounds = useMemo(() => {
+    const n = parseInt(expectedPlayers, 10);
+    if (!Number.isFinite(n) || n < 2) return Math.ceil(Math.log2(8));
+    return Math.ceil(Math.log2(n));
+  }, [expectedPlayers]);
 
   const mutation = useMutation({
     mutationFn: () => {
@@ -32,6 +42,11 @@ export function TorneioNovoPage() {
         entry_fee: parseFloat(entryFee) || 0,
         best_of: bestOf,
         premiacao_preset_id: presetId,
+        third_place_match: format === "single_elimination" ? thirdPlaceMatch : false,
+        se_bo_config:
+          format === "single_elimination" && Object.keys(seBoConfig).length > 0
+            ? seBoConfig
+            : undefined,
       });
     },
     onSuccess: (t) => navigate(`/torneios/${t.id}`),
@@ -71,13 +86,34 @@ export function TorneioNovoPage() {
         <input type="number" step="0.01" value={entryFee} onChange={(e) => setEntryFee(e.target.value)} />
       </div>
       <div className="form-row">
-        <label>Melhor de</label>
+        <label>Melhor de (padrão global)</label>
         <select value={bestOf} onChange={(e) => setBestOf(+e.target.value)}>
           <option value={1}>1</option>
           <option value={3}>3</option>
           <option value={5}>5</option>
         </select>
       </div>
+      {format === "single_elimination" && (
+        <div className="form-row">
+          <label>Jogadores esperados (para opções Bo por fase)</label>
+          <input
+            type="number"
+            min={2}
+            value={expectedPlayers}
+            onChange={(e) => setExpectedPlayers(e.target.value)}
+          />
+        </div>
+      )}
+      {format === "single_elimination" && (
+        <SeFormatOptions
+          thirdPlaceMatch={thirdPlaceMatch}
+          onThirdPlaceMatchChange={setThirdPlaceMatch}
+          seBoConfig={seBoConfig}
+          onSeBoConfigChange={setSeBoConfig}
+          defaultBestOf={bestOf}
+          maxRounds={sePhaseRounds}
+        />
+      )}
       <div className="form-row">
         <label>Preset premiação</label>
         <select value={presetId} onChange={(e) => setPresetId(e.target.value)}>

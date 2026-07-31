@@ -20,6 +20,8 @@ class EventRepositoryProtocol(Protocol):
         best_of: int,
         premiacao_preset: dict[str, Any],
         shuffle_seed: int,
+        third_place_match: bool = False,
+        se_bo_config: dict[str, Any] | None = None,
     ) -> Event: ...
 
     def get(self, event_id: int) -> Event | None: ...

@@ -8,7 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.services.torneio_service import TorneioService
-from tests.conftest import score_all_matches
+from tests.conftest import run_se_bracket, score_all_matches
 
 
 def _create_swiss(client: TestClient) -> int:
@@ -83,6 +83,67 @@ def test_drop_between_rounds_422_during_active(api_client: TestClient, db_sessio
     r = api_client.post(
         f"/api/v1/torneios/{eid}/jogadores/{pid}/drop",
         json={"mid_round": False},
+    )
+    assert r.status_code == 422
+
+
+def _create_se(client: TestClient, player_count: int = 4) -> int:
+    r = client.post(
+        "/api/v1/torneios",
+        json={
+            "name": "API SE",
+            "event_date": date.today().isoformat(),
+            "format": "single_elimination",
+            "max_rounds": None,
+            "entry_fee": 35,
+            "best_of": 1,
+            "premiacao_preset_id": "standard",
+            "third_place_match": True,
+            "se_bo_config": {"1": 3, "2": 1},
+        },
+    )
+    assert r.status_code == 200
+    eid = r.json()["id"]
+    for i in range(player_count):
+        assert (
+            client.post(
+                f"/api/v1/torneios/{eid}/jogadores",
+                json={"name": f"P{i + 1}"},
+            ).status_code
+            == 200
+        )
+    return eid
+
+
+def test_se_api_full_flow(api_client: TestClient, db_session):
+    eid = _create_se(api_client, 4)
+
+    svc = TorneioService(db_session)
+    run_se_bracket(svc, eid, default=(1, 0))
+
+    r = api_client.post(f"/api/v1/torneios/{eid}/finalizar")
+    assert r.status_code == 200
+    assert r.json()["status"] == "finished"
+
+    prem = api_client.get(f"/api/v1/torneios/{eid}/premiacao").json()
+    assert prem["schema_version"] == 2
+    assert prem["bands"] is not None
+    assert prem["total_creditos"] == 140.0
+
+
+def test_create_se_invalid_bo_config(api_client: TestClient):
+    r = api_client.post(
+        "/api/v1/torneios",
+        json={
+            "name": "Bad SE",
+            "event_date": date.today().isoformat(),
+            "format": "single_elimination",
+            "max_rounds": None,
+            "entry_fee": 10,
+            "best_of": 3,
+            "premiacao_preset_id": "standard",
+            "se_bo_config": {"1": 7},
+        },
     )
     assert r.status_code == 422
 

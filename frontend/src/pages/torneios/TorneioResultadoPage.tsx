@@ -5,7 +5,9 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { RaffleResultModal } from "../../components/RaffleResultModal";
+import { PremiacaoBandsTable } from "../../components/PremiacaoBandsTable";
 import { api } from "../../api/client";
+import { creditosSanityMismatch, sumCreditosFromRows } from "../../utils/premiacao";
 import { drawWinners } from "../../utils/raffle";
 
 
@@ -110,9 +112,28 @@ export function TorneioResultadoPage() {
 
 
 
-  const prem = premiacao as { premios: number[]; creditos?: number[] | null; entry_fee?: number } | undefined;
+  const prem = premiacao as {
+    premios: number[];
+    creditos?: number[] | null;
+    total_creditos?: number | null;
+    entry_fee?: number;
+    bands?: Array<{ label: string; pool: number; payout_per_player?: number | null }>;
+    player_payouts?: Array<{ player_id: number; name: string; band_label: string; payout: number }>;
+  } | undefined;
 
-  const showCreditos = prem && (prem.entry_fee ?? 0) > 0 && prem.creditos;
+  const showCreditos = prem && (prem.entry_fee ?? 0) > 0;
+  const totalCreditos =
+    prem?.total_creditos ??
+    (showCreditos
+      ? sumCreditosFromRows(prem?.creditos, prem?.player_payouts, prem?.entry_fee ?? 0)
+      : null);
+  const useBands = prem?.bands && prem.bands.length > 0;
+
+  const creditosSumFromRows =
+    showCreditos && prem
+      ? sumCreditosFromRows(prem.creditos, prem.player_payouts, prem.entry_fee ?? 0)
+      : null;
+  const creditosMismatch = creditosSanityMismatch(totalCreditos, creditosSumFromRows);
 
   const eligiblePlayers =
     classificacao?.standings.filter((s) => !s.is_drop).map((s) => s.name) ?? [];
@@ -247,44 +268,57 @@ export function TorneioResultadoPage() {
 
       )}
 
-      {prem && (
+      {prem && useBands && (
+        <>
+          <PremiacaoBandsTable
+            bands={prem.bands!}
+            playerPayouts={prem.player_payouts}
+            entryFee={prem.entry_fee}
+          />
+          {showCreditos && totalCreditos != null && (
+            <p style={{ marginTop: "0.75rem" }}>
+              Total em créditos na loja: <strong>R$ {totalCreditos.toFixed(2)}</strong>
+              {creditosSumFromRows != null && (
+                <span style={{ opacity: 0.85 }}>
+                  {" "}
+                  (soma linhas: R$ {creditosSumFromRows.toFixed(2)})
+                </span>
+              )}
+            </p>
+          )}
+          {creditosMismatch && (
+            <p className="warning" role="alert">
+              Atenção: total de créditos difere da soma por jogador — verifique premiação.
+            </p>
+          )}
+        </>
+      )}
 
+      {prem && !useBands && (
         <table>
-
           <thead>
-
             <tr>
-
               <th>Colocação</th>
-
               <th>Inscrições</th>
-
               {showCreditos && <th>Créditos na Loja</th>}
-
             </tr>
-
           </thead>
-
           <tbody>
-
             {prem.premios.map((p, i) => (
-
               <tr key={i}>
-
                 <td>{i + 1}º</td>
-
                 <td>{p}</td>
-
-                {showCreditos && <td>R$ {(prem.creditos![i] ?? 0).toFixed(2)}</td>}
-
+                {showCreditos && <td>R$ {(prem.creditos?.[i] ?? p * (prem.entry_fee ?? 0)).toFixed(2)}</td>}
               </tr>
-
             ))}
-
           </tbody>
-
         </table>
+      )}
 
+      {prem && !useBands && showCreditos && totalCreditos != null && (
+        <p style={{ marginTop: "0.75rem" }}>
+          Total em créditos na loja: <strong>R$ {totalCreditos.toFixed(2)}</strong>
+        </p>
       )}
 
 

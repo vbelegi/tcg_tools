@@ -31,6 +31,10 @@ def test_init_db_on_empty_database(tmp_path: Path, monkeypatch: pytest.MonkeyPat
     assert "alembic_version" in tables
     cols = {c["name"] for c in inspect(engine).get_columns("matches")}
     assert "scores_submitted" in cols
+    assert "is_third_place" in cols
+    event_cols = {c["name"] for c in inspect(engine).get_columns("events")}
+    assert "third_place_match" in event_cols
+    assert "se_bo_config" in event_cols
     engine.dispose()
 
 

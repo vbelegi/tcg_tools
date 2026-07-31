@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date
 from typing import Any
 
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.torneios.models import MatchRecord, PlayerRecord, TournamentState
+from app.core.torneios.se_phases import normalize_se_bo_config
 from app.models import Event, Match, Player, Round
 from app.repositories.protocols import EventRepositoryProtocol
 
@@ -26,6 +27,8 @@ class EventRepository(EventRepositoryProtocol):
         best_of: int,
         premiacao_preset: dict[str, Any],
         shuffle_seed: int,
+        third_place_match: bool = False,
+        se_bo_config: dict[str, Any] | None = None,
     ) -> Event:
         event = Event(
             name=name,
@@ -37,6 +40,8 @@ class EventRepository(EventRepositoryProtocol):
             premiacao_preset=premiacao_preset,
             status="draft",
             shuffle_seed=shuffle_seed,
+            third_place_match=third_place_match,
+            se_bo_config=se_bo_config,
         )
         self._db.add(event)
         self._db.flush()
@@ -83,19 +88,23 @@ class EventRepository(EventRepositoryProtocol):
             if rnd.status == "active":
                 current_round = rnd.number
             for m in rnd.matches:
-                matches.append(MatchRecord(
-                    id=m.id,
-                    round_number=rnd.number,
-                    player1_id=m.player1_id,
-                    player2_id=m.player2_id,
-                    score_p1=m.score_p1,
-                    score_p2=m.score_p2,
-                    is_bye=m.is_bye,
-                    is_walkover=m.is_walkover,
-                    had_rematch=m.had_rematch,
-                    scores_submitted=m.scores_submitted,
-                    winner_id=m.winner_id,
-                ))
+                matches.append(
+                    MatchRecord(
+                        id=m.id,
+                        round_number=rnd.number,
+                        player1_id=m.player1_id,
+                        player2_id=m.player2_id,
+                        score_p1=m.score_p1,
+                        score_p2=m.score_p2,
+                        is_bye=m.is_bye,
+                        is_walkover=m.is_walkover,
+                        had_rematch=m.had_rematch,
+                        scores_submitted=m.scores_submitted,
+                        winner_id=m.winner_id,
+                        is_third_place=m.is_third_place,
+                        best_of=m.best_of,
+                    )
+                )
                 if m.player2_id and not m.is_bye:
                     played_pairs.add(frozenset({m.player1_id, m.player2_id}))
 
@@ -118,6 +127,8 @@ class EventRepository(EventRepositoryProtocol):
             players=players,
             matches=matches,
             played_pairs=played_pairs,
+            third_place_match=event.third_place_match,
+            se_bo_config=normalize_se_bo_config(event.se_bo_config),
         )
 
     def commit(self) -> None:

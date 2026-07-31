@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { ConfirmModal } from "../../components/ConfirmModal";
 import { PlayerPickerModal } from "../../components/PlayerPickerModal";
+import { RoundMatchesTable } from "../../components/RoundMatchesTable";
+import { SeFormatOptions, type SeBoConfig } from "../../components/SeFormatOptions";
 import { api } from "../../api/client";
 
 export function TorneioDetailPage() {
@@ -17,10 +19,20 @@ export function TorneioDetailPage() {
   const [dropModalOpen, setDropModalOpen] = useState(false);
   const [finalizarModalOpen, setFinalizarModalOpen] = useState(false);
   const [reabrirModalOpen, setReabrirModalOpen] = useState(false);
+  const [thirdPlaceMatch, setThirdPlaceMatch] = useState(false);
+  const [seBoConfig, setSeBoConfig] = useState<SeBoConfig>({});
+  const [seOptionsDirty, setSeOptionsDirty] = useState(false);
 
   const { data: torneio } = useQuery({
     queryKey: ["torneio", eventId],
     queryFn: () => api.getTorneio(eventId),
+  });
+
+  const completedRoundNum = torneio?.completed_rounds ?? 0;
+  const { data: lastCompletedRound } = useQuery({
+    queryKey: ["rodada", eventId, completedRoundNum],
+    queryFn: () => api.getRodada(eventId, completedRoundNum),
+    enabled: Boolean(torneio?.between_rounds && completedRoundNum > 0),
   });
 
   const addPlayer = useMutation({
@@ -88,6 +100,19 @@ export function TorneioDetailPage() {
     onError: (e) => setError((e as Error).message),
   });
 
+  const saveSeOptions = useMutation({
+    mutationFn: () =>
+      api.updateTorneio(eventId, {
+        third_place_match: thirdPlaceMatch,
+        se_bo_config: Object.keys(seBoConfig).length > 0 ? seBoConfig : null,
+      }),
+    onSuccess: () => {
+      setSeOptionsDirty(false);
+      qc.invalidateQueries({ queryKey: ["torneio", eventId] });
+    },
+    onError: (e) => setError((e as Error).message),
+  });
+
   const handleIniciar = () => {
     if (!torneio) return;
     const n = torneio.players?.length ?? 0;
@@ -100,6 +125,14 @@ export function TorneioDetailPage() {
     }
     iniciar.mutate();
   };
+
+  useEffect(() => {
+    if (!torneio || torneio.status !== "draft" || torneio.format !== "single_elimination") return;
+    if (!seOptionsDirty) {
+      setThirdPlaceMatch(torneio.third_place_match ?? false);
+      setSeBoConfig(torneio.se_bo_config ?? {});
+    }
+  }, [torneio, seOptionsDirty]);
 
   if (!torneio) return <p>Carregando...</p>;
 
@@ -129,10 +162,51 @@ export function TorneioDetailPage() {
       </div>
 
       {error && <p className="error">{error}</p>}
+      {torneio.config_warnings?.map((w) => (
+        <p key={w} className="warning" role="status">
+          {w}
+        </p>
+      ))}
 
       {isDraft && (
         <>
           <h2>Jogadores ({torneio.players?.length ?? 0})</h2>
+          {torneio.format === "single_elimination" && (
+            <>
+              <SeFormatOptions
+                thirdPlaceMatch={thirdPlaceMatch}
+                onThirdPlaceMatchChange={(v) => {
+                  setThirdPlaceMatch(v);
+                  setSeOptionsDirty(true);
+                }}
+                seBoConfig={seBoConfig}
+                onSeBoConfigChange={(v) => {
+                  setSeBoConfig(v);
+                  setSeOptionsDirty(true);
+                }}
+                defaultBestOf={torneio.best_of}
+                maxRounds={
+                  torneio.recommended_rounds ??
+                  Math.ceil(Math.log2(Math.max(torneio.players?.length ?? 8, 2)))
+                }
+              />
+              {seOptionsDirty && (
+                <p className="warning" style={{ marginBottom: "0.5rem" }}>
+                  Opções SE alteradas — salve antes de iniciar. Bo global atual: {torneio.best_of}.
+                </p>
+              )}
+              {seOptionsDirty && (
+                <button
+                  className="secondary"
+                  style={{ marginBottom: "1rem" }}
+                  onClick={() => saveSeOptions.mutate()}
+                  disabled={saveSeOptions.isPending}
+                >
+                  Salvar opções SE
+                </button>
+              )}
+            </>
+          )}
           {torneio.max_rounds != null && torneio.players && torneio.players.length >= 4 && (
             <p className="warning">
               Recomendado: {torneio.recommended_rounds ?? "—"} rodadas para {torneio.players.length}{" "}
@@ -220,6 +294,18 @@ export function TorneioDetailPage() {
                 : ""}
           </p>
           <p className="warning">Janela para drop entre rodadas (sem WO).</p>
+          {lastCompletedRound && (
+            <>
+              <p style={{ fontSize: "0.9rem", opacity: 0.85, marginTop: "1rem" }}>
+                Confira os resultados da rodada {lastCompletedRound.number} antes de iniciar a
+                próxima. Se algo estiver errado, use <strong>Reabrir rodada</strong>.
+              </p>
+              <RoundMatchesTable
+                title={`Resumo — rodada ${lastCompletedRound.number}`}
+                matches={lastCompletedRound.matches}
+              />
+            </>
+          )}
           {activePlayers.length > 0 && (
             <div style={{ marginTop: "1rem" }}>
               <button className="secondary" onClick={() => setDropModalOpen(true)}>

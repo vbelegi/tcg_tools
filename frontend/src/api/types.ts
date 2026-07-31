@@ -60,6 +60,12 @@ export interface Torneio {
 
   completed_rounds?: number;
 
+  third_place_match?: boolean;
+
+  se_bo_config?: Record<string, number> | null;
+
+  config_warnings?: string[];
+
   players?: Player[];
 
 }
@@ -109,6 +115,10 @@ export interface Match {
   had_rematch: boolean;
 
   scores_submitted?: boolean;
+
+  is_third_place?: boolean;
+
+  best_of?: number;
 
 }
 

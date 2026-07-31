@@ -62,6 +62,14 @@ def _distribuir_residuo_maior_resto(
     return [unidade / fator for unidade in unidades]
 
 
+def split_pool(pool: float, count: int, casas_decimais: int) -> list[float]:
+    """Split a band pool equally among ``count`` players with maior-resto rounding."""
+    if count <= 0:
+        return []
+    valores_exatos = [pool / count] * count
+    return _distribuir_residuo_maior_resto(valores_exatos, pool, casas_decimais)
+
+
 def distribuir_premios(
     jogadores: int,
     premiados: int,

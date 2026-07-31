@@ -115,6 +115,24 @@ textarea {
   box-sizing: border-box;
 }
 
+input[type="checkbox"],
+input[type="radio"] {
+  width: auto;
+  max-width: none;
+  padding: 0;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.form-row label.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0;
+  color: #e7e9ea;
+  cursor: pointer;
+}
+
 button.primary {
   background: #1d9bf0;
   border: none;
@@ -270,6 +288,28 @@ th {
 .error {
   color: #f4212e;
   margin: 0.5rem 0;
+}
+
+.error-text {
+  color: #f4212e;
+}
+
+.match-row-incomplete td {
+  background: rgba(244, 33, 46, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(244, 33, 46, 0.35);
+}
+
+.match-row-incomplete select.score-select {
+  border-color: #f4212e;
+}
+
+.round-summary {
+  margin-top: 1rem;
+}
+
+.round-summary-title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
 }
 
 .success {
