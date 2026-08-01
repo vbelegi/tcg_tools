@@ -52,7 +52,8 @@ function ValidatePort(PortStr: String): Boolean;
 var
   P: Integer;
 begin
-  Result := TryStrToInt(PortStr, P) and (P >= 1024) and (P <= 65535);
+  P := StrToIntDef(PortStr, -1);
+  Result := (P >= 1024) and (P <= 65535);
 end;
 
 procedure StopTCGToolsProcesses;

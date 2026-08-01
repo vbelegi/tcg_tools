@@ -122,6 +122,8 @@ if (-not $SkipInno) {
         throw "Inno Setup 6 (ISCC.exe) nao encontrado."
     }
     & $Iscc "/DAppVersion=$Version" "/DStagingDir=$Staging" "/DOutputDir=$Dist" (Join-Path $PSScriptRoot "installer.iss")
+    if ($LASTEXITCODE -ne 0) { throw "Inno Setup compile failed (exit $LASTEXITCODE)." }
+    if (-not (Test-Path $SetupExe)) { throw "Instalador nao gerado: $SetupExe" }
     Write-Host "Instalador: $SetupExe" -ForegroundColor Green
 } else {
     Write-Host "Staging pronto: $Staging" -ForegroundColor Green
