@@ -40,7 +40,12 @@ Parâmetros:
 - Validar: `./scripts/validate-prod-lock.ps1`
 - Regenerar após bump de deps: `./scripts/update-prod-lock.ps1`
 
-Build usa `pip install -r requirements-prod.lock` + `pip install . --no-deps`.
+Build de release usa **dois layers** (sem `pip install .` no embed):
+
+1. **Deps de terceiros** — `pip install -r requirements-prod.lock` no Python embeddable (`runtime/python/Lib/site-packages`)
+2. **Payload da aplicação** — cópia de `backend/` para staging; uvicorn roda com `cwd=backend/` (`python -m uvicorn app.main:app`)
+
+O embed não compila o pacote local (sem setuptools no runtime). Dev continua com `pip install -e backend[dev]`.
 
 ## CI reutilizável
 
