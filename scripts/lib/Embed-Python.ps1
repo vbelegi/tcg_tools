@@ -67,7 +67,7 @@ function Install-EmbedPython {
     if (-not (Test-Path $GetPip)) {
         Invoke-WebRequest -Uri "https://bootstrap.pypa.io/get-pip.py" -OutFile $GetPip -UseBasicParsing
     }
-    & $PyExe $GetPip --no-warn-script-location
+    & $PyExe $GetPip --no-warn-script-location 2>&1 | Out-Null
     if ($LASTEXITCODE -ne 0) { throw "get-pip failed." }
 
     return $PyExe
