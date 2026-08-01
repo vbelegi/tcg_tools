@@ -25,11 +25,11 @@ def default_presets_file() -> Path:
 
 
 def default_exports_dir() -> Path:
-    return repo_root() / "exports"
+    return default_data_dir() / "exports"
 
 
 def default_logs_dir() -> Path:
-    return repo_root() / "logs"
+    return default_data_dir() / "logs"
 
 
 def default_frontend_dist() -> Path:

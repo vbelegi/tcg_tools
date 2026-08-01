@@ -64,7 +64,28 @@ Ao criar um evento, o preset escolhido é copiado para `events.premiacao_preset`
 | Variável | Efeito |
 |----------|--------|
 | `TCGTOOLS_PRESETS_FILE` | Caminho alternativo ao JSON de presets |
-| `TCGTOOLS_EXPORTS_DIR` | Pasta de CSV exportados |
-| `TCGTOOLS_DATA_DIR` | Pasta de dados (SQLite em dev/produção) |
+| `TCGTOOLS_EXPORTS_DIR` | Pasta de CSV exportados (default: `{data_dir}/exports`) |
+| `TCGTOOLS_DATA_DIR` | Pasta de dados (SQLite, exports, logs) |
+| `TCGTOOLS_PORT` | Porta HTTP (definida pelo launcher; override opcional) |
 
-Consulte também [INSTALACAO.md](INSTALACAO.md) e o [README](../README.md).
+## Launcher (`launcher_config.json`)
+
+Instalação via setup.exe grava `%APPDATA%\TCGTools\launcher_config.json`:
+
+```json
+{
+  "port": 8000,
+  "start_with_windows": false
+}
+```
+
+| Campo | Descrição |
+|-------|-----------|
+| `port` | Porta do uvicorn (1024–65535) |
+| `start_with_windows` | Registro em HKCU Run |
+
+O launcher é o único editor deste arquivo. Reinicie o app após alterar a porta.
+
+Log: `%APPDATA%\TCGTools\launcher.log`
+
+Consulte também [INSTALACAO.md](INSTALACAO.md), [INSTALADOR.md](INSTALADOR.md) e o [README](../README.md).

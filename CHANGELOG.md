@@ -6,6 +6,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Instalador Windows:** `scripts/build-release.ps1`, `scripts/installer.iss` (Inno Setup), pipeline [release.yml](.github/workflows/release.yml)
+- **Launcher Go** (`launcher/`): bandeja do sistema, single-instance, autostart, `launcher_config.json`
+- **Scripts compartilhados:** `scripts/lib/Embed-Python.ps1` + testes Pester
+- Docs: [BUILD_RELEASE.md](docs/BUILD_RELEASE.md), [INSTALADOR.md](docs/INSTALADOR.md) atualizado
+- Paths: exports/logs sob `data_dir`; testes `test_paths.py`
+- CI: job `launcher` com cobertura Go ≥80%
 - **Eliminatória simples:** faixas de classificação e premiação (3–4, 5–8…); partida opcional de 3º–4º (bronze); melhor de por fase; invariante `sum(payouts) = N`
 - Migration Alembic `003`: `third_place_match`, `se_bo_config`, `matches.is_third_place`, `matches.best_of`
 - Premiação standalone: seletor Suíço / Eliminatória + preview por faixas
@@ -16,6 +22,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- `setup.ps1` usa módulo Embed-Python; cria `data/exports` e `data/logs`
 - Torneios SE finalizados após update gravam `premiacao_resultado.schema_version = 2` com snapshot congelado
 - Torneios finalizados antes da feature: comportamento legado preservado
 - `se_bo_config` inválido para o bracket gera `config_warnings` no rascunho e é podado ao iniciar

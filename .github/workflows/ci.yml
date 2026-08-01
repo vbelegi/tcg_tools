@@ -45,3 +45,27 @@ jobs:
           npm run test:coverage
       - name: Build
         run: npm run build
+
+  launcher:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: launcher
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - name: Go test with coverage
+        run: |
+          go mod tidy
+          go test ./... -coverprofile=coverage.out -covermode=atomic
+      - name: Enforce coverage threshold
+        run: |
+          $line = go tool cover -func=coverage.out | Select-String "total:"
+          if ($line -match "(\d+\.\d+)%") {
+            $pct = [double]$Matches[1]
+            if ($pct -lt 80) { throw "Launcher coverage ${pct}% below 80%" }
+          } else {
+            throw "Could not parse coverage output"
+          }

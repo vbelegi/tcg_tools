@@ -131,6 +131,24 @@ npm run generate:api
 
 Export JSON **v2** inclui campos SE (`third_place_match`, `best_of` por partida, etc.).
 
+## Instalador e launcher
+
+### SmartScreen bloqueia o setup.exe
+
+Instalador não assinado na v1. Clique **Mais informações → Executar mesmo assim**.
+
+### Ícone da bandeja não aparece (RDP / política de grupo)
+
+Verifique `%APPDATA%\TCGTools\launcher.log`. O servidor pode estar rodando — abra manualmente a URL em `launcher_config.json`.
+
+### Porta alterada não surte efeito
+
+Edite `%APPDATA%\TCGTools\launcher_config.json`, **Encerrar** pelo menu da bandeja e abra o atalho novamente.
+
+### Backup antes de desinstalar
+
+Desinstalar remove `%APPDATA%\TCGTools\` inteiro. Copie `tcg_tools.db` antes.
+
 ## Suporte técnico
 
 1. Anote a mensagem de erro exata.

@@ -37,13 +37,13 @@ class Settings(BaseSettings):
     def resolved_exports_dir(self) -> Path:
         if self.exports_dir:
             return self.exports_dir
-        return paths.default_exports_dir()
+        return self.data_dir / "exports"
 
     @property
     def resolved_logs_dir(self) -> Path:
         if self.logs_dir:
             return self.logs_dir
-        return paths.default_logs_dir()
+        return self.data_dir / "logs"
 
     @property
     def resolved_frontend_dist(self) -> Path:
