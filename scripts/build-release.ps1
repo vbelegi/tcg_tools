@@ -76,15 +76,11 @@ $LockFile = Join-Path $Backend "requirements-prod.lock"
 Push-Location $Backend
 & $PyExe -m pip install --upgrade pip 2>&1 | Out-Null
 if ($LASTEXITCODE -ne 0) { throw "pip upgrade failed." }
-if (Test-Path $LockFile) {
-    & $PyExe -m pip install -r $LockFile
-    if ($LASTEXITCODE -ne 0) { throw "pip install -r requirements-prod.lock failed." }
-    & $PyExe -m pip install . --no-deps
-    if ($LASTEXITCODE -ne 0) { throw "pip install backend failed." }
-} else {
-    & $PyExe -m pip install .
-    if ($LASTEXITCODE -ne 0) { throw "pip install backend failed." }
+if (-not (Test-Path $LockFile)) {
+    throw "requirements-prod.lock nao encontrado (execute validate-prod-lock.ps1)."
 }
+& $PyExe -m pip install -r $LockFile
+if ($LASTEXITCODE -ne 0) { throw "pip install -r requirements-prod.lock failed." }
 Pop-Location
 
 Write-Host "Copiando backend..."
