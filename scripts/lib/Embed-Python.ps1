@@ -73,4 +73,3 @@ function Install-EmbedPython {
     return $PyExe
 }
 
-Export-ModuleMember -Function Get-EmbedPythonZipUrl, Initialize-EmbedPythonPathFile, Install-EmbedPython

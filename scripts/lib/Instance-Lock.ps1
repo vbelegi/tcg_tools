@@ -9,7 +9,6 @@ function Test-TCGToolsInstanceRunning {
     $m = New-Object System.Threading.Mutex($false, $Script:TCGToolsMutexName, [ref]$created)
     try {
         if (-not $created) { return $true }
-        $m.ReleaseMutex()
         return $false
     } finally {
         $m.Dispose()
@@ -19,7 +18,7 @@ function Test-TCGToolsInstanceRunning {
 function Enter-TCGToolsInstanceLock {
     if ($Script:TCGToolsHeldMutex) { return }
     $created = $false
-    $m = New-Object System.Threading.Mutex($false, $Script:TCGToolsMutexName, [ref]$created)
+    $m = New-Object System.Threading.Mutex($true, $Script:TCGToolsMutexName, [ref]$created)
     if (-not $created) {
         $m.Dispose()
         throw "TCG Tools ja esta em execucao nesta sessao de usuario."
@@ -37,4 +36,3 @@ function Exit-TCGToolsInstanceLock {
     }
 }
 
-Export-ModuleMember -Function Test-TCGToolsInstanceRunning, Enter-TCGToolsInstanceLock, Exit-TCGToolsInstanceLock
