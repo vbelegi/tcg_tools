@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 from functools import lru_cache
 from pathlib import Path
 
@@ -31,19 +32,19 @@ class Settings(BaseSettings):
     def resolved_presets_file(self) -> Path:
         if self.presets_file:
             return self.presets_file
-        return paths.default_presets_file()
+        return self.data_dir / "premiacao_presets.json"
 
     @property
     def resolved_exports_dir(self) -> Path:
         if self.exports_dir:
             return self.exports_dir
-        return paths.default_exports_dir()
+        return self.data_dir / "exports"
 
     @property
     def resolved_logs_dir(self) -> Path:
         if self.logs_dir:
             return self.logs_dir
-        return paths.default_logs_dir()
+        return self.data_dir / "logs"
 
     @property
     def resolved_frontend_dist(self) -> Path:
@@ -55,6 +56,11 @@ class Settings(BaseSettings):
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.resolved_exports_dir.mkdir(parents=True, exist_ok=True)
         self.resolved_logs_dir.mkdir(parents=True, exist_ok=True)
+        presets = self.resolved_presets_file
+        if not presets.exists():
+            bundled = paths.bundled_presets_file()
+            if bundled.is_file():
+                shutil.copy2(bundled, presets)
 
 
 @lru_cache

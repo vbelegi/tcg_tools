@@ -12,6 +12,7 @@ def test_health():
     r = client.get("/api/v1/health")
     assert r.status_code == 200
     assert r.json()["status"] == "ok"
+    assert r.json()["app"] == "tcg_tools"
 
 
 def test_calcular_se_bands():

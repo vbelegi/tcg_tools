@@ -92,21 +92,12 @@ Acesse `http://127.0.0.1:8000`
 
 ## Instalação na loja
 
+1. Baixe e execute `TCGTools-{versão}-setup.exe` ([docs/INSTALADOR.md](docs/INSTALADOR.md))
+2. Use o atalho **TCG Tools** (launcher com bandeja do sistema)
 
+Checklist: [docs/INSTALACAO.md](docs/INSTALACAO.md) · Build/release: [docs/BUILD_RELEASE.md](docs/BUILD_RELEASE.md)
 
-1. Execute `scripts\setup.ps1` (instala dependências e builda frontend)
-
-2. Use `scripts\Iniciar TCG Tools.bat` para iniciar
-
-
-
-Checklist completo: [docs/INSTALACAO.md](docs/INSTALACAO.md)  
-
-Instalador único (estratégia): [docs/INSTALADOR.md](docs/INSTALADOR.md)
-
-
-
-**Dados:** `%APPDATA%\TCGTools\` (via `TCGTOOLS_DATA_DIR` no `.bat`) ou `./data/` em dev  
+**Dados:** `%APPDATA%\TCGTools\` (SQLite, exports, logs) · **Dev:** `./data/` via `scripts\setup.ps1`  
 
 **Logs de torneios:** `./logs/` (JSON exportados)  
 
@@ -129,6 +120,10 @@ py -3.13 -m pytest tests/ -v --cov=app --cov-fail-under=80
 cd ..\frontend
 
 npm run test
+
+cd ..\launcher
+
+go test ./...
 
 ```
 
@@ -158,7 +153,9 @@ tcg_tools/
 
 ├── frontend/             # React + Vite + TypeScript
 
-├── scripts/              # setup.ps1, Iniciar TCG Tools.bat
+├── launcher/             # TCGTools.exe (Go, bandeja do sistema)
+
+├── scripts/              # setup.ps1, build-release.ps1, installer.iss
 
 ├── config/               # settings.json legado (migração one-shot)
 
@@ -194,7 +191,8 @@ tcg_tools/
 
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Problemas comuns e soluções |
 
-| [docs/INSTALADOR.md](docs/INSTALADOR.md) | Instalador único e atualizações |
+| [docs/INSTALADOR.md](docs/INSTALADOR.md) | Instalador setup.exe e atualizações |
+| [docs/BUILD_RELEASE.md](docs/BUILD_RELEASE.md) | Pipeline de build e checklist VM |
 
 | [docs/modelo_premiacao.md](docs/modelo_premiacao.md) | Fórmulas e parâmetros do split |
 

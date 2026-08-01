@@ -21,15 +21,15 @@ py -3.13 -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 
 Use sempre `scripts\Iniciar TCG Tools.bat`, que tenta 3.13 primeiro.
 
-### Lock de instância (`.bat`)
+### Lock de instância (`.bat` dev)
 
 Se o app “não abre” mas a porta está livre, remova o lock:
 
 ```
-%TEMP%\tcg_tools.lock
+%TEMP%\tcg_tools_instance.lock
 ```
 
-Feche qualquer janela do TCG Tools antes de reiniciar.
+Em produção use **TCGTools.exe** (mutex `Local\TCGTools_SingleInstance`, por usuário). Não rode `.bat` e launcher ao mesmo tempo na mesma sessão.
 
 ## Banco de dados
 
@@ -130,6 +130,24 @@ npm run generate:api
 | JSON torneios | `logs/` | [export_log.md](export_log.md) |
 
 Export JSON **v2** inclui campos SE (`third_place_match`, `best_of` por partida, etc.).
+
+## Instalador e launcher
+
+### SmartScreen bloqueia o setup.exe
+
+Instalador não assinado na v1. Clique **Mais informações → Executar mesmo assim**.
+
+### Ícone da bandeja não aparece (RDP / política de grupo)
+
+Verifique `%APPDATA%\TCGTools\launcher.log`. O servidor pode estar rodando — abra manualmente a URL em `launcher_config.json`.
+
+### Porta alterada não surte efeito
+
+Edite `%APPDATA%\TCGTools\launcher_config.json`, **Encerrar** pelo menu da bandeja e abra o atalho novamente.
+
+### Backup antes de desinstalar
+
+Desinstalar remove `%APPDATA%\TCGTools\` inteiro. Copie `tcg_tools.db` antes.
 
 ## Suporte técnico
 

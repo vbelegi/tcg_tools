@@ -15,10 +15,19 @@ logs/*.json
 # Node / frontend build
 frontend/node_modules/
 frontend/dist/
+frontend/coverage/
 *.tsbuildinfo
 
 # Generated exports (CSV baixados pela UI)
 exports/*.csv
+
+# Release build artifacts
+dist/
+launcher/TCGTools.exe
+launcher/coverage.out
+launcher/coverage_pkg.out
+launcher/cov_test.out
+launcher/*.syso
 
 # IDE / secrets
 .env

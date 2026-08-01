@@ -8,7 +8,8 @@ Distribuir 100% das inscrições entre os melhores colocados utilizando um model
 
 Os valores usados em cada cálculo vêm do **preset** selecionado:
 
-- Arquivo: `backend/config/premiacao_presets.json`
+- Arquivo gravável: `{data_dir}/premiacao_presets.json` (padrão: `%APPDATA%\TCGTools\` na loja)
+- Defaults embarcados: `backend/config/premiacao_presets.json` (somente leitura após instalação)
 - API: `GET /api/v1/premiacao/presets/{id}`
 - Torneios: snapshot em `events.premiacao_preset` no momento da criação do evento
 

@@ -1,84 +1,61 @@
-# Instalador único — estratégia e atualizações
+# Instalador Windows — TCG Tools
 
-## Objetivo
+## Para a loja
 
-Um instalador Windows que a loja executa **uma vez** (ou para atualizar) sem clonar repositório, instalar Node ou rodar scripts manualmente.
+1. Baixe `TCGTools-{versão}-setup.exe` (GitHub Releases ou pendrive)
+2. Execute o instalador (admin necessário — instala em `Program Files`)
+3. Aceite SmartScreen se aparecer: **Mais informações → Executar mesmo assim** (instalador não assinado na v1)
+4. Configure porta (padrão 8000) e opcionalmente "Iniciar com Windows"
+5. Use o atalho **TCG Tools** — abre o navegador em `http://127.0.0.1:{porta}`
 
-## Recomendação: build versionada (não Git em runtime)
+**Não é necessário** Python, Node, Git nem scripts PowerShell na loja.
 
-| Abordagem | Prós | Contras |
-|-----------|------|---------|
-| **Instalador apontando para Git** | Sempre “último commit” | Requer Git + rede na loja; builds não reproduzíveis; quebra se repo for privado |
-| **Instalador a partir de build (recomendado)** | Versão fixa, testada, offline | Requer pipeline de release |
+Cada **usuário Windows** na máquina tem dados próprios em `%APPDATA%\TCGTools\` e pode executar sua própria instância (mutex `Local\TCGTools_SingleInstance`, por sessão de usuário).
 
-**Use build versionada:** cada release gera um pacote `TCGTools-1.x.x-setup.exe` com backend, frontend buildado, Python embeddable e scripts.
+## Atualizar
 
-## O que compõe o instalador
+Execute o novo `setup.exe` **por cima** da instalação existente. Binários são substituídos; dados em `%APPDATA%\TCGTools\` são preservados (DB, config, exports, logs).
 
-1. **Python 3.13 embeddable** em `runtime/python/` (já suportado por `setup.ps1`)
-2. **Backend** instalado via `pip install` no embeddable
-3. **Frontend** — `frontend/dist/` (sem Node na máquina alvo)
-4. **Atalho / `.bat`** — equivalente a `Iniciar TCG Tools.bat`
-5. **Dados** — `%APPDATA%\TCGTools\` (SQLite, presets migrados)
+O wizard **atualiza** `launcher_config.json` (porta e autostart) a cada install/upgrade.
 
-### Ferramentas possíveis
+Antes de sobrescrever arquivos, o instalador encerra `TCGTools.exe` e processos `python.exe` filhos em `Program Files\TCG Tools\`.
 
-- **[Inno Setup](https://jrsoftware.org/isinfo.php)** (gratuito) — script `.iss` copia arquivos, cria atalho, registra desinstalador
-- **WiX / MSI** — mais corporativo, maior curva de aprendizado
+## Desinstalar
 
-## Pipeline de release (sugestão)
+Painel de Controle → Desinstalar TCG Tools.
 
-```text
-tag v1.1.0
-  → CI: pytest + coverage + npm test + npm build
-  → Empacotar artefato (zip ou Inno Setup)
-  → Anexar ao GitHub Release
+- Arquivos em **Program Files** são sempre removidos.
+- Na tela de progresso, **desmarque por padrão** a opção *"Remover dados locais"* se quiser **manter** `tcg_tools.db`, exports, logs e presets em `%APPDATA%\TCGTools\`.
+- Marque a opção para apagar todos os dados locais.
+
+Faça backup de `tcg_tools.db` antes de marcar remoção de dados.
+
+## O que o instalador contém
+
+- Python 3.13 embeddable + dependências de produção (pins exatos em `requirements-prod.lock`)
+- Backend FastAPI + migrações Alembic
+- Frontend React buildado (`frontend/dist/`)
+- Launcher `TCGTools.exe` (bandeja do sistema)
+
+## Configuração pós-instalação
+
+Arquivo `%APPDATA%\TCGTools\launcher_config.json`:
+
+```json
+{
+  "port": 8000,
+  "start_with_windows": false
+}
 ```
 
-Script local de empacotamento (futuro): `scripts/build-release.ps1`
+Edite a porta e reinicie o app pelo tray (Encerrar → atalho).
 
-## Atualizações
+Presets de premiação graváveis: `%APPDATA%\TCGTools\premiacao_presets.json`.
 
-### Modelo recomendado: reinstalar por cima
+## Gerar instalador (desenvolvedor)
 
-1. Usuário baixa `TCGTools-1.2.0-setup.exe` do Release.
-2. Executa o instalador **sobre** a instalação existente.
-3. O instalador:
-   - **Substitui** binários (`runtime/`, `backend/app`, `frontend/dist`, scripts)
-   - **Preserva** `%APPDATA%\TCGTools\` (banco e dados do usuário)
-   - Roda migrações Alembic no **primeiro start** (já implementado no lifespan)
+Ver [BUILD_RELEASE.md](BUILD_RELEASE.md).
 
-### O que NÃO sobrescrever
+## Dev com clone do repositório
 
-- `%APPDATA%\TCGTools\tcg_tools.db`
-- Presets customizados se armazenados em data dir (futuro)
-- `exports/` e `logs/` do usuário
-
-### Downgrade
-
-Não suportado oficialmente. Faça backup do `.db` antes de instalar versão anterior.
-
-## Auto-update (futuro, opcional)
-
-- App consulta `releases/latest` (GitHub API) na inicialização
-- Notifica “Nova versão 1.2.0 disponível” com link para download
-- **Não** auto-baixar Git; baixar apenas o instalador assinado do Release
-
-## Checklist para implementar o instalador
-
-- [ ] `scripts/build-release.ps1` — setup + build frontend + copiar para staging
-- [ ] `scripts/installer.iss` (Inno Setup)
-- [ ] GitHub Action `release.yml` em tag
-- [ ] Documentar caminho de instalação padrão (`C:\Program Files\TCG Tools\`)
-- [ ] Teste em VM Windows limpa (sem Python/Node pré-instalados)
-
-## Perguntas frequentes
-
-**Instalar do Git na loja?**  
-Possível via `git pull` + `setup.ps1`, mas exige Git, Node (build) e conhecimento técnico. Não recomendado para operação diária.
-
-**Re-executar instalador faz overwrite completo?**  
-Sim, dos **arquivos do programa**. Dados em `%APPDATA%\TCGTools\` devem ser preservados pelo script do instalador.
-
-**Precisa desinstalar antes de atualizar?**  
-Não, se o instalador usar modo upgrade (Inno Setup `UsePreviousAppDir=yes`).
+Use `scripts/setup.ps1` e `scripts/Iniciar TCG Tools.bat` (ou `scripts/start-dev.ps1`). Mesmo mutex do launcher — **não** rode `.bat` e `TCGTools.exe` ao mesmo tempo na mesma sessão.
