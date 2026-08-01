@@ -57,9 +57,11 @@ if (-not $SkipTests) {
 }
 
 Write-Host "Frontend build..."
+py -3.13 -m pip install -q -e "${Backend}[dev]"
 Push-Location $Frontend
 npm ci 2>$null; if ($LASTEXITCODE -ne 0) { npm install }
 npm run build
+if ($LASTEXITCODE -ne 0) { throw "Frontend build failed." }
 Pop-Location
 
 if (Test-Path $Staging) { Remove-Item $Staging -Recurse -Force }
@@ -69,14 +71,19 @@ New-Item -ItemType Directory -Force -Path $Runtime | Out-Null
 Write-Host "Python embeddable + deps..."
 & (Join-Path $PSScriptRoot "validate-prod-lock.ps1")
 $PyExe = Install-EmbedPython -RuntimeDir $Runtime
+if ($PyExe -is [array]) { $PyExe = $PyExe[-1] }
 $LockFile = Join-Path $Backend "requirements-prod.lock"
 Push-Location $Backend
-& $PyExe -m pip install --upgrade pip
+& $PyExe -m pip install --upgrade pip 2>&1 | Out-Null
+if ($LASTEXITCODE -ne 0) { throw "pip upgrade failed." }
 if (Test-Path $LockFile) {
     & $PyExe -m pip install -r $LockFile
+    if ($LASTEXITCODE -ne 0) { throw "pip install -r requirements-prod.lock failed." }
     & $PyExe -m pip install . --no-deps
+    if ($LASTEXITCODE -ne 0) { throw "pip install backend failed." }
 } else {
     & $PyExe -m pip install .
+    if ($LASTEXITCODE -ne 0) { throw "pip install backend failed." }
 }
 Pop-Location
 
