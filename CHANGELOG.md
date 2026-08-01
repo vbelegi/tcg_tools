@@ -4,6 +4,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Launcher:** Job Object real (kill-on-close), health check com `app=tcg_tools`, checagem de porta, stderr do uvicorn, MessageBox em erros fatais
+- **Launcher:** `go.sum` commitado; systray corrigido para `github.com/energye/systray` v1.0.3; ícone embarcado (`assets/icon.ico`)
+- **Presets:** gravados em `{data_dir}/premiacao_presets.json` (corrige falha de escrita em Program Files)
+- **Build:** `pip install -r requirements-prod.lock` no release; Inno Setup com `AppMutex` e encerramento na desinstalação
+- **CI:** Pester + lockfile validation; `windows-test-suite.yml` reutilizável; smoke staging no release
+- **Multi-user:** mutex `Local\` (por sessão de usuário); presets em `{data_dir}`
+- **Instalador:** merge config no upgrade; uninstall opcional de APPDATA; kill python filho
+
 ### Added
 
 - **Instalador Windows:** `scripts/build-release.ps1`, `scripts/installer.iss` (Inno Setup), pipeline [release.yml](.github/workflows/release.yml)

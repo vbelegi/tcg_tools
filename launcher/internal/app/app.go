@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
 	"os"
 	"os/exec"
@@ -14,6 +15,9 @@ import (
 	"github.com/vbelegi/tcg_tools/launcher/internal/registry"
 	"github.com/vbelegi/tcg_tools/launcher/internal/tray"
 )
+
+//go:embed assets/icon.ico
+var embeddedIcon []byte
 
 type Application struct {
 	cfg        config.Config
@@ -47,11 +51,14 @@ func (a *Application) Run(ctx context.Context) error {
 	a.server = process.New(a.installDir, a.cfg.Port, config.DataDir())
 	if err := a.server.Start(ctx); err != nil {
 		config.AppendLog(fmt.Sprintf("erro ao iniciar servidor: %v", err))
+		if runtime.GOOS == "windows" {
+			instance.NotifyError("TCG Tools", fmt.Sprintf("Nao foi possivel iniciar o servidor:\n\n%v", err))
+		}
 		return err
 	}
 	defer a.server.Stop()
 
-	if err := registry.SetAutostart(a.cfg.StartWithWindows, exePath()); err != nil {
+	if err := a.syncAutostart(exePath()); err != nil {
 		config.AppendLog(fmt.Sprintf("aviso autostart: %v", err))
 	}
 
@@ -69,16 +76,16 @@ func (a *Application) Run(ctx context.Context) error {
 		OnDataDir: func() { openFolder(config.DataDir()) },
 		OnExports: func() { openFolder(config.ExportsDir()) },
 		OnLogs:    func() { openFolder(config.LogsDir()) },
-		AutostartLabel: func(_ bool) string {
-			if a.autostart {
-				return "Desativar inicio com Windows"
-			}
-			return "Ativar inicio com Windows"
+		AutostartEnabled: func() bool {
+			return a.autostart
 		},
 		OnToggleAutostart: func() {
 			next, err := registry.ToggleAutostart(a.autostart, exePath())
 			if err != nil {
 				config.AppendLog(fmt.Sprintf("erro autostart: %v", err))
+				if runtime.GOOS == "windows" {
+					instance.NotifyError("TCG Tools", fmt.Sprintf("Falha ao alterar autostart:\n\n%v", err))
+				}
 				return
 			}
 			a.autostart = next
@@ -86,6 +93,23 @@ func (a *Application) Run(ctx context.Context) error {
 			_ = config.Save(a.cfg)
 		},
 	})
+	return nil
+}
+
+func (a *Application) syncAutostart(exe string) error {
+	if a.cfg.StartWithWindows {
+		if match, _ := registry.AutostartMatchesExe(exe); !match {
+			return registry.SetAutostart(true, exe)
+		}
+		return nil
+	}
+	enabled, err := registry.IsAutostartEnabled(exe)
+	if err != nil {
+		return err
+	}
+	if enabled {
+		return registry.SetAutostart(false, exe)
+	}
 	return nil
 }
 
@@ -105,6 +129,8 @@ func openFolder(path string) {
 }
 
 func trayIcon() []byte {
-	// Minimal embedded icon placeholder; replace with assets/icon.ico via go:embed in production build.
+	if len(embeddedIcon) > 0 {
+		return embeddedIcon
+	}
 	return nil
 }

@@ -21,6 +21,23 @@ def test_settings_resolved_dirs_use_data_dir(monkeypatch: pytest.MonkeyPatch, tm
     settings = get_settings()
     assert settings.resolved_exports_dir == tmp_path / "exports"
     assert settings.resolved_logs_dir == tmp_path / "logs"
+    assert settings.resolved_presets_file == tmp_path / "premiacao_presets.json"
+    get_settings.cache_clear()
+
+
+def test_ensure_dirs_seeds_presets_from_bundled(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+):
+    monkeypatch.setenv("TCGTOOLS_DATA_DIR", str(tmp_path))
+    get_settings.cache_clear()
+    settings = Settings()
+    settings.ensure_dirs()
+    assert settings.resolved_presets_file.is_file()
+    bundled = paths.bundled_presets_file()
+    if bundled.is_file():
+        assert settings.resolved_presets_file.read_text(encoding="utf-8") == bundled.read_text(
+            encoding="utf-8"
+        )
     get_settings.cache_clear()
 
 

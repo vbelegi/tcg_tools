@@ -25,6 +25,9 @@ SolidCompression=yes
 PrivilegesRequired=admin
 UsePreviousAppDir=yes
 ArchitecturesInstallIn64BitMode=x64
+AppMutex=Local\TCGTools_SingleInstance
+CloseApplications=force
+RestartApplications=no
 
 [Languages]
 Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
@@ -43,6 +46,7 @@ Name: "{autodesktop}\TCG Tools"; Filename: "{app}\TCGTools.exe"; Tasks: desktopi
 var
   PortPage: TInputQueryWizardPage;
   StartWithWindowsCheck: TNewCheckBox;
+  UninstallDeleteDataCheck: TNewCheckBox;
 
 function ValidatePort(PortStr: String): Boolean;
 var
@@ -51,11 +55,26 @@ begin
   Result := TryStrToInt(PortStr, P) and (P >= 1024) and (P <= 65535);
 end;
 
+procedure StopTCGToolsProcesses;
+var
+  ResultCode: Integer;
+  ScriptPath: String;
+begin
+  ScriptPath := ExpandConstant('{app}\stop-tcg-processes.ps1');
+  if FileExists(ScriptPath) then
+    Exec('powershell.exe', '-NoProfile -ExecutionPolicy Bypass -File "' + ScriptPath + '"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode)
+  else
+  begin
+    Exec('taskkill', '/IM TCGTools.exe /F', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    Sleep(1000);
+  end;
+end;
+
 procedure InitializeWizard;
 begin
   PortPage := CreateInputQueryPage(wpSelectDir,
     'Configuracao do servidor', 'Porta HTTP local',
-    'Informe a porta usada pelo TCG Tools (padrao 8000).');
+    'Informe a porta usada pelo TCG Tools (padrao 8000). Em upgrades, estes valores atualizam launcher_config.json.');
   PortPage.Add('Porta:', False);
   PortPage.Values[0] := '8000';
 
@@ -80,15 +99,13 @@ begin
   end;
 end;
 
-procedure WriteLauncherConfig;
+procedure MergeLauncherConfig;
 var
   ConfigPath, AppDataDir, Json: String;
   PortVal: Integer;
 begin
   AppDataDir := ExpandConstant('{userappdata}\TCGTools');
   ConfigPath := AppDataDir + '\launcher_config.json';
-  if FileExists(ConfigPath) then
-    Exit;
   ForceDirectories(AppDataDir);
   PortVal := StrToInt(PortPage.Values[0]);
   if StartWithWindowsCheck.Checked then
@@ -106,15 +123,46 @@ end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
+  if CurStep = ssInstall then
+    StopTCGToolsProcesses;
   if CurStep = ssPostInstall then
-    WriteLauncherConfig;
+    MergeLauncherConfig;
+end;
+
+procedure InitializeUninstallProgressForm;
+begin
+  UninstallDeleteDataCheck := TNewCheckBox.Create(UninstallProgressForm);
+  UninstallDeleteDataCheck.Parent := UninstallProgressForm;
+  UninstallDeleteDataCheck.Caption := 'Remover dados locais (%APPDATA%\TCGTools: banco, exports, logs, presets)';
+  UninstallDeleteDataCheck.Checked := False;
+  UninstallDeleteDataCheck.Top := UninstallProgressForm.StatusLabel.Top + UninstallProgressForm.StatusLabel.Height + 16;
+  UninstallDeleteDataCheck.Left := UninstallProgressForm.StatusLabel.Left;
+  UninstallDeleteDataCheck.Width := UninstallProgressForm.ClientWidth - 32;
 end;
 
 function InitializeUninstall(): Boolean;
 begin
+  if CheckForMutexes('Local\TCGTools_SingleInstance') then
+  begin
+    if MsgBox(
+      'O TCG Tools parece estar em execucao nesta sessao de usuario.' + #13#10 +
+      'Deseja encerrar o aplicativo antes de desinstalar?',
+      mbConfirmation, MB_YESNO) = IDYES then
+    begin
+      StopTCGToolsProcesses;
+    end
+    else
+    begin
+      Result := False;
+      Exit;
+    end;
+  end
+  else
+    StopTCGToolsProcesses;
+
   Result := MsgBox(
-    'Desinstalar o TCG Tools remove tambem todos os dados em %APPDATA%\TCGTools (torneios, exports, logs).' + #13#10 +
-    'Faca backup do arquivo tcg_tools.db antes de continuar.' + #13#10#13#10 +
+    'Desinstalar o TCG Tools remove os arquivos do programa em Program Files.' + #13#10 +
+    'Na proxima tela voce pode optar por manter ou remover os dados em %APPDATA%\TCGTools.' + #13#10#13#10 +
     'Deseja continuar?',
     mbConfirmation, MB_YESNO) = IDYES;
 end;
@@ -123,17 +171,20 @@ procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
   AppDataDir: String;
 begin
+  if CurUninstallStep = usUninstall then
+    StopTCGToolsProcesses;
+
   if CurUninstallStep = usPostUninstall then
   begin
-    AppDataDir := ExpandConstant('{userappdata}\TCGTools');
-    if DirExists(AppDataDir) then
-      DelTree(AppDataDir, True, True, True);
     RegDeleteValue(HKEY_CURRENT_USER, 'Software\Microsoft\Windows\CurrentVersion\Run', 'TCGTools');
+    if UninstallDeleteDataCheck.Checked then
+    begin
+      AppDataDir := ExpandConstant('{userappdata}\TCGTools');
+      if DirExists(AppDataDir) then
+        DelTree(AppDataDir, True, True, True);
+    end;
   end;
 end;
-
-[UninstallDelete]
-Type: filesandordirs; Name: "{userappdata}\TCGTools"
 
 [Run]
 Filename: "{app}\TCGTools.exe"; Description: "Iniciar TCG Tools"; Flags: nowait postinstall skipifsilent

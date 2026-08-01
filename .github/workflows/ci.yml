@@ -8,64 +8,48 @@ on:
 jobs:
   backend:
     runs-on: windows-latest
-    defaults:
-      run:
-        working-directory: backend
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
-      - name: Install backend
-        run: py -3.13 -m pip install -e ".[dev]"
-      - name: Pytest with coverage
-        run: py -3.13 -m pytest tests/ -v --cov=app --cov-report=term-missing --cov-fail-under=80
+      - name: Backend tests
+        shell: pwsh
+        run: ./scripts/ci/run-backend-tests.ps1
 
   frontend:
     runs-on: windows-latest
-    defaults:
-      run:
-        working-directory: frontend
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
-      - name: Install backend (OpenAPI export)
-        working-directory: backend
-        run: py -3.13 -m pip install -e ".[dev]"
       - uses: actions/setup-node@v5
         with:
           node-version: "22"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - name: Install and test
-        run: |
-          npm ci
-          npm run test:coverage
-      - name: Build
-        run: npm run build
+      - name: Frontend tests
+        shell: pwsh
+        run: ./scripts/ci/run-frontend-tests.ps1
 
   launcher:
     runs-on: windows-latest
-    defaults:
-      run:
-        working-directory: launcher
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-      - name: Go test with coverage
+      - name: Launcher tests
+        shell: pwsh
+        run: ./scripts/ci/run-launcher-tests.ps1
+
+  pester:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Pester + lockfile validation
+        shell: pwsh
         run: |
-          go mod tidy
-          go test ./... -coverprofile=coverage.out -covermode=atomic
-      - name: Enforce coverage threshold
-        run: |
-          $line = go tool cover -func=coverage.out | Select-String "total:"
-          if ($line -match "(\d+\.\d+)%") {
-            $pct = [double]$Matches[1]
-            if ($pct -lt 80) { throw "Launcher coverage ${pct}% below 80%" }
-          } else {
-            throw "Could not parse coverage output"
-          }
+          ./scripts/validate-prod-lock.ps1
+          ./scripts/ci/run-pester-tests.ps1

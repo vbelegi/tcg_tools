@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 const (
@@ -90,12 +91,33 @@ func Load() (Config, error) {
 		return cfg, err
 	}
 	if err := json.Unmarshal(data, &cfg); err != nil {
-		return cfg, err
+		backupCorruptConfig(path, data)
+		AppendLog(fmt.Sprintf("config invalido restaurado para padrao: %v", err))
+		return resetConfigFile(path)
 	}
 	if err := cfg.Validate(); err != nil {
-		return DefaultConfig(), err
+		backupCorruptConfig(path, data)
+		AppendLog(fmt.Sprintf("config invalido restaurado para padrao: %v", err))
+		return resetConfigFile(path)
 	}
 	return cfg, nil
+}
+
+func resetConfigFile(path string) (Config, error) {
+	cfg := DefaultConfig()
+	if err := os.MkdirAll(DataDir(), 0o755); err != nil {
+		return cfg, err
+	}
+	if err := Save(cfg); err != nil {
+		return cfg, err
+	}
+	_ = path
+	return cfg, nil
+}
+
+func backupCorruptConfig(path string, data []byte) {
+	backup := path + ".bak"
+	_ = os.WriteFile(backup, data, 0o644)
 }
 
 func Save(cfg Config) error {
@@ -109,7 +131,11 @@ func Save(cfg Config) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(ConfigPath(), data, 0o644)
+	tmp := ConfigPath() + ".tmp"
+	if err := os.WriteFile(tmp, data, 0o644); err != nil {
+		return err
+	}
+	return os.Rename(tmp, ConfigPath())
 }
 
 func ReadVersion(installDir string) string {
@@ -121,10 +147,14 @@ func ReadVersion(installDir string) string {
 }
 
 func AppendLog(message string) {
+	if err := os.MkdirAll(DataDir(), 0o755); err != nil {
+		return
+	}
 	f, err := os.OpenFile(LogPath(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		return
 	}
 	defer f.Close()
-	fmt.Fprintf(f, "%s\n", message)
+	ts := time.Now().Format("2006-01-02 15:04:05")
+	fmt.Fprintf(f, "%s %s\n", ts, message)
 }

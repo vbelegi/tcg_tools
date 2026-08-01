@@ -1,18 +1,18 @@
 package tray
 
 import (
-	"github.com/energye/systray/v2"
+	"github.com/energye/systray"
 )
 
 type Actions struct {
-	OnOpen    func()
-	OnQuit    func()
-	OnAbout   func()
-	OnDataDir func()
-	OnExports func()
-	OnLogs    func()
+	OnOpen            func()
+	OnQuit            func()
+	OnAbout           func()
+	OnDataDir         func()
+	OnExports         func()
+	OnLogs            func()
 	OnToggleAutostart func()
-	AutostartLabel func(enabled bool) string
+	AutostartEnabled  func() bool
 }
 
 func Run(icon []byte, tooltip string, actions Actions) {
@@ -23,64 +23,54 @@ func Run(icon []byte, tooltip string, actions Actions) {
 		systray.SetTitle("TCG Tools")
 		systray.SetTooltip(tooltip)
 
-		mOpen := systray.AddMenuItem("Abrir TCG Tools", "")
-		mAbout := systray.AddMenuItem("Sobre / versao", "")
+		systray.AddMenuItem("Abrir TCG Tools", "").Click(func() {
+			if actions.OnOpen != nil {
+				actions.OnOpen()
+			}
+		})
+		systray.AddMenuItem("Sobre / versao", "").Click(func() {
+			if actions.OnAbout != nil {
+				actions.OnAbout()
+			}
+		})
 		systray.AddSeparator()
-		mData := systray.AddMenuItem("Abrir pasta de dados", "")
-		mExports := systray.AddMenuItem("Abrir pasta exports", "")
-		mLogs := systray.AddMenuItem("Abrir pasta logs", "")
-		autoLabel := "Iniciar com Windows"
-		if actions.AutostartLabel != nil {
-			autoLabel = actions.AutostartLabel(false)
+		systray.AddMenuItem("Abrir pasta de dados", "").Click(func() {
+			if actions.OnDataDir != nil {
+				actions.OnDataDir()
+			}
+		})
+		systray.AddMenuItem("Abrir pasta exports", "").Click(func() {
+			if actions.OnExports != nil {
+				actions.OnExports()
+			}
+		})
+		systray.AddMenuItem("Abrir pasta logs", "").Click(func() {
+			if actions.OnLogs != nil {
+				actions.OnLogs()
+			}
+		})
+
+		autoLabel := AutostartMenuTitle(false)
+		if actions.AutostartEnabled != nil {
+			autoLabel = AutostartMenuTitle(actions.AutostartEnabled())
 		}
 		mAuto := systray.AddMenuItem(autoLabel, "")
-		systray.AddSeparator()
-		mQuit := systray.AddMenuItem("Encerrar", "")
-
-		go func() {
-			for {
-				select {
-				case <-mOpen.ClickedCh:
-					if actions.OnOpen != nil {
-						actions.OnOpen()
-					}
-				case <-mAbout.ClickedCh:
-					if actions.OnAbout != nil {
-						actions.OnAbout()
-					}
-				case <-mData.ClickedCh:
-					if actions.OnDataDir != nil {
-						actions.OnDataDir()
-					}
-				case <-mExports.ClickedCh:
-					if actions.OnExports != nil {
-						actions.OnExports()
-					}
-				case <-mLogs.ClickedCh:
-					if actions.OnLogs != nil {
-						actions.OnLogs()
-					}
-				case <-mAuto.ClickedCh:
-					if actions.OnToggleAutostart != nil {
-						actions.OnToggleAutostart()
-					}
-					if actions.AutostartLabel != nil {
-						enabled := actions.AutostartLabel(false)
-						if enabled == "Desativar inicio com Windows" {
-							mAuto.SetTitle("Desativar inicio com Windows")
-						} else {
-							mAuto.SetTitle("Ativar inicio com Windows")
-						}
-					}
-				case <-mQuit.ClickedCh:
-					if actions.OnQuit != nil {
-						actions.OnQuit()
-					}
-					systray.Quit()
-					return
-				}
+		mAuto.Click(func() {
+			if actions.OnToggleAutostart != nil {
+				actions.OnToggleAutostart()
 			}
-		}()
+			if actions.AutostartEnabled != nil {
+				mAuto.SetTitle(AutostartMenuTitle(actions.AutostartEnabled()))
+			}
+		})
+
+		systray.AddSeparator()
+		systray.AddMenuItem("Encerrar", "").Click(func() {
+			if actions.OnQuit != nil {
+				actions.OnQuit()
+			}
+			systray.Quit()
+		})
 	}, func() {})
 }
 

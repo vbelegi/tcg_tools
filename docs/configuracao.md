@@ -1,6 +1,6 @@
 # Configuração de premiação (presets)
 
-A premiação usa **presets** armazenados em `backend/config/premiacao_presets.json`. A UI em **Premiação → Presets** edita esse arquivo via API.
+A premiação usa **presets** armazenados em `%APPDATA%\TCGTools\premiacao_presets.json` (instalação Windows) ou `./data/premiacao_presets.json` (desenvolvimento). Na primeira execução, o arquivo é criado a partir dos defaults em `backend/config/premiacao_presets.json`. A UI em **Premiação → Presets** edita esse arquivo via API.
 
 ## Formato do arquivo
 

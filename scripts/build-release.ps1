@@ -45,7 +45,7 @@ if (-not $SkipTests) {
         Write-Host "Launcher tests..."
         Push-Location $Launcher
         go test ./... -coverprofile=coverage.out
-        $line = go tool cover -func=coverage.out | Select-String "total:"
+        $line = go tool cover -func coverage.out | Select-String "total:"
         if ($line -match "(\d+\.\d+)%") {
             $pct = [double]$Matches[1]
             if ($pct -lt 80) { throw "Launcher coverage ${pct}% below 80%" }
@@ -67,10 +67,17 @@ New-Item -ItemType Directory -Force -Path $Staging | Out-Null
 New-Item -ItemType Directory -Force -Path $Runtime | Out-Null
 
 Write-Host "Python embeddable + deps..."
+& (Join-Path $PSScriptRoot "validate-prod-lock.ps1")
 $PyExe = Install-EmbedPython -RuntimeDir $Runtime
+$LockFile = Join-Path $Backend "requirements-prod.lock"
 Push-Location $Backend
 & $PyExe -m pip install --upgrade pip
-& $PyExe -m pip install .
+if (Test-Path $LockFile) {
+    & $PyExe -m pip install -r $LockFile
+    & $PyExe -m pip install . --no-deps
+} else {
+    & $PyExe -m pip install .
+}
 Pop-Location
 
 Write-Host "Copiando backend..."
@@ -88,6 +95,8 @@ Write-Host "Copiando frontend dist..."
 $FeDest = Join-Path $Staging "frontend\dist"
 New-Item -ItemType Directory -Force -Path (Split-Path $FeDest) | Out-Null
 Copy-Item (Join-Path $Frontend "dist") $FeDest -Recurse -Force
+
+Copy-Item (Join-Path $PSScriptRoot "stop-tcg-processes.ps1") (Join-Path $Staging "stop-tcg-processes.ps1") -Force
 
 Write-Host "Compilando launcher..."
 if (-not (Get-Command go -ErrorAction SilentlyContinue)) {

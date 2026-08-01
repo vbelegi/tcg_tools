@@ -17,3 +17,7 @@ func IsAutostartEnabled(exePath string) (bool, error) {
 func ToggleAutostart(current bool, exePath string) (bool, error) {
 	return current, errUnsupported
 }
+
+func AutostartMatchesExe(exePath string) (bool, error) {
+	return false, errUnsupported
+}

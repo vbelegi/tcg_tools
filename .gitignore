@@ -25,6 +25,8 @@ exports/*.csv
 dist/
 launcher/TCGTools.exe
 launcher/coverage.out
+launcher/coverage_pkg.out
+launcher/cov_test.out
 launcher/*.syso
 
 # IDE / secrets

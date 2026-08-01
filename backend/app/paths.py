@@ -20,8 +20,13 @@ def default_data_dir() -> Path:
     return Path("./data")
 
 
-def default_presets_file() -> Path:
+def bundled_presets_file() -> Path:
+    """Shipped defaults (read-only in Program Files installs)."""
     return backend_root() / "config" / "premiacao_presets.json"
+
+
+def default_presets_file() -> Path:
+    return default_data_dir() / "premiacao_presets.json"
 
 
 def default_exports_dir() -> Path:

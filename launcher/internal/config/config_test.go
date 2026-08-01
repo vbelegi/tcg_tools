@@ -84,3 +84,41 @@ func TestReadVersionFromFile(t *testing.T) {
 		t.Fatalf("got %q", got)
 	}
 }
+
+func TestLoadRecoversFromInvalidJSON(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("APPDATA", dir)
+
+	badPath := ConfigPath()
+	if err := os.MkdirAll(filepath.Dir(badPath), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(badPath, []byte("{not-json"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.Port != DefaultPort {
+		t.Fatalf("expected default port, got %d", cfg.Port)
+	}
+	if _, err := os.Stat(badPath + ".bak"); err != nil {
+		t.Fatal("expected backup of corrupt config")
+	}
+}
+
+func TestAppendLogIncludesTimestamp(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("APPDATA", dir)
+	AppendLog("teste")
+	data, err := os.ReadFile(LogPath())
+	if err != nil {
+		t.Fatal(err)
+	}
+	line := string(data)
+	if len(line) < 20 || line[len(line)-1] != '\n' {
+		t.Fatalf("unexpected log line: %q", line)
+	}
+}

@@ -5,54 +5,53 @@ on:
     tags:
       - "v*"
     branches:
-      - "**"
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
 
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  test:
-    runs-on: windows-latest
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.filter.outputs.release }}
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
+      - uses: dorny/paths-filter@v3
+        id: filter
         with:
-          python-version: "3.13"
-      - uses: actions/setup-node@v5
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.22"
-      - name: Backend tests
-        working-directory: backend
-        run: |
-          py -3.13 -m pip install -e ".[dev]"
-          py -3.13 -m pytest tests/ -q --cov=app --cov-fail-under=80
-      - name: Frontend tests
-        working-directory: frontend
-        run: |
-          py -3.13 -m pip install -e "../backend[dev]"
-          npm ci
-          npm run test:coverage
-          npm run build
-      - name: Launcher tests
-        working-directory: launcher
-        run: |
-          go mod tidy
-          go test ./... -coverprofile=coverage.out -covermode=atomic
-          $line = go tool cover -func=coverage.out | Select-String "total:"
-          if ($line -match "(\d+\.\d+)%") {
-            $pct = [double]$Matches[1]
-            if ($pct -lt 80) { throw "Launcher coverage ${pct}% below 80%" }
-          }
+          filters: |
+            release:
+              - 'backend/**'
+              - 'frontend/**'
+              - 'launcher/**'
+              - 'scripts/**'
+              - '.github/workflows/release.yml'
+              - '.github/workflows/windows-test-suite.yml'
+
+  test:
+    needs: changes
+    if: |
+      needs.changes.outputs.release == 'true' ||
+      startsWith(github.ref, 'refs/tags/v') ||
+      github.event_name == 'pull_request'
+    uses: ./.github/workflows/windows-test-suite.yml
 
   build:
-    needs: test
-    if: github.event_name == 'push'
+    needs: [changes, test]
+    if: |
+      github.event_name == 'push' && (
+        startsWith(github.ref, 'refs/tags/v') ||
+        github.ref == 'refs/heads/main' ||
+        github.ref == 'refs/heads/master' ||
+        needs.changes.outputs.release == 'true'
+      )
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
@@ -67,12 +66,21 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
+      - name: Cache Python embed zip
+        uses: actions/cache@v4
+        with:
+          path: dist/python-embed.zip
+          key: python-embed-3.13.0-${{ runner.os }}
       - name: Install Inno Setup
         run: choco install innosetup -y
       - name: Build release
         shell: pwsh
         run: |
+          ./scripts/validate-prod-lock.ps1
           ./scripts/build-release.ps1 -SkipTests
+      - name: Smoke test staging
+        shell: pwsh
+        run: ./scripts/test-staging.ps1
       - name: Resolve artifact name
         id: meta
         shell: pwsh

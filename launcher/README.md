@@ -4,22 +4,25 @@ Launcher Windows (`TCGTools.exe`) com bandeja do sistema: inicia uvicorn, abre o
 
 ## Pré-requisitos
 
-- Go **1.22+**
+- Go **1.22+** ([download](https://go.dev/dl/))
 - Windows (build alvo)
+
+Sem Go instalado localmente, os testes/build do launcher rodam no CI; instale Go para validar antes do push.
 
 ## Estrutura
 
 ```text
 launcher/
-├── main.go                 # wiring (~30 linhas)
+├── main.go
+├── assets/icon.ico          # embarcado via go:embed
 └── internal/
-    ├── app/                # orquestrador
-    ├── config/             # launcher_config.json em %APPDATA%\TCGTools
-    ├── instance/           # mutex single-instance
-    ├── process/            # spawn uvicorn + health check
-    ├── tray/               # wrapper energye/systray (único import da lib)
-    ├── registry/           # autostart HKCU Run
-    └── browser/            # abrir URL no navegador padrão
+    ├── app/
+    ├── config/              # launcher_config.json em %APPDATA%\TCGTools
+    ├── instance/            # mutex Local\TCGTools_SingleInstance (multi-user)
+    ├── process/             # spawn uvicorn, Job Object, health check
+    ├── tray/                # wrapper energye/systray
+    ├── registry/
+    └── browser/
 ```
 
 ## Comandos
@@ -28,15 +31,25 @@ launcher/
 cd launcher
 go mod tidy
 go test ./... -coverprofile=coverage.out
-go tool cover -func=coverage.out
+go tool cover -func coverage.out
 go build -ldflags "-H windowsgui -s -w" -o TCGTools.exe .
+```
+
+Ou via CI script:
+
+```powershell
+./scripts/ci/run-launcher-tests.ps1
 ```
 
 ## Cobertura
 
-Meta **≥80%** (gate no CI). Pacotes com lógica testável: `config`, `process`, `registry`, `instance`.
+Meta **≥80%** (gate no CI). Pacotes testados: `config`, `process`, `registry`, `instance`, `app`, `tray/labels`.
 
-Exclusões documentadas do threshold manual: `main.go`, `internal/tray` (UI nativa), stubs Windows-only.
+## Single-instance (multi-user)
+
+Mutex: `Local\TCGTools_SingleInstance` — uma instância **por sessão de usuário Windows** (vários logins na mesma máquina podem rodar em paralelo, cada um com `%APPDATA%\TCGTools\`).
+
+O mesmo mutex é usado por `scripts/lib/Instance-Lock.ps1` (dev `.bat` / `start-dev.ps1`).
 
 ## Configuração
 
@@ -49,16 +62,17 @@ Arquivo `%APPDATA%\TCGTools\launcher_config.json`:
 }
 ```
 
-Log de debug: `%APPDATA%\TCGTools\launcher.log`
-
-## Dev local (sem instalador)
-
-1. Build frontend e backend conforme README raiz
-2. Coloque Python embeddable em `runtime/python/` ou use `py -3.13`
-3. Execute `go run .` a partir de `launcher/` com `TCGTOOLS_DATA_DIR` apontando para `./data`
-
-Em produção instalada, o executável fica na raiz de `C:\Program Files\TCG Tools\` ao lado de `backend/`, `frontend/dist/` e `runtime/python/`.
+JSON inválido é copiado para `.bak` e recriado com defaults. Log: `%APPDATA%\TCGTools\launcher.log` (com timestamp).
 
 ## Systray
 
-Usa [`github.com/energye/systray/v2`](https://github.com/energye/systray) (pure Go, sem CGO).
+Usa [`github.com/energye/systray`](https://github.com/energye/systray) v1.0.3 (pure Go, sem CGO).
+
+Menu: Abrir, Sobre, pastas (dados/exports/logs), autostart, Encerrar.
+
+## Processo filho
+
+- uvicorn spawnado sem janela (`CREATE_NO_WINDOW`)
+- Job Object Windows com `KILL_ON_JOB_CLOSE`
+- Health: `GET /api/v1/health` com `"app":"tcg_tools"`
+- Checagem de porta livre antes do spawn
