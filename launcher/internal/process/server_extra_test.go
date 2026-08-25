@@ -6,7 +6,7 @@ import (
 )
 
 func TestServerStopNoProcess(t *testing.T) {
-	s := New("C:\\missing", 8000, t.TempDir())
+	s := New("C:\\missing", 8000, t.TempDir(), "127.0.0.1")
 	if err := s.Stop(); err != nil {
 		t.Fatal(err)
 	}
@@ -14,7 +14,7 @@ func TestServerStopNoProcess(t *testing.T) {
 
 func TestServerStartMissingPython(t *testing.T) {
 	dir := t.TempDir()
-	s := New(dir, 18000, t.TempDir())
+	s := New(dir, 18000, t.TempDir(), "127.0.0.1")
 	ctx := context.Background()
 	err := s.Start(ctx)
 	if err == nil {
@@ -47,7 +47,7 @@ func TestServerStartPortBusy(t *testing.T) {
 	}
 	port := lnPort(ln)
 	defer ln.Close()
-	s := New(t.TempDir(), port, t.TempDir())
+	s := New(t.TempDir(), port, t.TempDir(), "127.0.0.1")
 	err = s.Start(context.Background())
 	if err == nil {
 		s.Stop()

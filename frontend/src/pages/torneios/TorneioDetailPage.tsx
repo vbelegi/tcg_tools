@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { ConfirmModal } from "../../components/ConfirmModal";
@@ -7,6 +7,8 @@ import { PlayerPickerModal } from "../../components/PlayerPickerModal";
 import { RoundMatchesTable } from "../../components/RoundMatchesTable";
 import { SeFormatOptions, type SeBoConfig } from "../../components/SeFormatOptions";
 import { api } from "../../api/client";
+import { parsePastedNames } from "../../utils/pasteNames";
+import { playersMissingSeed, seedRequirementMessage } from "../../utils/seeds";
 
 export function TorneioDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -22,6 +24,11 @@ export function TorneioDetailPage() {
   const [thirdPlaceMatch, setThirdPlaceMatch] = useState(false);
   const [seBoConfig, setSeBoConfig] = useState<SeBoConfig>({});
   const [seOptionsDirty, setSeOptionsDirty] = useState(false);
+  const [playerAddedFlash, setPlayerAddedFlash] = useState(false);
+  const playerNameRef = useRef<HTMLInputElement>(null);
+  const playerSeedRef = useRef<HTMLInputElement>(null);
+  const nextRoundBtnRef = useRef<HTMLButtonElement>(null);
+  const finalizeBtnRef = useRef<HTMLButtonElement>(null);
 
   const { data: torneio } = useQuery({
     queryKey: ["torneio", eventId],
@@ -35,16 +42,40 @@ export function TorneioDetailPage() {
     enabled: Boolean(torneio?.between_rounds && completedRoundNum > 0),
   });
 
+  useEffect(() => {
+    if (torneio?.status === "draft") {
+      playerNameRef.current?.focus();
+    }
+  }, [torneio?.status, eventId]);
+
+  useEffect(() => {
+    if (!playerAddedFlash) return;
+    const t = window.setTimeout(() => setPlayerAddedFlash(false), 2000);
+    return () => window.clearTimeout(t);
+  }, [playerAddedFlash]);
+
+  const focusNameField = () => {
+    requestAnimationFrame(() => playerNameRef.current?.focus());
+  };
+
   const addPlayer = useMutation({
-    mutationFn: () =>
-      api.addJogador(eventId, playerName, playerSeed ? parseInt(playerSeed, 10) : undefined),
+    mutationFn: async (payload: { names: string[]; seed?: number }) => {
+      for (const name of payload.names) {
+        await api.addJogador(eventId, name, payload.seed);
+      }
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["torneio", eventId] });
       setPlayerName("");
       setPlayerSeed("");
       setError("");
+      setPlayerAddedFlash(true);
+      focusNameField();
     },
-    onError: (e) => setError((e as Error).message),
+    onError: (e) => {
+      setError((e as Error).message);
+      focusNameField();
+    },
   });
 
   const removePlayer = useMutation({
@@ -134,6 +165,14 @@ export function TorneioDetailPage() {
     }
   }, [torneio, seOptionsDirty]);
 
+  useEffect(() => {
+    if (!torneio?.between_rounds) return;
+    requestAnimationFrame(() => {
+      if (torneio.can_start_next_round) nextRoundBtnRef.current?.focus();
+      else if (torneio.can_finalize) finalizeBtnRef.current?.focus();
+    });
+  }, [torneio?.between_rounds, torneio?.can_start_next_round, torneio?.can_finalize, torneio?.completed_rounds]);
+
   if (!torneio) return <p>Carregando...</p>;
 
   const isDraft = torneio.status === "draft";
@@ -142,6 +181,72 @@ export function TorneioDetailPage() {
   const hasActiveRound = isRunning && !torneio.between_rounds && torneio.current_round > 0;
   const activePlayers =
     torneio.players?.filter((p) => !p.dropped_at).map((p) => ({ id: p.id, name: p.name })) ?? [];
+
+  const draftPlayers = torneio.players ?? [];
+  const missingSeedPlayers = playersMissingSeed(draftPlayers);
+  const missingSeedIds = new Set(missingSeedPlayers.map((p) => p.id));
+  const seedsIncomplete = missingSeedPlayers.length > 0;
+  const seedRequired = draftPlayers.some((p) => p.seed != null);
+  const seedErrorMessage = seedRequirementMessage(missingSeedPlayers.map((p) => p.name));
+  const canSubmitPlayer =
+    Boolean(playerName.trim()) &&
+    !addPlayer.isPending &&
+    !(seedRequired && !playerSeed.trim());
+
+  const submitPlayer = () => {
+    if (!canSubmitPlayer) return;
+    addPlayer.mutate({
+      names: [playerName.trim()],
+      seed: playerSeed.trim() ? parseInt(playerSeed, 10) : undefined,
+    });
+  };
+
+  const clearPlayerForm = () => {
+    setPlayerName("");
+    setPlayerSeed("");
+    setError("");
+    focusNameField();
+  };
+
+  const handleNameKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      clearPlayerForm();
+      return;
+    }
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    if (!playerName.trim() || addPlayer.isPending) return;
+    if (seedRequired) {
+      playerSeedRef.current?.focus();
+      return;
+    }
+    submitPlayer();
+  };
+
+  const handleSeedKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      clearPlayerForm();
+      return;
+    }
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    submitPlayer();
+  };
+
+  const handleNamePaste = (e: ClipboardEvent<HTMLInputElement>) => {
+    const names = parsePastedNames(e.clipboardData.getData("text"));
+    if (names.length <= 1) return;
+    e.preventDefault();
+    if (seedRequired) {
+      setError(
+        "Com seeding ativo, cole um nome por vez e informe o seed — ou remova os seeds existentes.",
+      );
+      return;
+    }
+    addPlayer.mutate({ names });
+  };
 
   const reabrirMessage = hasActiveRound
     ? `Reabrir rodada ${torneio.current_round - 1}? A rodada ${torneio.current_round} será removida e o pairing refeito ao avançar.`
@@ -215,43 +320,114 @@ export function TorneioDetailPage() {
                 ` (configurado: ${torneio.max_rounds})`}
             </p>
           )}
-          <ul>
-            {torneio.players?.map((p) => (
-              <li key={p.id} style={{ marginBottom: "0.35rem" }}>
-                {p.name}
-                {p.seed != null && ` (seed ${p.seed})`}{" "}
-                <button
-                  className="secondary"
-                  onClick={() => setRemoveTarget({ id: p.id, name: p.name })}
+          {seedsIncomplete && (
+            <p className="error" role="alert">
+              {seedErrorMessage} Remova e cadastre de novo com seed, ou remova os seeds
+              existentes.
+            </p>
+          )}
+          <ul className="player-draft-list">
+            {torneio.players?.map((p) => {
+              const needsSeed = missingSeedIds.has(p.id);
+              return (
+                <li
+                  key={p.id}
+                  className={needsSeed ? "player-row player-row-seed-missing" : "player-row"}
                 >
-                  Remover
-                </button>
-              </li>
-            ))}
+                  <span>
+                    {p.name}
+                    {p.seed != null ? ` (seed ${p.seed})` : needsSeed ? " — falta seed" : ""}
+                  </span>{" "}
+                  <button
+                    className="secondary"
+                    onClick={() => setRemoveTarget({ id: p.id, name: p.name })}
+                  >
+                    Remover
+                  </button>
+                </li>
+              );
+            })}
           </ul>
           <div className="form-row">
-            <label>Nome</label>
-            <input value={playerName} onChange={(e) => setPlayerName(e.target.value)} />
+            <label htmlFor="player-name">Nome</label>
+            <input
+              id="player-name"
+              ref={playerNameRef}
+              value={playerName}
+              onChange={(e) => setPlayerName(e.target.value)}
+              onKeyDown={handleNameKeyDown}
+              onPaste={handleNamePaste}
+              placeholder={
+                seedRequired
+                  ? "Nome · Enter vai para o seed"
+                  : "Nome · Enter adiciona · cole lista"
+              }
+              aria-describedby="player-name-hint"
+              disabled={addPlayer.isPending}
+            />
+            <p id="player-name-hint" className="field-hint">
+              Enter adiciona
+              {seedRequired ? " (após o seed)" : ""}. Esc limpa. Cole vários nomes (linhas/vírgulas)
+              sem seeding.
+            </p>
           </div>
           <div className="form-row">
-            <label>Seed (opcional)</label>
-            <input type="number" value={playerSeed} onChange={(e) => setPlayerSeed(e.target.value)} />
+            <label htmlFor="player-seed">
+              Seed {seedRequired ? "(obrigatório — seeding já iniciado)" : "(opcional)"}
+            </label>
+            <input
+              id="player-seed"
+              ref={playerSeedRef}
+              type="number"
+              value={playerSeed}
+              onChange={(e) => setPlayerSeed(e.target.value)}
+              onKeyDown={handleSeedKeyDown}
+              className={seedRequired && !playerSeed.trim() ? "input-invalid" : undefined}
+              aria-invalid={seedRequired && !playerSeed.trim()}
+              aria-describedby={seedRequired ? "player-seed-hint" : undefined}
+              disabled={addPlayer.isPending}
+            />
+            {seedRequired && !playerSeed.trim() && (
+              <p id="player-seed-hint" className="error-text" style={{ fontSize: "0.85rem", margin: "0.25rem 0 0" }}>
+                Informe um seed para este jogador, ou remova os seeds dos demais.
+              </p>
+            )}
           </div>
           <button
             className="secondary"
-            onClick={() => addPlayer.mutate()}
-            disabled={!playerName.trim() || addPlayer.isPending}
+            type="button"
+            onClick={submitPlayer}
+            disabled={!canSubmitPlayer}
           >
-            Adicionar jogador
+            {addPlayer.isPending ? "Adicionando…" : "Adicionar jogador"}
           </button>
+          {playerAddedFlash && (
+            <div className="save-feedback success" role="status" aria-live="polite">
+              Jogador(es) adicionado(s)
+            </div>
+          )}
           <div style={{ marginTop: "1.5rem" }}>
             <button
               className="primary"
               onClick={handleIniciar}
-              disabled={(torneio.players?.length ?? 0) < 4 || iniciar.isPending}
+              disabled={
+                (torneio.players?.length ?? 0) < 4 ||
+                seedsIncomplete ||
+                iniciar.isPending
+              }
+              title={
+                seedsIncomplete
+                  ? "Corrija o seeding parcial antes de iniciar"
+                  : undefined
+              }
             >
               Iniciar torneio
             </button>
+            {seedsIncomplete && (
+              <p className="error-text" style={{ fontSize: "0.85rem", marginTop: "0.5rem" }}>
+                Não é possível iniciar com apenas alguns jogadores com seed.
+              </p>
+            )}
           </div>
         </>
       )}
@@ -325,6 +501,7 @@ export function TorneioDetailPage() {
             )}
             {torneio.can_start_next_round && (
               <button
+                ref={nextRoundBtnRef}
                 className="primary"
                 onClick={() => iniciarProxima.mutate()}
                 disabled={iniciarProxima.isPending}
@@ -334,6 +511,7 @@ export function TorneioDetailPage() {
             )}
             {torneio.can_finalize && (
               <button
+                ref={finalizeBtnRef}
                 className="secondary"
                 onClick={() => setFinalizarModalOpen(true)}
                 disabled={finalizar.isPending}

@@ -20,10 +20,11 @@ const (
 type Config struct {
 	Port             int  `json:"port"`
 	StartWithWindows bool `json:"start_with_windows"`
+	LanAccess        bool `json:"lan_access"`
 }
 
 func DefaultConfig() Config {
-	return Config{Port: DefaultPort, StartWithWindows: false}
+	return Config{Port: DefaultPort, StartWithWindows: false, LanAccess: false}
 }
 
 func DataDir() string {
@@ -68,6 +69,13 @@ func LogsDir() string {
 
 func (c Config) BaseURL() string {
 	return fmt.Sprintf("http://127.0.0.1:%d", c.Port)
+}
+
+func (c Config) BindHost() string {
+	if c.LanAccess {
+		return "0.0.0.0"
+	}
+	return "127.0.0.1"
 }
 
 func (c Config) Validate() error {

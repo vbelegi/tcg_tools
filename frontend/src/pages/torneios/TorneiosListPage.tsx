@@ -9,7 +9,7 @@ export function TorneiosListPage() {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1>Torneios</h1>
-        <Link to="/torneios/novo" className="primary" style={{ padding: "0.6rem 1.25rem", borderRadius: 999 }}>
+        <Link to="/torneios/novo" className="primary">
           Novo torneio
         </Link>
       </div>

@@ -100,6 +100,7 @@ New-Item -ItemType Directory -Force -Path (Split-Path $FeDest) | Out-Null
 Copy-Item (Join-Path $Frontend "dist") $FeDest -Recurse -Force
 
 Copy-Item (Join-Path $PSScriptRoot "stop-tcg-processes.ps1") (Join-Path $Staging "stop-tcg-processes.ps1") -Force
+Copy-Item (Join-Path $PSScriptRoot "set-admin-password.ps1") (Join-Path $Staging "set-admin-password.ps1") -Force
 
 Write-Host "Compilando launcher..."
 if (-not (Get-Command go -ErrorAction SilentlyContinue)) {
@@ -107,6 +108,16 @@ if (-not (Get-Command go -ErrorAction SilentlyContinue)) {
 }
 Push-Location $Launcher
 go mod tidy
+$IconIco = Join-Path $Launcher "internal\app\assets\icon.ico"
+if (-not (Test-Path $IconIco)) {
+    throw "Icone do launcher nao encontrado: $IconIco"
+}
+# Incorpora icon.ico nos recursos PE do .exe (atalhos / Explorer). go:embed sozinho so alimenta a bandeja.
+$Syso = Join-Path $Launcher "rsrc_windows_amd64.syso"
+Write-Host "Gerando recurso de icone Windows ($Syso)..."
+go run github.com/akavel/rsrc@v0.10.2 -arch amd64 -ico $IconIco -o $Syso
+if ($LASTEXITCODE -ne 0) { throw "Falha ao gerar rsrc_windows_amd64.syso (icone do exe)." }
+if (-not (Test-Path $Syso)) { throw "rsrc_windows_amd64.syso nao foi criado." }
 go build -ldflags "-H windowsgui -s -w" -o (Join-Path $Staging "TCGTools.exe") .
 Pop-Location
 

@@ -93,6 +93,13 @@ Use quando digitou placar errado **depois** de concluir a rodada:
 ## Decisões de produto (referência)
 
 - **DROP** na classificação: jogadores que desistiram aparecem no final com label DROP.
+- **Desempate (Suíço):** Pts → OMW% → GW% → OGW% → seed → ordem de inscrição (tooltip na tela Resultado).
+- **Seeds:** all-or-nothing — se um jogador tem seed, todos precisam; caso contrário o torneio não inicia.
+- **Atalhos:** Enter adiciona jogador (com seed: Nome→Seed→Nome); Esc limpa/fecha modal; colar lista de nomes; na rodada, foco na próxima partida e Ctrl+Enter para concluir; no sorteio encadeado, Enter/Espaço = próximo.
+- **Login:** sempre exige usuário `admin` + senha (definida no instalador). Alterar senha: menu lateral ou reexecução do setup.
+- **Marca:** identidade visual Fourse (roxo/laranja); rodapé “Powered by FOURSE”.
+- **LAN:** opcional no instalador; outros devices acessam `http://IP:porta` na mesma rede (com login).
+- **Sorteio:** modo “todos de uma vez” ou **encadeado** (1 a 1 sem repetir). No resultado do torneio, dá para excluir jogadores da pool (ex.: campeão) sem afetar a classificação.
 - **max_rounds** é fixado ao iniciar (calculado automaticamente se vazio).
 - **Export JSON** só após finalizar o torneio.
 - **Decklists** opcionais, editáveis após finalizar.

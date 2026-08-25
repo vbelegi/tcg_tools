@@ -45,7 +45,7 @@ func TestWaitForHealthRejectsWrongApp(t *testing.T) {
 }
 
 func TestServerURLs(t *testing.T) {
-	s := New(`C:\TCG`, 8080, `C:\data`)
+	s := New(`C:\TCG`, 8080, `C:\data`, "127.0.0.1")
 	if s.BaseURL() != "http://127.0.0.1:8080" {
 		t.Fatal(s.BaseURL())
 	}

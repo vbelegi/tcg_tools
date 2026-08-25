@@ -14,6 +14,18 @@ func TestDefaultConfigValidate(t *testing.T) {
 	if cfg.BaseURL() != "http://127.0.0.1:8000" {
 		t.Fatalf("unexpected base url: %s", cfg.BaseURL())
 	}
+	if cfg.LanAccess {
+		t.Fatal("expected lan_access false by default")
+	}
+}
+
+func TestBindHost(t *testing.T) {
+	if got := (Config{LanAccess: false}).BindHost(); got != "127.0.0.1" {
+		t.Fatalf("expected localhost bind, got %q", got)
+	}
+	if got := (Config{LanAccess: true}).BindHost(); got != "0.0.0.0" {
+		t.Fatalf("expected LAN bind, got %q", got)
+	}
 }
 
 func TestValidateRejectsInvalidPort(t *testing.T) {
@@ -31,7 +43,7 @@ func TestLoadSaveRoundTrip(t *testing.T) {
 	dir := t.TempDir()
 	t.Setenv("APPDATA", dir)
 
-	cfg := Config{Port: 9000, StartWithWindows: true}
+	cfg := Config{Port: 9000, StartWithWindows: true, LanAccess: true}
 	if err := Save(cfg); err != nil {
 		t.Fatal(err)
 	}
@@ -39,8 +51,11 @@ func TestLoadSaveRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if loaded.Port != 9000 || !loaded.StartWithWindows {
+	if loaded.Port != 9000 || !loaded.StartWithWindows || !loaded.LanAccess {
 		t.Fatalf("unexpected config: %+v", loaded)
+	}
+	if loaded.BindHost() != "0.0.0.0" {
+		t.Fatalf("unexpected bind host: %s", loaded.BindHost())
 	}
 }
 

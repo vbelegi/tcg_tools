@@ -41,6 +41,21 @@ def test_validate_start_min_players():
         validate_start(_state(players=3))
 
 
+def test_validate_start_allows_all_unseeded():
+    state = _state(players=4)
+    for p in state.players:
+        p.seed = None
+    validate_start(state)
+
+
+def test_validate_start_rejects_partial_seeds():
+    state = _state(players=4)
+    state.players[1].seed = None
+    state.players[3].seed = None
+    with pytest.raises(StateMachineError, match="Seeding parcial"):
+        validate_start(state)
+
+
 def test_validate_complete_round_running_only():
     validate_complete_round(_state("running"))
     with pytest.raises(StateMachineError):

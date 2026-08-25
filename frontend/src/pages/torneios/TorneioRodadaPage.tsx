@@ -34,6 +34,8 @@ function ScoreSelect({
   onChange,
   disabled,
   label,
+  matchId,
+  side,
 }: {
   value: string;
   options: number[];
@@ -42,6 +44,8 @@ function ScoreSelect({
   onChange: (v: string) => void;
   disabled?: boolean;
   label: string;
+  matchId: number;
+  side: "p1" | "p2";
 }) {
   const numericValue = value === "" ? null : Number(value);
   const optionSet = new Set(options);
@@ -58,6 +62,8 @@ function ScoreSelect({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       disabled={disabled}
+      data-match-id={matchId}
+      data-score-side={side}
     >
       <option value="">—</option>
       {sorted.map((n) => (
@@ -128,7 +134,7 @@ export function TorneioRodadaPage() {
       }
       return api.updateMatch(eventId, matchId, parseInt(s.p1, 10), parseInt(s.p2, 10));
     },
-    onSuccess: (_data, matchId) => {
+    onSuccess: async (_data, matchId) => {
       setError("");
       setSavedMatchId(matchId);
       setScores((prev) => {
@@ -136,7 +142,17 @@ export function TorneioRodadaPage() {
         delete next[matchId];
         return next;
       });
-      refetch();
+      const refreshed = await refetch();
+      const matches = refreshed.data?.matches ?? rodada?.matches ?? [];
+      const pending = incompleteMatches(matches).filter((m) => m.id !== matchId);
+      const nextMatch = pending[0];
+      requestAnimationFrame(() => {
+        if (!nextMatch) return;
+        const el = document.querySelector<HTMLSelectElement>(
+          `select[data-match-id="${nextMatch.id}"][data-score-side="p1"]`,
+        );
+        el?.focus();
+      });
     },
     onError: (e) => {
       setSavedMatchId(null);
@@ -170,9 +186,35 @@ export function TorneioRodadaPage() {
     onError: (e) => setError((e as Error).message),
   });
 
+  const isActive = rodada?.status === "active";
+
+  useEffect(() => {
+    if (!isActive) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || e.key !== "Enter") return;
+      if (completarModalOpen || woModalOpen) return;
+      e.preventDefault();
+      setCompletarModalOpen(true);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isActive, completarModalOpen, woModalOpen]);
+
+  useEffect(() => {
+    if (rodada?.status !== "active") return;
+    const first = incompleteMatches(rodada.matches)[0];
+    if (!first) return;
+    requestAnimationFrame(() => {
+      document
+        .querySelector<HTMLSelectElement>(
+          `select[data-match-id="${first.id}"][data-score-side="p1"]`,
+        )
+        ?.focus();
+    });
+  }, [eventId, roundNum, rodada?.status]);
+
   if (!rodada || !torneio) return <p>Carregando...</p>;
 
-  const isActive = rodada.status === "active";
   const matchBestOf = (m: Match) => m.best_of ?? torneio.best_of;
   const allowDraw = torneio.format === "swiss";
   const roundBoValues = [...new Set(rodada.matches.map(matchBestOf))].sort((a, b) => a - b);
@@ -217,6 +259,12 @@ export function TorneioRodadaPage() {
       setError(
         `Salve o placar antes de concluir: ${missing.map(matchSummaryLabel).join("; ")}.`,
       );
+      requestAnimationFrame(() => {
+        const el = document.querySelector<HTMLSelectElement>(
+          `select[data-match-id="${missing[0].id}"][data-score-side="p1"]`,
+        );
+        el?.focus();
+      });
       return;
     }
     completar.mutate();
@@ -235,7 +283,8 @@ export function TorneioRodadaPage() {
         {allowDraw
           ? " 1 = vitória por tempo (Bo3/Bo5). 0-0 = empate intencional (Suíço)."
           : " Eliminatória: informe vitórias até fechar o melhor de da partida (sem empate)."}
-        {" "}— = não informado.
+        {" "}— = não informado. Após salvar, o foco vai para a próxima partida.{" "}
+        <kbd>Ctrl</kbd>+<kbd>Enter</kbd> abre concluir rodada.
       </p>
       {error && <p className="error">{error}</p>}
       {highlightIncomplete && pending.length > 0 && (
@@ -301,6 +350,8 @@ export function TorneioRodadaPage() {
                         allowDraw={allowDraw}
                         onChange={(v) => updateScore(m, "p1", v)}
                         disabled={!isActive}
+                        matchId={m.id}
+                        side="p1"
                       />
                     </div>
                   )}
@@ -334,6 +385,8 @@ export function TorneioRodadaPage() {
                         allowDraw={allowDraw}
                         onChange={(v) => updateScore(m, "p2", v)}
                         disabled={!isActive}
+                        matchId={m.id}
+                        side="p2"
                       />
                     </div>
                   )}

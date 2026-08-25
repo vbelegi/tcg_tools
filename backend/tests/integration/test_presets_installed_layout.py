@@ -3,22 +3,45 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Generator
 from pathlib import Path
 
 import pytest
+from alembic import command
+from alembic.config import Config
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
 
 from app import paths
 from app.config import get_settings
+from app.core.auth import upsert_admin_password
+from app.db.session import get_db
 from app.main import app
 
 
+def _alembic_config(db_url: str) -> Config:
+    backend_root = Path(__file__).resolve().parents[2]
+    cfg = Config(str(backend_root / "alembic.ini"))
+    cfg.set_main_option("script_location", str(backend_root / "alembic"))
+    cfg.set_main_option("sqlalchemy.url", db_url)
+    return cfg
+
+
 @pytest.fixture
-def installed_layout_client(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
+def installed_layout_client(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> Generator[tuple[TestClient, Path, Path], None, None]:
     """Simulate per-user install: bundled presets read-only, writes go to data_dir."""
     data_dir = tmp_path / "AppData" / "TCGTools"
+    data_dir.mkdir(parents=True)
+    db_path = data_dir / "tcg_tools.db"
+    url = f"sqlite:///{db_path.as_posix()}"
     monkeypatch.setenv("TCGTOOLS_DATA_DIR", str(data_dir))
+    monkeypatch.setenv("TCGTOOLS_DATABASE_URL", url)
     get_settings.cache_clear()
+    command.upgrade(_alembic_config(url), "head")
+
     settings = get_settings()
     presets_path = settings.resolved_presets_file
     bundled = paths.bundled_presets_file()
@@ -28,8 +51,26 @@ def installed_layout_client(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     assert presets_path.parent == data_dir
     assert presets_path.read_text(encoding="utf-8") == bundled.read_text(encoding="utf-8")
 
-    yield TestClient(app), presets_path, bundled
-    get_settings.cache_clear()
+    engine = create_engine(url, connect_args={"check_same_thread": False})
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    session: Session = SessionLocal()
+    upsert_admin_password(session, "testpass")
+
+    def _override_db() -> Generator[Session, None, None]:
+        yield session
+
+    app.dependency_overrides[get_db] = _override_db
+    client = TestClient(app)
+    r = client.post("/api/v1/auth/login", json={"username": "admin", "password": "testpass"})
+    assert r.status_code == 200, r.text
+
+    try:
+        yield client, presets_path, bundled
+    finally:
+        app.dependency_overrides.clear()
+        session.close()
+        engine.dispose()
+        get_settings.cache_clear()
 
 
 def test_presets_put_writes_to_data_dir_not_bundled(installed_layout_client):

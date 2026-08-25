@@ -14,9 +14,10 @@ Sem Go instalado localmente, os testes/build do launcher rodam no CI; instale Go
 ```text
 launcher/
 ├── main.go
-├── assets/icon.ico          # embarcado via go:embed
+├── rsrc_windows_amd64.syso  # gerado no build (ícone PE); gitignored
 └── internal/
     ├── app/
+    │   └── assets/icon.ico  # bandeja (go:embed) + fonte do .syso
     ├── config/              # launcher_config.json em %APPDATA%\TCGTools
     ├── instance/            # mutex Local\TCGTools_SingleInstance (multi-user)
     ├── process/             # spawn uvicorn, Job Object, health check
@@ -30,10 +31,13 @@ launcher/
 ```powershell
 cd launcher
 go mod tidy
+go run github.com/akavel/rsrc@v0.10.2 -arch amd64 -ico internal/app/assets/icon.ico -o rsrc_windows_amd64.syso
 go test ./... -coverprofile=coverage.out
 go tool cover -func coverage.out
 go build -ldflags "-H windowsgui -s -w" -o TCGTools.exe .
 ```
+
+O `.syso` incorpora o ícone nos recursos do PE (Explorer, atalhos, desinstalador). O `go:embed` do mesmo `.ico` continua sendo usado só pela bandeja em runtime. `launcher/*.syso` está no `.gitignore`.
 
 Ou via CI script:
 
@@ -58,17 +62,18 @@ Arquivo `%APPDATA%\TCGTools\launcher_config.json`:
 ```json
 {
   "port": 8000,
-  "start_with_windows": false
+  "start_with_windows": false,
+  "lan_access": false
 }
 ```
 
-JSON inválido é copiado para `.bak` e recriado com defaults. Log: `%APPDATA%\TCGTools\launcher.log` (com timestamp).
+Com `lan_access: true`, o uvicorn escuta em `0.0.0.0` (acesso na LAN). JSON inválido é copiado para `.bak` e recriado com defaults. Log: `%APPDATA%\TCGTools\launcher.log` (com timestamp).
 
 ## Systray
 
 Usa [`github.com/energye/systray`](https://github.com/energye/systray) v1.0.3 (pure Go, sem CGO).
 
-Menu: Abrir, Sobre, pastas (dados/exports/logs), autostart, Encerrar.
+Menu: Abrir, Sobre, pastas (dados/exports/logs), **Copiar URL da rede (LAN)** (quando `lan_access`), autostart, Encerrar.
 
 ## Processo filho
 

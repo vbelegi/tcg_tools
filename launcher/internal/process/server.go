@@ -20,14 +20,18 @@ const (
 type Server struct {
 	installDir string
 	port       int
+	bindHost   string
 	cmd        *exec.Cmd
 	dataDir    string
 	exitCh     chan error
 	stderr     bytes.Buffer
 }
 
-func New(installDir string, port int, dataDir string) *Server {
-	return &Server{installDir: installDir, port: port, dataDir: dataDir}
+func New(installDir string, port int, dataDir string, bindHost string) *Server {
+	if bindHost == "" {
+		bindHost = "127.0.0.1"
+	}
+	return &Server{installDir: installDir, port: port, dataDir: dataDir, bindHost: bindHost}
 }
 
 func (s *Server) PythonExe() string {
@@ -47,7 +51,7 @@ func (s *Server) HealthURL() string {
 }
 
 func (s *Server) Start(ctx context.Context) error {
-	if err := CheckPortAvailable("127.0.0.1", s.port); err != nil {
+	if err := CheckPortAvailable(s.bindHost, s.port); err != nil {
 		return err
 	}
 
@@ -61,7 +65,7 @@ func (s *Server) Start(ctx context.Context) error {
 		ctx,
 		python,
 		"-m", "uvicorn", "app.main:app",
-		"--host", "127.0.0.1",
+		"--host", s.bindHost,
 		"--port", fmt.Sprintf("%d", s.port),
 	)
 	s.cmd.Dir = s.BackendDir()

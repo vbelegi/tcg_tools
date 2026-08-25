@@ -11,6 +11,7 @@ import (
 	"github.com/vbelegi/tcg_tools/launcher/internal/browser"
 	"github.com/vbelegi/tcg_tools/launcher/internal/config"
 	"github.com/vbelegi/tcg_tools/launcher/internal/instance"
+	"github.com/vbelegi/tcg_tools/launcher/internal/netutil"
 	"github.com/vbelegi/tcg_tools/launcher/internal/process"
 	"github.com/vbelegi/tcg_tools/launcher/internal/registry"
 	"github.com/vbelegi/tcg_tools/launcher/internal/tray"
@@ -48,7 +49,7 @@ func (a *Application) Run(ctx context.Context) error {
 		defer lock.Release()
 	}
 
-	a.server = process.New(a.installDir, a.cfg.Port, config.DataDir())
+	a.server = process.New(a.installDir, a.cfg.Port, config.DataDir(), a.cfg.BindHost())
 	if err := a.server.Start(ctx); err != nil {
 		config.AppendLog(fmt.Sprintf("erro ao iniciar servidor: %v", err))
 		if runtime.GOOS == "windows" {
@@ -64,14 +65,46 @@ func (a *Application) Run(ctx context.Context) error {
 
 	_ = browser.Open(a.cfg.BaseURL())
 
-	tray.Run(trayIcon(), "TCG Tools", tray.Actions{
+	tooltip := "TCG Tools"
+	if a.cfg.LanAccess {
+		if lan, err := netutil.LANURL(a.cfg.Port); err == nil {
+			tooltip = "TCG Tools — LAN " + lan
+		} else {
+			tooltip = "TCG Tools — acesso LAN ativo"
+		}
+	}
+
+	tray.Run(trayIcon(), tooltip, tray.Actions{
 		OnOpen: func() { _ = browser.Open(a.cfg.BaseURL()) },
 		OnQuit: func() {
 			_ = a.server.Stop()
 		},
 		OnAbout: func() {
 			version := config.ReadVersion(a.installDir)
-			instance.NotifyAlreadyRunning("TCG Tools", fmt.Sprintf("Versao %s", version))
+			msg := fmt.Sprintf("Versao %s\nLocal: %s", version, a.cfg.BaseURL())
+			if a.cfg.LanAccess {
+				if lan, err := netutil.LANURL(a.cfg.Port); err == nil {
+					msg += "\nRede: " + lan
+				} else {
+					msg += "\nRede: (IP nao detectado)"
+				}
+			} else {
+				msg += "\nAcesso LAN: desligado"
+			}
+			instance.NotifyAlreadyRunning("TCG Tools", msg)
+		},
+		OnShowLanURL: func() {
+			if !a.cfg.LanAccess {
+				instance.NotifyAlreadyRunning("TCG Tools", "Acesso LAN desligado.\nAtive no instalador (opcao na rede local).")
+				return
+			}
+			lan, err := netutil.LANURL(a.cfg.Port)
+			if err != nil {
+				instance.NotifyError("TCG Tools", err.Error())
+				return
+			}
+			_ = copyToClipboard(lan)
+			instance.NotifyAlreadyRunning("TCG Tools", "URL da rede copiada:\n"+lan)
 		},
 		OnDataDir: func() { openFolder(config.DataDir()) },
 		OnExports: func() { openFolder(config.ExportsDir()) },
@@ -126,6 +159,15 @@ func openFolder(path string) {
 	if runtime.GOOS == "windows" {
 		_ = exec.Command("explorer", path).Start()
 	}
+}
+
+func copyToClipboard(text string) error {
+	if runtime.GOOS != "windows" {
+		return fmt.Errorf("clipboard apenas no Windows")
+	}
+	cmd := exec.Command("powershell", "-NoProfile", "-Command", "Set-Clipboard -Value $env:TCGTOOLS_CLIP")
+	cmd.Env = append(os.Environ(), "TCGTOOLS_CLIP="+text)
+	return cmd.Run()
 }
 
 func trayIcon() []byte {

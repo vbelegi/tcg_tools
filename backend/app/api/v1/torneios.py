@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_current_user
 from app.db.session import get_db
 from app.schemas.torneio import (
     ClassificacaoPatch,
@@ -17,8 +18,11 @@ from app.schemas.torneio import (
 )
 from app.services.torneio_service import TorneioError, TorneioService
 
-router = APIRouter(prefix="/torneios", tags=["torneios"])
-
+router = APIRouter(
+    prefix="/torneios",
+    tags=["torneios"],
+    dependencies=[Depends(get_current_user)],
+)
 
 def get_torneio_service(db: Session = Depends(get_db)) -> TorneioService:
     return TorneioService(db)

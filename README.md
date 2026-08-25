@@ -66,6 +66,14 @@ npm run test         # Vitest
 
 Acesse `http://127.0.0.1:5173` (proxy `/api` → backend).
 
+**Login (obrigatório):** após o setup, defina a senha do `admin`:
+
+```powershell
+$env:TCGTOOLS_DATA_DIR='.\data'; cd backend; py -3.13 -m app.scripts.set_admin_password --password admin123
+```
+
+(O `scripts\setup.ps1` imprime o comando equivalente para o data dir em uso.)
+
 
 
 ### Produção local
@@ -174,6 +182,10 @@ tcg_tools/
 - **Premiação:** calcular split, tabela, presets, export CSV
 
 - **Torneios:** Suíço e Eliminatória, pairings, resultados, reabrir rodada, premiação integrada, log JSON
+
+- **Sorteador:** sorteio em lote ou encadeado
+
+- **Auth / LAN:** login `admin`; acesso opcional na rede local
 
 - **Decklists:** opcional após finalizar torneio
 
