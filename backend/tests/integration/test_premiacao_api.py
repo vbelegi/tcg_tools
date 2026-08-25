@@ -3,20 +3,16 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from app.main import app
 
-client = TestClient(app)
-
-
-def test_health():
-    r = client.get("/api/v1/health")
+def test_health(api_client: TestClient):
+    r = api_client.get("/api/v1/health")
     assert r.status_code == 200
     assert r.json()["status"] == "ok"
     assert r.json()["app"] == "tcg_tools"
 
 
-def test_calcular_se_bands():
-    r = client.post(
+def test_calcular_se_bands(api_client: TestClient):
+    r = api_client.post(
         "/api/v1/premiacao/calcular",
         json={
             "jogadores": 16,
@@ -33,8 +29,8 @@ def test_calcular_se_bands():
     assert data["total_creditos"] == pytest.approx(560.0, abs=1e-9)
 
 
-def test_calcular():
-    r = client.post(
+def test_calcular(api_client: TestClient):
+    r = api_client.post(
         "/api/v1/premiacao/calcular",
         json={"jogadores": 24, "preset_id": "standard"},
     )
@@ -43,16 +39,16 @@ def test_calcular():
     assert sum(data["premios"]) == pytest.approx(24, abs=1e-9)
 
 
-def test_tabela():
-    r = client.get("/api/v1/premiacao/tabela?ate=8&preset_id=standard")
+def test_tabela(api_client: TestClient):
+    r = api_client.get("/api/v1/premiacao/tabela?ate=8&preset_id=standard")
     assert r.status_code == 200
     linhas = r.json()["linhas"]
     assert len(linhas) == 5
     assert linhas[0]["jogadores"] == 4
 
 
-def test_export():
-    r = client.post(
+def test_export(api_client: TestClient):
+    r = api_client.post(
         "/api/v1/premiacao/export",
         json={"ate": 8, "preset_id": "standard"},
     )
@@ -60,7 +56,7 @@ def test_export():
     assert "text/csv" in r.headers["content-type"]
 
 
-def test_presets_exports_flag():
-    r = client.get("/api/v1/premiacao/presets")
+def test_presets_exports_flag(api_client: TestClient):
+    r = api_client.get("/api/v1/premiacao/presets")
     assert r.status_code == 200
     assert "exports_desatualizados" in r.json()

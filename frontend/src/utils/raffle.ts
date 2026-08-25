@@ -8,6 +8,8 @@ export function shuffle<T>(items: T[], random: () => number = Math.random): T[] 
   return arr;
 }
 
+export type RaffleMode = "batch" | "chain";
+
 export function drawWinners<T>(participants: T[], winnerCount: number): T[] {
   if (participants.length === 0) {
     throw new Error("Cadastre pelo menos um participante.");
@@ -21,4 +23,18 @@ export function drawWinners<T>(participants: T[], winnerCount: number): T[] {
     );
   }
   return shuffle(participants).slice(0, winnerCount);
+}
+
+/** Sorteia um participante e devolve o restante (sem repetir). */
+export function pickOne<T>(
+  pool: T[],
+  random: () => number = Math.random,
+): { picked: T; remaining: T[] } {
+  if (pool.length === 0) {
+    throw new Error("Não há mais participantes para sortear.");
+  }
+  const idx = Math.floor(random() * pool.length);
+  const picked = pool[idx];
+  const remaining = pool.slice(0, idx).concat(pool.slice(idx + 1));
+  return { picked, remaining };
 }

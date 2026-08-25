@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
 
-import { RaffleResultModal } from "../../components/RaffleResultModal";
-import { drawWinners } from "../../utils/raffle";
+import { RaffleControls } from "../../components/RaffleControls";
+import { parsePastedNames } from "../../utils/pasteNames";
 
 type Participant = { id: number; name: string };
 
@@ -10,46 +10,60 @@ let nextId = 1;
 export function SorteadorPage() {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [nameInput, setNameInput] = useState("");
-  const [winnerCount, setWinnerCount] = useState("1");
-  const [error, setError] = useState("");
-  const [winners, setWinners] = useState<string[]>([]);
-  const [modalOpen, setModalOpen] = useState(false);
+  const nameRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    nameRef.current?.focus();
+  }, []);
+
+  const addNames = (names: string[]) => {
+    if (names.length === 0) return;
+    setParticipants((prev) => [
+      ...prev,
+      ...names.map((name) => ({ id: nextId++, name })),
+    ]);
+    setNameInput("");
+    requestAnimationFrame(() => nameRef.current?.focus());
+  };
 
   const addParticipant = () => {
     const name = nameInput.trim();
     if (!name) return;
-    setParticipants((prev) => [...prev, { id: nextId++, name }]);
-    setNameInput("");
-    setError("");
+    addNames([name]);
   };
 
   const removeParticipant = (id: number) => {
     setParticipants((prev) => prev.filter((p) => p.id !== id));
   };
 
-  const runDraw = () => {
-    setError("");
-    try {
-      const count = parseInt(winnerCount, 10);
-      const names = participants.map((p) => p.name);
-      setWinners(drawWinners(names, count));
-      setModalOpen(true);
-    } catch (e) {
-      setWinners([]);
-      setModalOpen(false);
-      setError((e as Error).message);
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      setNameInput("");
+      return;
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addParticipant();
     }
   };
+
+  const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
+    const names = parsePastedNames(e.clipboardData.getData("text"));
+    if (names.length <= 1) return;
+    e.preventDefault();
+    addNames(names);
+  };
+
+  const names = participants.map((p) => p.name);
 
   return (
     <div>
       <h1>Sorteador</h1>
       <p style={{ opacity: 0.85, maxWidth: "40rem" }}>
-        Cadastre participantes, defina quantos serão sorteados e o app escolhe os ganhadores de forma
-        aleatória (sem repetição na mesma rodada).
+        Cadastre participantes e sorteie todos de uma vez ou em modo encadeado (1 a 1, sem repetir).
+        Enter adiciona · Esc limpa · cole vários nomes de uma vez.
       </p>
-
-      {error && <p className="error">{error}</p>}
 
       <h2>Participantes ({participants.length})</h2>
       {participants.length > 0 && (
@@ -69,45 +83,23 @@ export function SorteadorPage() {
         <label htmlFor="participant-name">Nome</label>
         <input
           id="participant-name"
+          ref={nameRef}
           value={nameInput}
           onChange={(e) => setNameInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") addParticipant();
-          }}
-          placeholder="Nome do participante"
+          onKeyDown={handleKeyDown}
+          onPaste={handlePaste}
+          placeholder="Nome · Enter adiciona · cole lista"
         />
       </div>
       <button className="secondary" type="button" onClick={addParticipant} disabled={!nameInput.trim()}>
         Adicionar participante
       </button>
 
-      <div className="form-row" style={{ marginTop: "1.5rem" }}>
-        <label htmlFor="winner-count">Número de sorteados</label>
-        <input
-          id="winner-count"
-          type="number"
-          min={1}
-          max={Math.max(1, participants.length)}
-          value={winnerCount}
-          onChange={(e) => setWinnerCount(e.target.value)}
-        />
-      </div>
-
-      <button
-        className="primary"
-        type="button"
-        style={{ marginTop: "1rem" }}
-        onClick={runDraw}
-        disabled={participants.length === 0}
-      >
-        Sortear
-      </button>
-
-      <RaffleResultModal
-        open={modalOpen}
-        winners={winners}
-        onClose={() => setModalOpen(false)}
-        onRedraw={runDraw}
+      <h2 style={{ marginTop: "2rem" }}>Sorteio</h2>
+      <RaffleControls
+        participants={names}
+        description={`Pool atual: ${names.length} participante(s).`}
+        primaryButtonLabel="Sortear"
       />
     </div>
   );

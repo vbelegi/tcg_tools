@@ -55,6 +55,7 @@ export function formatApiError(detail: unknown, fallback = "Erro na requisição
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${url}`, {
     ...init,
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...init?.headers,
@@ -82,10 +83,26 @@ export const api = {
 
   health: () => request<{ status: string }>("/health"),
 
+  authStatus: () =>
+    request<{ configured: boolean; username: string; min_password_length: number }>("/auth/status"),
 
+  authMe: () => request<{ username: string }>("/auth/me"),
+
+  login: (username: string, password: string) =>
+    request<{ username: string }>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username, password }),
+    }),
+
+  logout: () => request<{ ok: boolean }>("/auth/logout", { method: "POST" }),
+
+  changePassword: (current_password: string, new_password: string) =>
+    request<{ ok: boolean; message: string }>("/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify({ current_password, new_password }),
+    }),
 
   getPresets: () => request<PresetsResponse>("/premiacao/presets"),
-
   updatePreset: (id: string, body: Preset, expectedMtime?: number) =>
 
     request<Preset>(`/premiacao/presets/${id}`, {

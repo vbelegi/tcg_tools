@@ -8,6 +8,7 @@ type Actions struct {
 	OnOpen            func()
 	OnQuit            func()
 	OnAbout           func()
+	OnShowLanURL      func()
 	OnDataDir         func()
 	OnExports         func()
 	OnLogs            func()
@@ -31,6 +32,11 @@ func Run(icon []byte, tooltip string, actions Actions) {
 		systray.AddMenuItem("Sobre / versao", "").Click(func() {
 			if actions.OnAbout != nil {
 				actions.OnAbout()
+			}
+		})
+		systray.AddMenuItem("Copiar URL da rede (LAN)", "").Click(func() {
+			if actions.OnShowLanURL != nil {
+				actions.OnShowLanURL()
 			}
 		})
 		systray.AddSeparator()

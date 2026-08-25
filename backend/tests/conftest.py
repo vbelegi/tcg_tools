@@ -143,11 +143,17 @@ def run_se_bracket(
 
 @pytest.fixture
 def api_client(db_session: Session) -> Generator[TestClient, None, None]:
-    """FastAPI client with real DB session (Alembic-migrated)."""
+    """FastAPI client with real DB session (Alembic-migrated) and admin login."""
+    from app.core.auth import upsert_admin_password
+
+    upsert_admin_password(db_session, "testpass")
 
     def _override_db() -> Generator[Session, None, None]:
         yield db_session
 
     app.dependency_overrides[get_db] = _override_db
-    yield TestClient(app)
+    client = TestClient(app)
+    r = client.post("/api/v1/auth/login", json={"username": "admin", "password": "testpass"})
+    assert r.status_code == 200, r.text
+    yield client
     app.dependency_overrides.clear()

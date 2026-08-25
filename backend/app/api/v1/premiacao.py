@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Query, Header
 from fastapi.responses import Response
 
+from app.api.deps import get_current_user
 from app.core.premiacao.validation import ConfigError, InputError
 from app.schemas.premiacao import (
     CalcularRequest,
@@ -17,8 +18,11 @@ from app.schemas.premiacao import (
 )
 from app.services.premiacao_service import PremiacaoService
 
-router = APIRouter(prefix="/premiacao", tags=["premiacao"])
-
+router = APIRouter(
+    prefix="/premiacao",
+    tags=["premiacao"],
+    dependencies=[Depends(get_current_user)],
+)
 
 def get_premiacao_service() -> PremiacaoService:
     return PremiacaoService()

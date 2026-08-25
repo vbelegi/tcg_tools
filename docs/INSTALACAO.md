@@ -11,7 +11,7 @@ Dados em `%APPDATA%\TCGTools\` (SQLite, exports, logs). Configuração em `launc
 
 ## Checklist manual (12 passos)
 
-1. Abrir `http://127.0.0.1:8000` (ou porta configurada)
+1. Abrir `http://127.0.0.1:8000` (ou porta configurada) e entrar com **admin** + senha do instalador
 2. Calcular premiação para 16 jogadores com valor de inscrição
 3. Criar torneio Suíço com 4 jogadores
 4. Iniciar, informar resultados, **concluir** rodada 1
@@ -28,7 +28,8 @@ Dados em `%APPDATA%\TCGTools\` (SQLite, exports, logs). Configuração em `launc
 
 1. Instalar Python 3.13 e Node.js 22+
 2. Executar `scripts\setup.ps1`
-3. Executar `scripts\Iniciar TCG Tools.bat`
+3. Definir senha do admin (comando impresso pelo setup)
+4. Executar `scripts\Iniciar TCG Tools.bat`
 
 Manual do operador: [OPERADOR.md](OPERADOR.md)
 

@@ -31,6 +31,22 @@ Se o app “não abre” mas a porta está livre, remova o lock:
 
 Em produção use **TCGTools.exe** (mutex `Local\TCGTools_SingleInstance`, por usuário). Não rode `.bat` e launcher ao mesmo tempo na mesma sessão.
 
+## Login / senha
+
+### Tela pede login ou API retorna 401
+
+O app exige usuário **admin** e senha. Sem senha gravada, o login falha.
+
+**Instalação (setup.exe):** defina/altere a senha no wizard (ou modo “Apenas alterar senha”).
+
+**Desenvolvimento:**
+
+```powershell
+$env:TCGTOOLS_DATA_DIR='.\data'   # ou %APPDATA%\TCGTools
+cd backend
+py -3.13 -m app.scripts.set_admin_password --password SuaSenhaAqui
+```
+
 ## Banco de dados
 
 ### Onde fica o SQLite

@@ -17,6 +17,8 @@ Pré-requisitos: Python 3.13, Node 22, Go 1.22+, [Inno Setup 6](https://jrsoftwa
 
 **Go local:** instale [Go 1.22+](https://go.dev/dl/) para compilar/testar o launcher antes do push. Sem Go, `build-release.ps1` falha na etapa do launcher; testes Go rodam no CI (`ci.yml` / `windows-test-suite.yml`).
 
+O build do launcher gera `rsrc_windows_amd64.syso` a partir de `launcher/internal/app/assets/icon.ico` (ícone do `.exe`/atalhos). A bandeja continua usando o mesmo arquivo via `go:embed`.
+
 ```powershell
 ./scripts/build-release.ps1
 # Apenas staging, sem Inno:
