@@ -4,6 +4,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-08-25
+
 ### Fixed
 
 - **Inno Setup:** `PasswordOnlyMode` como função (Check:) — corrige compile do instalador
@@ -30,30 +32,6 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 - **CI:** Pester + lockfile validation; `windows-test-suite.yml` reutilizável; smoke staging no release
 - **Multi-user:** mutex `Local\` (por sessão de usuário); presets em `{data_dir}`
 - **Instalador:** merge config no upgrade; uninstall opcional de APPDATA; kill python filho
-
-### Added
-
-- **Instalador Windows:** `scripts/build-release.ps1`, `scripts/installer.iss` (Inno Setup), pipeline [release.yml](.github/workflows/release.yml)
-- **Launcher Go** (`launcher/`): bandeja do sistema, single-instance, autostart, `launcher_config.json`
-- **Scripts compartilhados:** `scripts/lib/Embed-Python.ps1` + testes Pester
-- Docs: [BUILD_RELEASE.md](docs/BUILD_RELEASE.md), [INSTALADOR.md](docs/INSTALADOR.md) atualizado
-- Paths: exports/logs sob `data_dir`; testes `test_paths.py`
-- CI: job `launcher` com cobertura Go ≥80%
-- **Eliminatória simples:** faixas de classificação e premiação (3–4, 5–8…); partida opcional de 3º–4º (bronze); melhor de por fase; invariante `sum(payouts) = N`
-- Migration Alembic `003`: `third_place_match`, `se_bo_config`, `matches.is_third_place`, `matches.best_of`
-- Premiação standalone: seletor Suíço / Eliminatória + preview por faixas
-- Componentes UI `SeFormatOptions`, `PremiacaoBandsTable`, `MatchBadges`
-- Schema tipado `PremiacaoResultado`; export JSON **v2**; `total_creditos`; redistribuição de pool em faixas vazias
-- Docs: [migration_003.md](docs/migration_003.md), [export_log.md](docs/export_log.md)
-- Testes: SE 6/32 jogadores, bronze 16, reopen, drops na semi, `se_bracket`, cobertura frontend ≥80% (utils/components)
-
-### Changed
-
-- `setup.ps1` usa módulo Embed-Python; cria `data/exports` e `data/logs`
-- Torneios SE finalizados após update gravam `premiacao_resultado.schema_version = 2` com snapshot congelado
-- Torneios finalizados antes da feature: comportamento legado preservado
-- `se_bo_config` inválido para o bracket gera `config_warnings` no rascunho e é podado ao iniciar
-- CI: `npm run test:coverage` com meta 80% no frontend (utils/components)
 
 ## [1.1.0] - 2026-07-31
 
@@ -84,5 +62,6 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 - Scripts Windows: `setup.ps1`, `Iniciar TCG Tools.bat`
 - Alembic migrations (001 schema, 002 scores_submitted)
 
+[1.2.0]: compare/v1.1.0...v1.2.0
 [1.1.0]: compare/v1.0.0...v1.1.0
 [1.0.0]: releases/tag/v1.0.0
