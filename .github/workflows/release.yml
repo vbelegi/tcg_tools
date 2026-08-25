@@ -49,11 +49,16 @@ jobs:
   build:
     needs: [changes, test]
     if: |
-      github.event_name == 'push' && (
-        startsWith(github.ref, 'refs/tags/v') ||
-        github.ref == 'refs/heads/main' ||
-        github.ref == 'refs/heads/master' ||
+      (
+        github.event_name == 'pull_request' &&
         needs.changes.outputs.release == 'true'
+      ) || (
+        github.event_name == 'push' && (
+          startsWith(github.ref, 'refs/tags/v') ||
+          github.ref == 'refs/heads/main' ||
+          github.ref == 'refs/heads/master' ||
+          needs.changes.outputs.release == 'true'
+        )
       )
     runs-on: windows-latest
     steps:
@@ -96,6 +101,11 @@ jobs:
             echo "is_release=true" >> $env:GITHUB_OUTPUT
           } elseif ($env:GITHUB_REF -eq 'refs/heads/main' -or $env:GITHUB_REF -eq 'refs/heads/master') {
             echo "name=TCGTools-$version-setup.exe" >> $env:GITHUB_OUTPUT
+            echo "is_release=false" >> $env:GITHUB_OUTPUT
+          } elseif ($env:GITHUB_EVENT_NAME -eq 'pull_request') {
+            $pr = $env:GITHUB_REF -replace 'refs/pull/','' -replace '/merge',''
+            $sha = $env:GITHUB_SHA.Substring(0,7)
+            echo "name=TCGTools-pr$pr-$sha-setup.exe" >> $env:GITHUB_OUTPUT
             echo "is_release=false" >> $env:GITHUB_OUTPUT
           } else {
             $branch = $env:GITHUB_REF -replace 'refs/heads/','' -replace '/','-'

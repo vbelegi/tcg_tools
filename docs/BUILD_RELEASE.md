@@ -3,13 +3,15 @@
 ## Visão geral
 
 ```text
-push/tag → GitHub Actions (release.yml)
+PR (paths release) ou push/tag → GitHub Actions (release.yml)
   → windows-test-suite (reutilizável)
   → validate-prod-lock.ps1
-  → build-release.ps1
+  → build-release.ps1   # inclui ISCC (Inno) — também no PR
   → test-staging.ps1 (smoke health)
-  → dist/TCGTools-{version}-setup.exe
+  → dist/TCGTools-*-setup.exe (artifact; GitHub Release só em tag v*)
 ```
+
+PRs que tocam `backend/`, `frontend/`, `launcher/`, `scripts/` ou os workflows de release **compilam o instalador Inno** (sem publicar release). Assim erros de `installer.iss` aparecem antes do merge em `main`.
 
 ## Build local
 
