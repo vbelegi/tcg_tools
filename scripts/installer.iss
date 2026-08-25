@@ -54,7 +54,13 @@ var
   SetPasswordCheck: TNewCheckBox;
   PasswordOnlyCheck: TNewCheckBox;
   UninstallDeleteDataCheck: TNewCheckBox;
-  PasswordOnlyMode: Boolean;
+  IsPasswordOnly: Boolean;
+
+{ Check: clauses require a function named PasswordOnlyMode (not a bare Boolean var). }
+function PasswordOnlyMode: Boolean;
+begin
+  Result := IsPasswordOnly;
+end;
 
 function ValidatePort(PortStr: String): Boolean;
 var
@@ -86,7 +92,7 @@ end;
 
 procedure InitializeWizard;
 begin
-  PasswordOnlyMode := False;
+  IsPasswordOnly := False;
 
   PortPage := CreateInputQueryPage(wpSelectDir,
     'Configuracao do servidor', 'Porta e rede local',
@@ -135,7 +141,7 @@ end;
 function ShouldSkipPage(PageID: Integer): Boolean;
 begin
   Result := False;
-  if PasswordOnlyMode then
+  if IsPasswordOnly then
   begin
     if (PageID = wpSelectDir) or (PageID = wpSelectProgramGroup) or (PageID = wpSelectTasks) then
       Result := True;
@@ -147,14 +153,14 @@ begin
   Result := True;
   if CurPageID = PortPage.ID then
   begin
-    PasswordOnlyMode := PasswordOnlyCheck.Checked;
+    IsPasswordOnly := PasswordOnlyCheck.Checked;
     if not ValidatePort(PortPage.Values[0]) then
     begin
       MsgBox('Porta invalida. Use um valor entre 1024 e 65535.', mbError, MB_OK);
       Result := False;
       Exit;
     end;
-    if PasswordOnlyMode then
+    if IsPasswordOnly then
     begin
       if not FileExists(ExpandConstant('{app}\runtime\python\python.exe')) then
       begin
@@ -262,7 +268,7 @@ begin
     StopTCGToolsProcesses;
   if CurStep = ssPostInstall then
   begin
-    if not PasswordOnlyMode then
+    if not IsPasswordOnly then
       MergeLauncherConfig;
     ApplyFirewallRule;
     ApplyAdminPassword;

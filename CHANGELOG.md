@@ -4,6 +4,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Inno Setup:** `PasswordOnlyMode` como função (Check:) — corrige compile do instalador
+- **CI release:** job `build` (ISCC + staging) também roda em PRs com paths de release
+
 ### Added
 
 - **Classificação:** coluna OGW% e tooltip com ordem dos critérios de desempate na tela de resultado
