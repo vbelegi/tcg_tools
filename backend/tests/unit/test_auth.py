@@ -66,6 +66,7 @@ def test_register_player_api(db_session: Session):
             "email": "novo.player@example.com",
             "phone": "+5511988776655",
             "password": "abcdef",
+            "birth_date": "1990-05-15",
         },
     )
     assert r.status_code == 201, r.text

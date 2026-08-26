@@ -2548,15 +2548,8 @@
             "title": "Password"
           },
           "birth_date": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
+            "format": "date",
             "title": "Birth Date"
           },
           "guardian_name": {
@@ -2596,7 +2589,8 @@
         "type": "object",
         "required": [
           "token",
-          "password"
+          "password",
+          "birth_date"
         ],
         "title": "ClaimInviteBody"
       },
@@ -3160,15 +3154,8 @@
             "title": "Password"
           },
           "birth_date": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
+            "format": "date",
             "title": "Birth Date"
           },
           "guardian_name": {
@@ -3210,7 +3197,8 @@
           "display_name",
           "email",
           "phone",
-          "password"
+          "password",
+          "birth_date"
         ],
         "title": "RegisterBody"
       },

@@ -711,8 +711,11 @@ export interface components {
             token: string;
             /** Password */
             password: string;
-            /** Birth Date */
-            birth_date?: string | null;
+            /**
+             * Birth Date
+             * Format: date
+             */
+            birth_date: string;
             /** Guardian Name */
             guardian_name?: string | null;
             /** Guardian Phone */
@@ -926,8 +929,11 @@ export interface components {
             phone: string;
             /** Password */
             password: string;
-            /** Birth Date */
-            birth_date?: string | null;
+            /**
+             * Birth Date
+             * Format: date
+             */
+            birth_date: string;
             /** Guardian Name */
             guardian_name?: string | null;
             /** Guardian Phone */

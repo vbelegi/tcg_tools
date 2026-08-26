@@ -24,7 +24,11 @@ def test_invite_claim_and_login(api_client: TestClient, db_session: Session):
     invite = create_invite(db_session, user)
     r = api_client.post(
         "/api/v1/auth/claim-invite",
-        json={"token": invite.token, "password": "abcdef"},
+        json={
+            "token": invite.token,
+            "password": "abcdef",
+            "birth_date": "1995-03-20",
+        },
     )
     assert r.status_code == 200
     assert r.json()["email"] == "jogador.x@example.com"

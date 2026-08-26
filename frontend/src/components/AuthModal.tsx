@@ -56,7 +56,7 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
         email,
         phone,
         password,
-        birth_date: birthDate || undefined,
+        birth_date: birthDate,
         guardian_name: guardianName || undefined,
         guardian_phone: guardianPhone || undefined,
         guardian_relation: guardianRelation || undefined,
@@ -68,6 +68,10 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (mode === "register") {
+      if (!birthDate) {
+        setError("Data de nascimento é obrigatória.");
+        return;
+      }
       if (password !== password2) {
         setError("Confirmação de senha não confere.");
         return;
@@ -80,10 +84,28 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
 
   const pending = login.isPending || register.isPending;
   const title = mode === "login" ? "Entrar" : "Criar conta";
+  const canSubmit =
+    !pending &&
+    password.length >= 6 &&
+    (mode === "login" || (Boolean(displayName.trim()) && Boolean(birthDate) && Boolean(phone.trim())));
 
   return (
-    <Modal open={open} title={title} onClose={onClose}>
-      <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
+    <Modal
+      open={open}
+      title={title}
+      onClose={onClose}
+      footer={
+        <>
+          <button className="secondary" type="button" onClick={onClose} disabled={pending}>
+            Cancelar
+          </button>
+          <button className="primary" type="submit" form="auth-modal-form" disabled={!canSubmit}>
+            {pending ? "Aguarde…" : mode === "login" ? "Entrar" : "Criar conta"}
+          </button>
+        </>
+      }
+    >
+      <div className="auth-mode-tabs">
         <button
           type="button"
           className={mode === "login" ? "primary" : "secondary"}
@@ -100,7 +122,7 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
         </button>
       </div>
       {error && <p className="error">{error}</p>}
-      <form onSubmit={onSubmit}>
+      <form id="auth-modal-form" onSubmit={onSubmit}>
         {mode === "register" && (
           <>
             <div className="form-row">
@@ -124,16 +146,17 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
               />
             </div>
             <div className="form-row">
-              <label htmlFor="auth-bd">Data de nascimento (obrigatória se menor de 18)</label>
+              <label htmlFor="auth-bd">Data de nascimento</label>
               <input
                 id="auth-bd"
                 type="date"
                 value={birthDate}
                 onChange={(e) => setBirthDate(e.target.value)}
+                required
               />
             </div>
             <div className="form-row">
-              <label htmlFor="auth-gn">Responsável (se menor)</label>
+              <label htmlFor="auth-gn">Responsável (obrigatório se menor de 18)</label>
               <input
                 id="auth-gn"
                 value={guardianName}
@@ -196,18 +219,6 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
             />
           </div>
         )}
-        <div className="modal-footer" style={{ padding: 0, marginTop: "1rem" }}>
-          <button className="secondary" type="button" onClick={onClose} disabled={pending}>
-            Cancelar
-          </button>
-          <button
-            className="primary"
-            type="submit"
-            disabled={pending || password.length < 6 || (mode === "register" && !displayName.trim())}
-          >
-            {pending ? "Aguarde…" : mode === "login" ? "Entrar" : "Criar conta"}
-          </button>
-        </div>
       </form>
     </Modal>
   );

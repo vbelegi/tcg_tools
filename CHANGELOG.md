@@ -16,6 +16,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- **Lista de torneios:** “Novo torneio” / “Importar externo” só para staff/admin (externo só admin); links `.secondary` no estilo pill
+- **Auth modal:** layout mais estreito, inputs full-width, body scrollável e ações no footer
+- **Data de nascimento:** obrigatória no register/claim; responsável só se menor de 18
 - **Home:** atalhos Premiação/Sorteador só para staff/admin
 - **`/usuarios`:** gated por `RequireAdmin` no frontend
 - **Guardian:** obrigatório no register/claim quando birth_date indica menor de 18

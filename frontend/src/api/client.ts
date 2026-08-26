@@ -111,7 +111,7 @@ export const api = {
     email: string;
     phone: string;
     password: string;
-    birth_date?: string;
+    birth_date: string;
     guardian_name?: string;
     guardian_phone?: string;
     guardian_relation?: string;
@@ -131,7 +131,7 @@ export const api = {
   claimInvite: (body: {
     token: string;
     password: string;
-    birth_date?: string;
+    birth_date: string;
     guardian_name?: string;
     guardian_phone?: string;
     guardian_relation?: string;

@@ -42,7 +42,7 @@ class RegisterBody(BaseModel):
     email: str
     phone: str
     password: str
-    birth_date: date | None = None
+    birth_date: date
     guardian_name: str | None = None
     guardian_phone: str | None = None
     guardian_relation: str | None = None
@@ -56,7 +56,7 @@ class ChangePasswordBody(BaseModel):
 class ClaimInviteBody(BaseModel):
     token: str
     password: str
-    birth_date: date | None = None
+    birth_date: date
     guardian_name: str | None = None
     guardian_phone: str | None = None
     guardian_relation: str | None = None

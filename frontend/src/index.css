@@ -265,18 +265,26 @@ button.primary:disabled {
   cursor: not-allowed;
 }
 
-button.secondary {
+button.secondary,
+a.secondary {
+  display: inline-block;
   background: transparent;
   border: 1px solid var(--border);
   color: var(--text);
-  padding: 0.5rem 1rem;
+  padding: 0.6rem 1.25rem;
   border-radius: 999px;
   cursor: pointer;
+  font-weight: 600;
+  text-decoration: none;
+  text-align: center;
+  box-sizing: border-box;
 }
 
-button.secondary:hover:not(:disabled) {
+button.secondary:hover:not(:disabled),
+a.secondary:hover {
   border-color: var(--primary);
   color: var(--primary);
+  text-decoration: none;
 }
 
 button.danger {
@@ -352,14 +360,19 @@ select.score-select {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 1.25rem 1.5rem;
-  max-width: 420px;
+  max-width: 360px;
   width: 100%;
+  max-height: min(90vh, 720px);
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  box-sizing: border-box;
 }
 
 .modal-title {
   margin: 0 0 0.75rem;
   font-size: 1.1rem;
+  flex-shrink: 0;
 }
 
 .modal-message {
@@ -369,8 +382,31 @@ select.score-select {
   line-height: 1.5;
 }
 
+.modal-body {
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .modal-body .form-row {
-  margin-bottom: 0;
+  margin-bottom: 0.85rem;
+}
+
+.modal-dialog input,
+.modal-dialog select,
+.modal-dialog textarea {
+  width: 100%;
+  max-width: 100%;
+}
+
+.auth-mode-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.auth-mode-tabs button {
+  flex: 1;
 }
 
 .modal-footer {
@@ -378,6 +414,8 @@ select.score-select {
   justify-content: flex-end;
   gap: 0.5rem;
   margin-top: 1.25rem;
+  flex-shrink: 0;
+  width: 100%;
 }
 
 select.modal-select {

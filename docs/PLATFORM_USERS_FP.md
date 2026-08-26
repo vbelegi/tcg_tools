@@ -15,8 +15,8 @@ Contrato de produto (LAN v1 → web v2). Moeda: **Fourse Points (FP)**.
 - Login: **email + senha** (sem username de login); UI em **modal** (sem hints de bootstrap na interface).
 - Nome de exibição: não precisa ser único.
 - Email e celular: **únicos**; erro se já existirem.
-- **Auto-cadastro (player):** nome + e-mail + celular + senha → status `active` (conta completa).
-- **Menor de 18:** se informar data de nascimento &lt; 18 anos, exige `guardian_name` + `guardian_phone` (register e claim-invite).
+- **Auto-cadastro (player):** nome + e-mail + celular + senha + **data de nascimento** → status `active` (conta completa).
+- **Menor de 18:** data de nascimento obrigatória para todos os players; se &lt; 18 anos, exige também `guardian_name` + `guardian_phone` (register e claim-invite).
 - **Conta rápida incomplete (só staff/admin):** na ficha do torneio (ou painel Usuários) → nome + celular + email, sem senha; finalização via **link de convite** (7 dias, uso único). Admin **copia o link** e encaminha manualmente (sem e-mail automático na LAN v1).
 - Admin pode **excluir torneio** (qualquer status) com confirmação pelo nome.
 - Staff pode **buscar conta existente** e inscrever na ficha do draft.

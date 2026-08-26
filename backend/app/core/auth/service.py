@@ -173,7 +173,7 @@ def require_guardian_if_minor(
     guardian_phone: str | None,
 ) -> None:
     if birth_date is None:
-        return
+        raise AuthError("Data de nascimento é obrigatória.")
     if age_years(birth_date) >= 18:
         return
     if not (guardian_name or "").strip() or not (guardian_phone or "").strip():
@@ -225,7 +225,7 @@ def register_player(
     email: str,
     phone: str,
     password: str,
-    birth_date: date | None = None,
+    birth_date: date,
     guardian_name: str | None = None,
     guardian_phone: str | None = None,
     guardian_relation: str | None = None,
@@ -286,7 +286,7 @@ def claim_invite(
     token: str,
     password: str,
     *,
-    birth_date: date | None = None,
+    birth_date: date,
     guardian_name: str | None = None,
     guardian_phone: str | None = None,
     guardian_relation: str | None = None,
@@ -300,8 +300,7 @@ def claim_invite(
     validate_password_plain(password)
     user.password_hash = hash_password(password)
     user.status = UserStatus.active.value
-    if birth_date is not None:
-        user.birth_date = birth_date
+    user.birth_date = birth_date
     if guardian_name is not None:
         user.guardian_name = guardian_name.strip() or None
     if guardian_phone is not None:

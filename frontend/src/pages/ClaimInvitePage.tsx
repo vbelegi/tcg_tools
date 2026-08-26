@@ -20,7 +20,7 @@ export function ClaimInvitePage() {
       api.claimInvite({
         token,
         password,
-        birth_date: birthDate || undefined,
+        birth_date: birthDate,
         guardian_name: guardianName || undefined,
         guardian_phone: guardianPhone || undefined,
         guardian_relation: guardianRelation || undefined,
@@ -31,6 +31,10 @@ export function ClaimInvitePage() {
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
+    if (!birthDate) {
+      setError("Data de nascimento é obrigatória.");
+      return;
+    }
     if (password !== password2) {
       setError("Confirmação de senha não confere.");
       return;
@@ -68,10 +72,16 @@ export function ClaimInvitePage() {
         </div>
         <div className="form-row">
           <label htmlFor="bd">Data de nascimento</label>
-          <input id="bd" type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+          <input
+            id="bd"
+            type="date"
+            value={birthDate}
+            onChange={(e) => setBirthDate(e.target.value)}
+            required
+          />
         </div>
         <div className="form-row">
-          <label htmlFor="gn">Responsável (se menor)</label>
+          <label htmlFor="gn">Responsável (obrigatório se menor de 18)</label>
           <input id="gn" value={guardianName} onChange={(e) => setGuardianName(e.target.value)} />
         </div>
         <div className="form-row">

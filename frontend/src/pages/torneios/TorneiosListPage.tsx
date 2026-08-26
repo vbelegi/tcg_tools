@@ -1,22 +1,41 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+
 import { api } from "../../api/client";
 
 export function TorneiosListPage() {
   const { data, isLoading } = useQuery({ queryKey: ["torneios"], queryFn: api.listTorneios });
+  const { data: me } = useQuery({
+    queryKey: ["auth-me"],
+    queryFn: () => api.authMe(),
+    retry: false,
+  });
+  const canManage = me && (me.role === "admin" || me.role === "staff");
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "0.75rem",
+          flexWrap: "wrap",
+        }}
+      >
         <h1>Torneios</h1>
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-          <Link to="/torneios/externo" className="secondary">
-            Importar externo
-          </Link>
-          <Link to="/torneios/novo" className="primary">
-            Novo torneio
-          </Link>
-        </div>
+        {canManage && (
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+            {me.role === "admin" && (
+              <Link to="/torneios/externo" className="secondary">
+                Importar externo
+              </Link>
+            )}
+            <Link to="/torneios/novo" className="primary">
+              Novo torneio
+            </Link>
+          </div>
+        )}
       </div>
       {isLoading && <p>Carregando...</p>}
       {data && data.length === 0 && <p>Nenhum torneio cadastrado.</p>}
