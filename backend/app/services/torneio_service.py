@@ -261,6 +261,11 @@ class TorneioService:
         ]
         return summary
 
+    def delete_event(self, event_id: int) -> None:
+        event = self._require_event(event_id)
+        self._repo.delete_event(event)
+        self._commit()
+
     def update_event(self, event_id: int, data: dict[str, Any]) -> Event:
         event = self._require_event(event_id)
         if event.status != "draft":

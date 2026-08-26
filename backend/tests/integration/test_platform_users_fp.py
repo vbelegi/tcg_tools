@@ -150,3 +150,22 @@ def test_users_search_staff(api_client: TestClient, db_session: Session):
     r = api_client.get("/api/v1/users/search?q=Busca")
     assert r.status_code == 200
     assert any(u["email"] == "busca@example.com" for u in r.json())
+
+
+def test_delete_torneio_admin(api_client: TestClient):
+    r = api_client.post(
+        "/api/v1/torneios",
+        json={
+            "name": "To Delete",
+            "event_date": date.today().isoformat(),
+            "format": "swiss",
+            "max_rounds": 2,
+            "entry_fee": 10,
+            "best_of": 3,
+            "premiacao_preset_id": "standard",
+        },
+    )
+    assert r.status_code == 200
+    eid = r.json()["id"]
+    assert api_client.delete(f"/api/v1/torneios/{eid}").status_code == 204
+    assert api_client.get(f"/api/v1/torneios/{eid}").status_code == 404

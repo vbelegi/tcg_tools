@@ -111,6 +111,18 @@ def get_torneio(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
+@router.delete("/{event_id}", status_code=204)
+def delete_torneio(
+    event_id: int,
+    _: RequireAdmin,
+    svc: TorneioService = Depends(get_torneio_service),
+):
+    try:
+        svc.delete_event(event_id)
+    except TorneioError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
 @router.patch("/{event_id}")
 def update_torneio(
     event_id: int,

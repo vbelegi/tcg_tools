@@ -88,6 +88,9 @@ class EventRepository(EventRepositoryProtocol):
     def remove_player(self, player: Player) -> None:
         self._db.delete(player)
 
+    def delete_event(self, event: Event) -> None:
+        self._db.delete(event)
+
     def to_tournament_state(self, event: Event) -> TournamentState:
         players = [
             PlayerRecord(
