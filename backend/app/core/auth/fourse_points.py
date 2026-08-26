@@ -117,6 +117,7 @@ def ranking(db: DbSession, *, limit: int = 100) -> list[dict[str, Any]]:
         if bucket.get("avatar_url") is None:
             bucket["avatar_url"] = media_url(avatar_path)
     ordered = sorted(totals.values(), key=lambda r: (-r["points"], r["display_name"].lower()))
+    ordered = [row for row in ordered if int(row.get("points") or 0) > 0]
     for i, row in enumerate(ordered[:limit], start=1):
         row["rank"] = i
     return ordered[:limit]

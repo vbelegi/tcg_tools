@@ -114,6 +114,11 @@ def create_torneio(
     svc: TorneioService = Depends(get_torneio_service),
 ):
     try:
+        from app.models import TcgGame
+
+        game = svc._db.query(TcgGame).filter(TcgGame.id == body.tcg_game_id).one_or_none()
+        if game is None or not game.active:
+            raise HTTPException(status_code=422, detail="TCG inválido.")
         event = svc.create_event(
             body.name,
             body.event_date,
@@ -130,11 +135,6 @@ def create_torneio(
         raw.registration_open = bool(body.registration_open)
         raw.description = (body.description or "").strip() or None
         raw.start_time = body.start_time
-        from app.models import TcgGame
-
-        game = svc._db.query(TcgGame).filter(TcgGame.id == body.tcg_game_id).one_or_none()
-        if game is None or not game.active:
-            raise HTTPException(status_code=422, detail="TCG inválido.")
         raw.tcg_game_id = body.tcg_game_id
         svc._commit()
         return svc.get_event(event.id)

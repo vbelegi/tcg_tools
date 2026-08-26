@@ -27,6 +27,20 @@ export function RequireAuth() {
   return <Outlet />;
 }
 
+export function RequireStaff() {
+  const location = useLocation();
+  const { data, isLoading, isError } = useAuthMe();
+
+  if (isLoading) return <p>Carregando...</p>;
+  if (isError || !data) {
+    return loginRedirect(location.pathname, location.search);
+  }
+  if (data.role !== "admin" && data.role !== "staff") {
+    return <Navigate to="/" replace />;
+  }
+  return <Outlet />;
+}
+
 export function RequireAdmin() {
   const location = useLocation();
   const { data, isLoading, isError } = useAuthMe();

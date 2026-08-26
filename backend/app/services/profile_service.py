@@ -53,6 +53,9 @@ def build_public_profile(
     user: User,
     viewer: User | None,
 ) -> dict[str, Any]:
+    show_fp = can_view_fp(viewer, user)
+    is_owner = bool(viewer and viewer.id == user.id)
+
     players = db.query(Player).filter(Player.user_id == user.id).all()
     event_ids = [p.event_id for p in players]
     events: dict[int, Event] = {}
@@ -81,21 +84,21 @@ def build_public_profile(
         row = next((s for s in snap if s.get("player_id") == p.id), None)
         rank = row.get("rank") if row else None
         is_drop = row.get("is_drop") if row else bool(p.dropped_at)
-        history.append(
-            {
-                "event_id": ev.id,
-                "event_name": ev.name,
-                "event_date": ev.event_date.isoformat(),
-                "source": ev.source,
-                "rank": rank,
-                "rank_label": row.get("rank_label") if row else None,
-                "is_drop": bool(is_drop),
-                "decklist": p.decklist,
-                "player_count": len(ev.players),
-                "tcg_game": _tcg_payload(ev),
-                "fp_earned": fp_by_event.get(ev.id, 0),
-            }
-        )
+        entry: dict[str, Any] = {
+            "event_id": ev.id,
+            "event_name": ev.name,
+            "event_date": ev.event_date.isoformat(),
+            "source": ev.source,
+            "rank": rank,
+            "rank_label": row.get("rank_label") if row else None,
+            "is_drop": bool(is_drop),
+            "decklist": p.decklist,
+            "player_count": len(ev.players),
+            "tcg_game": _tcg_payload(ev),
+        }
+        if show_fp:
+            entry["fp_earned"] = fp_by_event.get(ev.id, 0)
+        history.append(entry)
     history.sort(key=lambda h: h["event_date"], reverse=True)
 
     ranks = [h["rank"] for h in history if h["rank"] is not None and not h["is_drop"]]
@@ -110,44 +113,46 @@ def build_public_profile(
         "best_finish": best,
     }
 
-    fp_by_game_map: dict[str, dict[str, Any]] = {}
-    for h in history:
-        tcg = h.get("tcg_game")
-        key = tcg["name"] if tcg else "Outros"
-        bucket = fp_by_game_map.setdefault(
-            key,
-            {
-                "tcg_name": key,
-                "tcg_game": tcg,
-                "points": 0,
-                "tournaments": 0,
-            },
-        )
-        bucket["points"] += int(h.get("fp_earned") or 0)
-        bucket["tournaments"] += 1
-    fp_by_game = sorted(fp_by_game_map.values(), key=lambda r: (-r["points"], r["tcg_name"]))
+    fp_by_game: list[dict[str, Any]] = []
+    fp_by_month: list[dict[str, Any]] = []
+    if show_fp:
+        fp_by_game_map: dict[str, dict[str, Any]] = {}
+        for h in history:
+            tcg = h.get("tcg_game")
+            key = tcg["name"] if tcg else "Outros"
+            bucket = fp_by_game_map.setdefault(
+                key,
+                {
+                    "tcg_name": key,
+                    "tcg_game": tcg,
+                    "points": 0,
+                    "tournaments": 0,
+                },
+            )
+            bucket["points"] += int(h.get("fp_earned") or 0)
+            bucket["tournaments"] += 1
+        fp_by_game = sorted(fp_by_game_map.values(), key=lambda r: (-r["points"], r["tcg_name"]))
 
-    month_points: dict[str, int] = defaultdict(int)
-    month_counts: Counter[str] = Counter()
-    for h in history:
-        ym = h["event_date"][:7]
-        month_points[ym] += int(h.get("fp_earned") or 0)
-        month_counts[ym] += 1
-    fp_by_month = [
-        {"month": m, "points": month_points[m], "tournaments": month_counts[m]}
-        for m in sorted(month_points.keys())
-    ]
+        month_points: dict[str, int] = defaultdict(int)
+        month_counts: Counter[str] = Counter()
+        for h in history:
+            ym = h["event_date"][:7]
+            month_points[ym] += int(h.get("fp_earned") or 0)
+            month_counts[ym] += 1
+        fp_by_month = [
+            {"month": m, "points": month_points[m], "tournaments": month_counts[m]}
+            for m in sorted(month_points.keys())
+        ]
+    else:
+        month_counts = Counter(h["event_date"][:7] for h in history)
 
-    badge_games: list[dict[str, Any]] = []
-    seen: set[int] = set()
-    for h in history:
-        tcg = h.get("tcg_game")
-        if not tcg or tcg["id"] in seen:
-            continue
-        seen.add(tcg["id"])
-        badge_games.append(tcg)
-
-    insights = _build_insights(history, fp_by_game, month_counts, best)
+    insights = _build_insights(
+        history,
+        fp_by_game if show_fp else [],
+        month_counts,
+        best,
+        second_person=is_owner,
+    )
 
     rank_position = None
     total_fp = user_fp_total(db, user.id)
@@ -157,26 +162,32 @@ def build_public_profile(
                 rank_position = row["rank"]
                 break
 
-    show_fp = can_view_fp(viewer, user)
     payload: dict[str, Any] = {
         **public_user_dict(user),
         "created_at": user.created_at.isoformat() if user.created_at else None,
         "avatar_url": media_url(user.avatar_path),
         "stats": stats,
         "insights": insights,
-        "badge_games": badge_games,
-        "fp_by_game": fp_by_game,
-        "fp_by_month": fp_by_month,
+        "badge_games": [],
+        "fp_by_game": fp_by_game if show_fp else [],
+        "fp_by_month": fp_by_month if show_fp else [],
         "history": history,
-        "ranking_position": rank_position,
+        "ranking_position": rank_position if show_fp else None,
         "viewer_authenticated": viewer is not None,
-        "can_edit": bool(viewer and viewer.id == user.id),
+        "can_edit": is_owner,
         "fourse_points_visible": show_fp,
+        "fourse_points": total_fp if show_fp else None,
     }
-    if show_fp:
-        payload["fourse_points"] = total_fp
-    else:
-        payload["fourse_points"] = None
+
+    badge_games: list[dict[str, Any]] = []
+    seen: set[int] = set()
+    for h in history:
+        tcg = h.get("tcg_game")
+        if not tcg or tcg["id"] in seen:
+            continue
+        seen.add(tcg["id"])
+        badge_games.append(tcg)
+    payload["badge_games"] = badge_games
     return payload
 
 
@@ -185,6 +196,8 @@ def _build_insights(
     fp_by_game: list[dict[str, Any]],
     month_counts: Counter[str],
     best: int | None,
+    *,
+    second_person: bool = False,
 ) -> list[str]:
     insights: list[str] = []
     if not history:
@@ -198,14 +211,24 @@ def _build_insights(
 
     if fp_by_game:
         best_game = max(fp_by_game, key=lambda g: (g["points"], g["tournaments"]))
-        insights.append(f"Seu melhor card game é {best_game['tcg_name']}.")
+        if second_person:
+            insights.append(f"Seu melhor card game é {best_game['tcg_name']}.")
+        else:
+            insights.append(f"Melhor card game: {best_game['tcg_name']}.")
 
     if best is not None:
-        insights.append(f"Seu melhor resultado foi {best}º lugar.")
+        if second_person:
+            insights.append(f"Seu melhor resultado foi {best}º lugar.")
+        else:
+            insights.append(f"Melhor resultado: {best}º lugar.")
 
     if month_counts:
         top_month, _ = month_counts.most_common(1)[0]
         y, m = top_month.split("-")
-        insights.append(f"Seu mês mais ativo foi {MONTHS_PT[int(m) - 1].capitalize()} de {y}.")
+        label = f"{MONTHS_PT[int(m) - 1].capitalize()} de {y}"
+        if second_person:
+            insights.append(f"Seu mês mais ativo foi {label}.")
+        else:
+            insights.append(f"Mês mais ativo: {label}.")
 
     return insights[:4]

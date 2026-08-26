@@ -8,7 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.services.torneio_service import TorneioService
-from tests.conftest import run_se_bracket, score_all_matches
+from tests.conftest import enroll_named_players_api, run_se_bracket, score_all_matches
 
 
 def _create_swiss(client: TestClient) -> int:
@@ -27,8 +27,7 @@ def _create_swiss(client: TestClient) -> int:
     )
     assert r.status_code == 200
     eid = r.json()["id"]
-    for name in ("A", "B", "C", "D"):
-        assert client.post(f"/api/v1/torneios/{eid}/jogadores", json={"name": name}).status_code == 200
+    enroll_named_players_api(client, eid, ("A", "B", "C", "D"))
     return eid
 
 
@@ -106,14 +105,7 @@ def _create_se(client: TestClient, player_count: int = 4) -> int:
     )
     assert r.status_code == 200
     eid = r.json()["id"]
-    for i in range(player_count):
-        assert (
-            client.post(
-                f"/api/v1/torneios/{eid}/jogadores",
-                json={"name": f"P{i + 1}"},
-            ).status_code
-            == 200
-        )
+    enroll_named_players_api(client, eid, [f"P{i + 1}" for i in range(player_count)])
     return eid
 
 

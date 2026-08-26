@@ -56,14 +56,18 @@ def test_pending_attendance_blocks_start(api_client: TestClient, db_session: Ses
         },
     )
     eid = r.json()["id"]
-    for name in ("A", "B", "C"):
-        assert (
-            api_client.post(f"/api/v1/torneios/{eid}/jogadores", json={"name": name}).status_code
-            == 200
-        )
+    from tests.conftest import enroll_named_players_api
+
+    enroll_named_players_api(api_client, eid, ("A", "B", "C"))
     pending = api_client.post(
         f"/api/v1/torneios/{eid}/jogadores",
-        json={"name": "D", "attendance": "pending"},
+        json={
+            "name": "D",
+            "attendance": "pending",
+            "create_account": True,
+            "email": f"d.pending.{eid}@api.test",
+            "phone": f"+55117{eid % 10000:04d}0001",
+        },
     )
     assert pending.status_code == 200
     start = api_client.post(f"/api/v1/torneios/{eid}/iniciar")
@@ -99,10 +103,14 @@ def test_finalize_awards_fp(api_client: TestClient, db_session: Session):
     )
     eid = r.json()["id"]
     names = [("A", user.id), ("B", None), ("C", None), ("D", None)]
-    for name, uid in names:
+    for i, (name, uid) in enumerate(names):
         body: dict = {"name": name}
         if uid:
             body["user_id"] = uid
+        else:
+            body["create_account"] = True
+            body["email"] = f"{name.lower()}.fp.{eid}.{i}@api.test"
+            body["phone"] = f"+55116{eid % 10000:04d}{i:04d}"
         assert api_client.post(f"/api/v1/torneios/{eid}/jogadores", json=body).status_code == 200
 
     assert api_client.post(f"/api/v1/torneios/{eid}/iniciar").status_code == 200
@@ -183,6 +191,46 @@ def test_delete_torneio_admin(api_client: TestClient):
     eid = r.json()["id"]
     assert api_client.delete(f"/api/v1/torneios/{eid}").status_code == 204
     assert api_client.get(f"/api/v1/torneios/{eid}").status_code == 404
+
+
+def test_create_torneio_rejects_invalid_tcg_without_orphan(api_client: TestClient):
+    before = {t["id"] for t in api_client.get("/api/v1/torneios").json()}
+    bad = api_client.post(
+        "/api/v1/torneios",
+        json={
+            "name": "Orphan TCG",
+            "event_date": date.today().isoformat(),
+            "format": "swiss",
+            "max_rounds": 2,
+            "entry_fee": 10,
+            "best_of": 3,
+            "premiacao_preset_id": "standard",
+            "tcg_game_id": 999999,
+        },
+    )
+    assert bad.status_code == 422
+    after = {t["id"] for t in api_client.get("/api/v1/torneios").json()}
+    assert after == before
+
+
+def test_add_player_rejects_nameless_walk_in(api_client: TestClient):
+    r = api_client.post(
+        "/api/v1/torneios",
+        json={
+            "name": "No Walkin",
+            "event_date": date.today().isoformat(),
+            "format": "swiss",
+            "max_rounds": 2,
+            "entry_fee": 10,
+            "best_of": 3,
+            "premiacao_preset_id": "standard",
+            "tcg_game_id": 1,
+        },
+    )
+    assert r.status_code == 200
+    eid = r.json()["id"]
+    denied = api_client.post(f"/api/v1/torneios/{eid}/jogadores", json={"name": "Solo"})
+    assert denied.status_code == 422
 
 
 def test_guest_sees_finished_and_open_registration(api_client: TestClient):

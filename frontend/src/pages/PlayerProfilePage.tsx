@@ -347,58 +347,60 @@ export function PlayerProfilePage() {
         </div>
       </section>
 
-      <div className="profile-charts">
-        <section className="profile-section profile-chart-card">
-          <h2>Pontos por jogo</h2>
-          {chartGames.length === 0 ? (
-            <p className="muted">Sem dados ainda.</p>
-          ) : (
-            <div className="profile-chart">
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={chartGames}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#3a2a4a" />
-                  <XAxis dataKey="name" stroke="#a898b8" fontSize={12} />
-                  <YAxis stroke="#a898b8" fontSize={12} />
-                  <Tooltip
-                    contentStyle={{ background: "#1c1028", border: "1px solid #3a2a4a" }}
-                    labelFormatter={(_, payload) =>
-                      (payload?.[0]?.payload as { full?: string } | undefined)?.full ?? ""
-                    }
-                  />
-                  <Bar dataKey="points" fill="#9b2de0" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </section>
+      {showFp && (
+        <div className="profile-charts">
+          <section className="profile-section profile-chart-card">
+            <h2>Pontos por jogo</h2>
+            {chartGames.length === 0 ? (
+              <p className="muted">Sem dados ainda.</p>
+            ) : (
+              <div className="profile-chart">
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={chartGames}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#3a2a4a" />
+                    <XAxis dataKey="name" stroke="#a898b8" fontSize={12} />
+                    <YAxis stroke="#a898b8" fontSize={12} />
+                    <Tooltip
+                      contentStyle={{ background: "#1c1028", border: "1px solid #3a2a4a" }}
+                      labelFormatter={(_, payload) =>
+                        (payload?.[0]?.payload as { full?: string } | undefined)?.full ?? ""
+                      }
+                    />
+                    <Bar dataKey="points" fill="#9b2de0" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </section>
 
-        <section className="profile-section profile-chart-card">
-          <h2>Desempenho por temporada</h2>
-          {chartMonths.length === 0 ? (
-            <p className="muted">Sem dados ainda.</p>
-          ) : (
-            <div className="profile-chart">
-              <ResponsiveContainer width="100%" height={220}>
-                <LineChart data={chartMonths}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#3a2a4a" />
-                  <XAxis dataKey="month" stroke="#a898b8" fontSize={12} />
-                  <YAxis stroke="#a898b8" fontSize={12} />
-                  <Tooltip
-                    contentStyle={{ background: "#1c1028", border: "1px solid #3a2a4a" }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="points"
-                    stroke="#9b2de0"
-                    strokeWidth={2}
-                    dot={{ r: 4, fill: "#9b2de0" }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </section>
-      </div>
+          <section className="profile-section profile-chart-card">
+            <h2>Desempenho por temporada</h2>
+            {chartMonths.length === 0 ? (
+              <p className="muted">Sem dados ainda.</p>
+            ) : (
+              <div className="profile-chart">
+                <ResponsiveContainer width="100%" height={220}>
+                  <LineChart data={chartMonths}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#3a2a4a" />
+                    <XAxis dataKey="month" stroke="#a898b8" fontSize={12} />
+                    <YAxis stroke="#a898b8" fontSize={12} />
+                    <Tooltip
+                      contentStyle={{ background: "#1c1028", border: "1px solid #3a2a4a" }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="points"
+                      stroke="#9b2de0"
+                      strokeWidth={2}
+                      dot={{ r: 4, fill: "#9b2de0" }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </section>
+        </div>
+      )}
 
       <section className="profile-section">
         <div className="profile-history-head">

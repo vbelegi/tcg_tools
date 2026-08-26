@@ -335,6 +335,10 @@ class TorneioService:
         clean_name = self._normalize_name(name)
         if not clean_name:
             raise TorneioError("Nome do jogador é obrigatório.")
+        if not create_account and user_id is None and not (email or "").strip():
+            raise TorneioError(
+                "Inscrição exige conta existente (user_id/e-mail) ou create_account com e-mail e celular."
+            )
         self._ensure_unique_player_name(event, clean_name)
         self._ensure_unique_seed(event, seed)
 
@@ -360,10 +364,11 @@ class TorneioService:
             self._ensure_unique_player_name(event, clean_name)
         elif email:
             user = get_user_by_email(self._db, email)
-            if user:
-                resolved_user_id = user.id
-                clean_name = user.display_name
-                self._ensure_unique_player_name(event, clean_name)
+            if not user:
+                raise TorneioError("Conta não encontrada para este e-mail.")
+            resolved_user_id = user.id
+            clean_name = user.display_name
+            self._ensure_unique_player_name(event, clean_name)
 
         if resolved_user_id is not None:
             dup = next((p for p in event.players if p.user_id == resolved_user_id), None)

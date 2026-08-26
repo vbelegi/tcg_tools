@@ -144,4 +144,8 @@ def public_profile(user_id: int, db: Session = Depends(get_db), viewer: User | N
     user = db.query(User).filter(User.id == user_id).one_or_none()
     if user is None:
         raise HTTPException(status_code=404, detail="Jogador não encontrado.")
+    is_owner = bool(viewer and viewer.id == user.id)
+    is_admin = bool(viewer and viewer.role == UserRole.admin.value)
+    if user.status != UserStatus.active.value and not (is_owner or is_admin):
+        raise HTTPException(status_code=404, detail="Jogador não encontrado.")
     return build_public_profile(db, user, viewer)

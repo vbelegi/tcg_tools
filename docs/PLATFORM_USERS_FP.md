@@ -24,7 +24,7 @@ Contrato de produto (LAN v1 → web v2). Moeda: **Fourse Points (FP)**.
 
 ## Inscrição e presença
 
-- Fontes: walk-in sem conta, conta existente, criação rápida, self-service.
+- Fontes: conta existente, criação rápida (incomplete), self-service. **Sem walk-in** sem conta.
 - `attendance`: `pending` | `checked_in`.
 - Self-service → `pending`; staff na loja pode criar já `checked_in`.
 - **Bloquear start** se houver `pending`.
@@ -64,7 +64,7 @@ Público: stats (torneios, títulos, top 8, melhor colocação), **Insights** he
 
 **Acesso:** Ranking Fourse Points (pódio top 3 + lista; `GET /ranking` com `avatar_url`); **Meu Perfil** no sidebar (logado); nome linkado em `/usuarios` (admin); busca pública no topo do perfil (`GET /jogadores/buscar?q=` → só `id`, `display_name`, `avatar_url`).
 
-**FP:** visível só para o **próprio jogador** e **admin**.
+**FP:** total e breakdown (`fp_by_*`, `fp_earned`, gráficos, posição no ranking) visíveis só para o **próprio jogador** e **admin**. Ranking público (`GET /ranking`) continua listando totais agregados.
 
 **Avatar:** upload próprio (`POST /auth/me/avatar`, máx. 512 KB; redimensiona para 256×256 WebP em `data/media/avatars/`). Placeholder: `/avatars/default.png`. Edição de nome: `PATCH /auth/me`. **Alterar senha** só no próprio perfil (modal); removido do sidebar.
 

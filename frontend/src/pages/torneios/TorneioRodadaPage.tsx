@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Link, Navigate, useParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 
 import { ConfirmModal } from "../../components/ConfirmModal";
 import { PlayerPickerModal } from "../../components/PlayerPickerModal";
@@ -116,6 +116,7 @@ export function TorneioRodadaPage() {
   const { id, n } = useParams<{ id: string; n: string }>();
   const eventId = Number(id);
   const roundNum = Number(n);
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const [error, setError] = useState("");
   const [scores, setScores] = useState<Record<number, ScoreDraft>>({});
@@ -193,7 +194,7 @@ export function TorneioRodadaPage() {
       setCompletarModalOpen(false);
       setHighlightIncomplete(false);
       qc.invalidateQueries({ queryKey: ["torneio", eventId] });
-      window.location.href = `/torneios/${eventId}`;
+      navigate(`/torneios/${eventId}`);
     },
     onError: (e) => {
       setCompletarModalOpen(false);
@@ -514,6 +515,7 @@ export function TorneioRodadaPage() {
         description="O oponente recebe vitória automática. Esta ação não pode ser desfeita — confirme o jogador que desistiu da partida."
         players={activePlayers}
         confirmLabel="Confirmar WO"
+        requireNameConfirm
         pending={dropPlayer.isPending}
         onClose={() => setWoModalOpen(false)}
         onConfirm={(pid) => dropPlayer.mutate(pid)}

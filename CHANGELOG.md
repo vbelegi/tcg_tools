@@ -11,7 +11,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 ### Added
 
 - **Torneio draft UX:** inscrição unificada (busca → conta existente ou incomplete); header com Iniciar; Excluir no menu ⋯
-- **Admin UX:** Premiação, Sorteador, Usuários e TCGs no padrão denso (header manage, chips, tabelas compactas)
+- **Hardening:** FP breakdown/gráficos só dono/admin; create torneio valida TCG antes do commit; API bloqueia walk-in sem conta; `RequireStaff`/`RequireAdmin` nas rotas admin; WO com type-to-confirm; perfil incomplete não é público por id
 - **Perfil — navegação:** Meu Perfil no sidebar; nome linkado em Usuários; busca pública `GET /jogadores/buscar`
 - **Perfil — senha:** modal Alterar senha no próprio perfil (removido do sidebar)
 - **Perfil do jogador:** dashboard com stats, Insights, badges TCG, Recharts (FP por jogo/mês), histórico filtrável; avatar + editar nome
@@ -38,7 +38,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 - **Torneio:** `tcg_game_id` obrigatório na criação (API + UI interno/externo)
 - **Perfil:** FP oculto para visitantes (visível para dono e admin); decklists e histórico públicos
 - **Inscrição aberta:** guest/player veem drafts com `registration_open` (vitrine + CTA); draft fechado continua oculto
-- **Walk-in:** validação de celular com erro junto ao formulário (hint DDD + número)
+- **Incomplete / inscrição:** validação de celular com erro junto ao formulário (hint DDD + número); API exige conta (`user_id`/e-mail) ou `create_account`
 - **Player:** lista só `finished` ou inscritos; detalhe sem “Gerenciar rodada” (pairings/classificação só leitura); GET rodada liberado para quem pode ver o evento
 - **Visitante:** lista só torneios `finished`; clique abre resultado (classificação + decklists leitura); API oculta draft/running
 - **Auth modal:** padding na scrollbar do formulário

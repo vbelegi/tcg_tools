@@ -3,7 +3,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
-import { RequireAdmin, RequireAuth } from "./components/RequireAuth";
+import { RequireAdmin, RequireAuth, RequireStaff } from "./components/RequireAuth";
 import { CalendarPage } from "./pages/CalendarPage";
 import { ClaimInvitePage } from "./pages/ClaimInvitePage";
 import { Home } from "./pages/Home";
@@ -43,15 +43,19 @@ createRoot(document.getElementById("root")!).render(
           </Route>
           <Route element={<RequireAuth />}>
             <Route element={<Layout />}>
+              <Route path="torneios/:id/rodadas/:n" element={<TorneioRodadaPage />} />
+            </Route>
+          </Route>
+          <Route element={<RequireStaff />}>
+            <Route element={<Layout />}>
               <Route path="premiacao" element={<PremiacaoPage />} />
               <Route path="sorteador" element={<SorteadorPage />} />
               <Route path="torneios/novo" element={<TorneioNovoPage />} />
-              <Route path="torneios/externo" element={<TorneioExternoPage />} />
-              <Route path="torneios/:id/rodadas/:n" element={<TorneioRodadaPage />} />
             </Route>
           </Route>
           <Route element={<RequireAdmin />}>
             <Route element={<Layout />}>
+              <Route path="torneios/externo" element={<TorneioExternoPage />} />
               <Route path="usuarios" element={<UsuariosPage />} />
               <Route path="tcgs" element={<TcgGamesPage />} />
             </Route>

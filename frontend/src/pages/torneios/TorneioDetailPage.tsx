@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { Link, Navigate, useParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 
 import { ConfirmModal } from "../../components/ConfirmModal";
 import { Modal } from "../../components/Modal";
@@ -24,6 +24,7 @@ function isValidPhoneInput(value: string): boolean {
 export function TorneioDetailPage() {
   const { id } = useParams<{ id: string }>();
   const eventId = Number(id);
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const { data: me, isFetched: meFetched } = useQuery({
     queryKey: ["auth-me"],
@@ -196,7 +197,7 @@ export function TorneioDetailPage() {
     mutationFn: () => api.iniciarTorneio(eventId),
     onSuccess: (t) => {
       qc.invalidateQueries({ queryKey: ["torneio", eventId] });
-      window.location.href = `/torneios/${eventId}/rodadas/${t.current_round}`;
+      navigate(`/torneios/${eventId}/rodadas/${t.current_round}`);
     },
     onError: (e) => setError((e as Error).message),
   });
@@ -225,7 +226,7 @@ export function TorneioDetailPage() {
   const deleteEvent = useMutation({
     mutationFn: () => api.deleteTorneio(eventId),
     onSuccess: () => {
-      window.location.href = "/torneios";
+      navigate("/torneios");
     },
     onError: (e) => setError((e as Error).message),
   });
@@ -234,7 +235,7 @@ export function TorneioDetailPage() {
     mutationFn: () => api.iniciarProximaRodada(eventId),
     onSuccess: (t) => {
       qc.invalidateQueries({ queryKey: ["torneio", eventId] });
-      window.location.href = `/torneios/${eventId}/rodadas/${t.current_round}`;
+      navigate(`/torneios/${eventId}/rodadas/${t.current_round}`);
     },
     onError: (e) => setError((e as Error).message),
   });
@@ -244,7 +245,7 @@ export function TorneioDetailPage() {
     onSuccess: (t) => {
       setReabrirModalOpen(false);
       qc.invalidateQueries({ queryKey: ["torneio", eventId] });
-      window.location.href = `/torneios/${eventId}/rodadas/${t.current_round}`;
+      navigate(`/torneios/${eventId}/rodadas/${t.current_round}`);
     },
     onError: (e) => setError((e as Error).message),
   });
@@ -263,7 +264,7 @@ export function TorneioDetailPage() {
     onSuccess: () => {
       setFinalizarModalOpen(false);
       qc.invalidateQueries({ queryKey: ["torneio", eventId] });
-      window.location.href = `/torneios/${eventId}/resultado`;
+      navigate(`/torneios/${eventId}/resultado`);
     },
     onError: (e) => setError((e as Error).message),
   });

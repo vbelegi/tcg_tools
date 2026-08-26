@@ -46,7 +46,15 @@ def test_profile_hides_fp_from_strangers(api_client: TestClient, db_session: Ses
     )
     for name in ("B", "C", "D"):
         assert (
-            api_client.post(f"/api/v1/torneios/{eid}/jogadores", json={"name": name}).status_code
+            api_client.post(
+                f"/api/v1/torneios/{eid}/jogadores",
+                json={
+                    "name": name,
+                    "create_account": True,
+                    "email": f"{name.lower()}.prof.{eid}@api.test",
+                    "phone": f"+55115{eid % 10000:04d}{ord(name):04d}",
+                },
+            ).status_code
             == 200
         )
     assert api_client.post(f"/api/v1/torneios/{eid}/iniciar").status_code == 200
@@ -72,6 +80,10 @@ def test_profile_hides_fp_from_strangers(api_client: TestClient, db_session: Ses
     guest_body = guest.json()
     assert guest_body["fourse_points_visible"] is False
     assert guest_body["fourse_points"] is None
+    assert guest_body["fp_by_game"] == []
+    assert guest_body["fp_by_month"] == []
+    assert guest_body["ranking_position"] is None
+    assert "fp_earned" not in guest_body["history"][0]
     assert guest_body["history"]
 
     # owner sees FP

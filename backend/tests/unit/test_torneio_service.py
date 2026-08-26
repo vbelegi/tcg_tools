@@ -110,12 +110,12 @@ def test_finalize_rejected_with_active_round():
         svc.finalize(1)
 
 
-def test_duplicate_player_name_rejected():
+def test_walk_in_without_account_rejected():
     db = MagicMock()
     repo = MagicMock()
     event = _draft_event()
     repo.get.return_value = event
 
     svc = TorneioService(db, repo=repo)
-    with pytest.raises(TorneioError, match="P1"):
+    with pytest.raises(TorneioError, match="conta existente|create_account"):
         svc.add_player(1, "P1")
