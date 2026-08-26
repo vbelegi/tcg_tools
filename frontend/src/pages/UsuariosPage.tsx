@@ -3,6 +3,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "../api/client";
 
+function inviteAbsoluteUrl(claimPath: string): string {
+  const path = claimPath.startsWith("/") ? claimPath : `/${claimPath}`;
+  return `${window.location.origin}${path}`;
+}
+
 export function UsuariosPage() {
   const qc = useQueryClient();
   const [q, setQ] = useState("");
@@ -32,8 +37,16 @@ export function UsuariosPage() {
 
   const invite = useMutation({
     mutationFn: (id: number) => api.inviteUser(id),
-    onSuccess: (res) => {
-      setInviteMsg(`Link: ${res.claim_path} (token válido até ${res.expires_at})`);
+    onSuccess: async (res) => {
+      const url = inviteAbsoluteUrl(res.claim_path);
+      try {
+        await navigator.clipboard.writeText(url);
+        setInviteMsg(
+          `Link copiado. Encaminhe manualmente (WhatsApp/e-mail). Válido até ${res.expires_at}: ${url}`,
+        );
+      } catch {
+        setInviteMsg(`Copie e encaminhe o link (válido até ${res.expires_at}): ${url}`);
+      }
     },
     onError: (e) => setError((e as Error).message),
   });
@@ -46,12 +59,15 @@ export function UsuariosPage() {
   return (
     <div>
       <h1>Usuários</h1>
-      <p>Contas incompletas aguardam o link de convite (7 dias). Admin pode criar staff/admin.</p>
+      <p>
+        Contas incompletas: gere o link de convite e encaminhe ao jogador (sem e-mail automático).
+        Admin pode criar staff/admin.
+      </p>
       {error && <p className="error">{error}</p>}
       {inviteMsg && <p className="success">{inviteMsg}</p>}
 
       <form onSubmit={onCreate} className="card" style={{ marginBottom: "1.5rem" }}>
-        <h2>Criar conta (rápida)</h2>
+        <h2>Criar conta (rápida / incomplete)</h2>
         <div className="form-row">
           <label>Nome de exibição</label>
           <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} required />
@@ -104,7 +120,7 @@ export function UsuariosPage() {
               <td>
                 {u.status === "incomplete" && (
                   <button className="secondary" type="button" onClick={() => invite.mutate(u.id)}>
-                    Gerar convite
+                    {invite.isPending ? "Gerando…" : "Gerar e copiar convite"}
                   </button>
                 )}
               </td>

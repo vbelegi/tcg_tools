@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type ClipboardEvent, type KeyboardEvent } 
 import { Link, useParams } from "react-router-dom";
 
 import { ConfirmModal } from "../../components/ConfirmModal";
+import { Modal } from "../../components/Modal";
 import { PlayerPickerModal } from "../../components/PlayerPickerModal";
 import { RoundMatchesTable } from "../../components/RoundMatchesTable";
 import { SeFormatOptions, type SeBoConfig } from "../../components/SeFormatOptions";
@@ -20,11 +21,18 @@ export function TorneioDetailPage() {
     retry: false,
   });
   const isStaff = me && (me.role === "admin" || me.role === "staff");
+  const isAdmin = me?.role === "admin";
   const [playerName, setPlayerName] = useState("");
   const [playerSeed, setPlayerSeed] = useState("");
   const [playerEmail, setPlayerEmail] = useState("");
   const [playerPhone, setPlayerPhone] = useState("");
   const [createAccount, setCreateAccount] = useState(false);
+  const [userSearch, setUserSearch] = useState("");
+  const [userHits, setUserHits] = useState<
+    Array<{ id: number; display_name: string; email?: string; phone?: string | null }>
+  >([]);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteNameInput, setDeleteNameInput] = useState("");
   const [error, setError] = useState("");
   const [removeTarget, setRemoveTarget] = useState<{ id: number; name: string } | null>(null);
   const [dropModalOpen, setDropModalOpen] = useState(false);
@@ -74,12 +82,14 @@ export function TorneioDetailPage() {
       email?: string;
       phone?: string;
       create_account?: boolean;
+      user_id?: number;
     }) => {
       for (const name of payload.names) {
         await api.addJogador(eventId, name, payload.seed, {
           email: payload.email,
           phone: payload.phone,
           create_account: payload.create_account,
+          user_id: payload.user_id,
         });
       }
     },
@@ -130,6 +140,20 @@ export function TorneioDetailPage() {
   const selfRegister = useMutation({
     mutationFn: () => api.selfRegister(eventId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["torneio", eventId] }),
+    onError: (e) => setError((e as Error).message),
+  });
+
+  const searchUsers = useMutation({
+    mutationFn: (q: string) => api.searchUsers(q),
+    onSuccess: (rows) => setUserHits(rows),
+    onError: (e) => setError((e as Error).message),
+  });
+
+  const deleteEvent = useMutation({
+    mutationFn: () => api.deleteTorneio(eventId),
+    onSuccess: () => {
+      window.location.href = "/torneios";
+    },
     onError: (e) => setError((e as Error).message),
   });
 
@@ -307,6 +331,20 @@ export function TorneioDetailPage() {
         <span className="badge">{torneio.status}</span>
         {torneio.source === "external" && <span className="badge"> externo</span>}
       </p>
+      {isAdmin && (
+        <div style={{ marginBottom: "1rem" }}>
+          <button
+            className="secondary"
+            type="button"
+            onClick={() => {
+              setDeleteNameInput("");
+              setDeleteConfirmOpen(true);
+            }}
+          >
+            Excluir torneio…
+          </button>
+        </div>
+      )}
 
       <div className="stepper">
         <span className={isDraft ? "active" : ""}>Jogadores</span>
@@ -445,8 +483,59 @@ export function TorneioDetailPage() {
           </ul>
           {isStaff && (
             <>
+              <div className="card" style={{ marginBottom: "1rem" }}>
+                <h3>Inscrever conta existente</h3>
+                <div className="form-row">
+                  <label htmlFor="user-search">Buscar (nome, e-mail ou celular)</label>
+                  <input
+                    id="user-search"
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        if (userSearch.trim().length >= 1) searchUsers.mutate(userSearch.trim());
+                      }
+                    }}
+                  />
+                </div>
+                <button
+                  className="secondary"
+                  type="button"
+                  disabled={userSearch.trim().length < 1 || searchUsers.isPending}
+                  onClick={() => searchUsers.mutate(userSearch.trim())}
+                >
+                  Buscar
+                </button>
+                {userHits.length > 0 && (
+                  <ul style={{ marginTop: "0.75rem" }}>
+                    {userHits.map((u) => (
+                      <li key={u.id} className="player-row">
+                        <span>
+                          {u.display_name}
+                          {u.email ? ` · ${u.email}` : ""}
+                          {u.phone ? ` · ${u.phone}` : ""}
+                        </span>{" "}
+                        <button
+                          className="secondary"
+                          type="button"
+                          disabled={addPlayer.isPending}
+                          onClick={() =>
+                            addPlayer.mutate({
+                              names: [u.display_name],
+                              user_id: u.id,
+                            })
+                          }
+                        >
+                          Inscrever
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
               <div className="form-row">
-                <label htmlFor="player-name">Nome</label>
+                <label htmlFor="player-name">Nome (walk-in / nova incomplete)</label>
                 <input
                   id="player-name"
                   ref={playerNameRef}
@@ -707,6 +796,48 @@ export function TorneioDetailPage() {
         onClose={() => setReabrirModalOpen(false)}
         onConfirm={() => reabrirRodada.mutate()}
       />
+
+      <Modal
+        open={deleteConfirmOpen}
+        title="Excluir torneio"
+        onClose={() => setDeleteConfirmOpen(false)}
+        footer={
+          <>
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => setDeleteConfirmOpen(false)}
+              disabled={deleteEvent.isPending}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="danger"
+              disabled={
+                deleteEvent.isPending || deleteNameInput.trim() !== torneio.name
+              }
+              onClick={() => deleteEvent.mutate()}
+            >
+              Excluir definitivamente
+            </button>
+          </>
+        }
+      >
+        <p className="modal-message">
+          Esta ação remove o evento, rodadas, partidas e FP deste torneio. Digite o nome exato para
+          confirmar: <strong>{torneio.name}</strong>
+        </p>
+        <div className="form-row">
+          <label htmlFor="delete-name">Nome do torneio</label>
+          <input
+            id="delete-name"
+            value={deleteNameInput}
+            onChange={(e) => setDeleteNameInput(e.target.value)}
+            autoComplete="off"
+          />
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -153,6 +153,18 @@ export const api = {
       }>
     >(`/users${q ? `?q=${encodeURIComponent(q)}` : ""}`),
 
+  searchUsers: (q: string) =>
+    request<
+      Array<{
+        id: number;
+        display_name: string;
+        email?: string;
+        phone?: string | null;
+        role: string;
+        status: string;
+      }>
+    >(`/users/search?q=${encodeURIComponent(q)}`),
+
   createUser: (body: {
     display_name: string;
     email: string;
@@ -180,7 +192,7 @@ export const api = {
     request(`/torneios/${eventId}/inscrever`, { method: "POST" }),
 
   createExternalTorneio: (body: unknown) =>
-    request("/torneios/externos", { method: "POST", body: JSON.stringify(body) }),
+    request<Torneio>("/torneios/externos", { method: "POST", body: JSON.stringify(body) }),
 
   changePassword: (current_password: string, new_password: string) =>
     request<{ ok: boolean; message: string }>("/auth/change-password", {
@@ -273,8 +285,10 @@ export const api = {
   getTorneio: (id: number) => request<Torneio & { players: Player[] }>(`/torneios/${id}`),
 
   createTorneio: (body: object) =>
-
     request<Torneio>("/torneios", { method: "POST", body: JSON.stringify(body) }),
+
+  deleteTorneio: (id: number) =>
+    request<void>(`/torneios/${id}`, { method: "DELETE" }),
 
   updateTorneio: (id: number, body: object) =>
 
@@ -284,7 +298,12 @@ export const api = {
     id: number,
     name: string,
     seed?: number,
-    extra?: { email?: string; phone?: string; create_account?: boolean },
+    extra?: {
+      email?: string;
+      phone?: string;
+      create_account?: boolean;
+      user_id?: number;
+    },
   ) =>
     request<Player>(`/torneios/${id}/jogadores`, {
       method: "POST",

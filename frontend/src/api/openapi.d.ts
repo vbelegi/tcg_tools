@@ -21,6 +21,211 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Auth Status */
+        get: operations["auth_status_api_v1_auth_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Auth Me */
+        get: operations["auth_me_api_v1_auth_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Login */
+        post: operations["login_api_v1_auth_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Register */
+        post: operations["register_api_v1_auth_register_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Logout */
+        post: operations["logout_api_v1_auth_logout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/change-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Auth Change Password */
+        post: operations["auth_change_password_api_v1_auth_change_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/claim-invite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Auth Claim Invite */
+        post: operations["auth_claim_invite_api_v1_auth_claim_invite_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Users */
+        get: operations["list_users_api_v1_users_get"];
+        put?: never;
+        /** Create User */
+        post: operations["create_user_api_v1_users_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/{user_id}/invite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Invite User */
+        post: operations["invite_user_api_v1_users__user_id__invite_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search Users */
+        get: operations["search_users_api_v1_users_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ranking": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Public Ranking */
+        get: operations["public_ranking_api_v1_ranking_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jogadores/{user_id}/perfil": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Public Profile */
+        get: operations["public_profile_api_v1_jogadores__user_id__perfil_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/premiacao/presets": {
         parameters: {
             query?: never;
@@ -125,6 +330,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/torneios/externos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create External */
+        post: operations["create_external_api_v1_torneios_externos_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/torneios/{event_id}": {
         parameters: {
             query?: never;
@@ -136,7 +358,8 @@ export interface paths {
         get: operations["get_torneio_api_v1_torneios__event_id__get"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** Delete Torneio */
+        delete: operations["delete_torneio_api_v1_torneios__event_id__delete"];
         options?: never;
         head?: never;
         /** Update Torneio */
@@ -154,6 +377,40 @@ export interface paths {
         put?: never;
         /** Add Jogador */
         post: operations["add_jogador_api_v1_torneios__event_id__jogadores_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/torneios/{event_id}/inscrever": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Self Inscribe */
+        post: operations["self_inscribe_api_v1_torneios__event_id__inscrever_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/torneios/{event_id}/jogadores/{player_id}/check-in": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Check In */
+        post: operations["check_in_api_v1_torneios__event_id__jogadores__player_id__check_in_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -211,7 +468,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/torneios/{event_id}/rodadas/{number}": {
+    "/api/v1/torneios/{event_id}/rodadas/{round_number}": {
         parameters: {
             query?: never;
             header?: never;
@@ -219,7 +476,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get Rodada */
-        get: operations["get_rodada_api_v1_torneios__event_id__rodadas__number__get"];
+        get: operations["get_rodada_api_v1_torneios__event_id__rodadas__round_number__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -241,25 +498,8 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Update Match */
-        patch: operations["update_match_api_v1_torneios__event_id__matches__match_id__patch"];
-        trace?: never;
-    };
-    "/api/v1/torneios/{event_id}/jogadores/{player_id}/drop": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Drop Jogador */
-        post: operations["drop_jogador_api_v1_torneios__event_id__jogadores__player_id__drop_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
+        /** Update Partida */
+        patch: operations["update_partida_api_v1_torneios__event_id__matches__match_id__patch"];
         trace?: never;
     };
     "/api/v1/torneios/{event_id}/avancar": {
@@ -271,10 +511,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * Avancar
-         * @description Conclui a rodada ativa (sem iniciar a próxima).
-         */
+        /** Avancar */
         post: operations["avancar_api_v1_torneios__event_id__avancar_post"];
         delete?: never;
         options?: never;
@@ -308,11 +545,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * Reabrir Rodada
-         * @description Reabre a última rodada concluída (ou a anterior à rodada ativa) para correções.
-         */
+        /** Reabrir Rodada */
         post: operations["reabrir_rodada_api_v1_torneios__event_id__rodadas_reabrir_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/torneios/{event_id}/jogadores/{player_id}/drop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Drop Jogador */
+        post: operations["drop_jogador_api_v1_torneios__event_id__jogadores__player_id__drop_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -336,23 +587,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/torneios/{event_id}/premiacao": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Premiacao */
-        get: operations["get_premiacao_api_v1_torneios__event_id__premiacao_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/torneios/{event_id}/classificacao": {
         parameters: {
             query?: never;
@@ -360,8 +594,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Classificacao */
-        get: operations["get_classificacao_api_v1_torneios__event_id__classificacao_get"];
+        /** Classificacao */
+        get: operations["classificacao_api_v1_torneios__event_id__classificacao_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -371,17 +605,34 @@ export interface paths {
         patch: operations["patch_classificacao_api_v1_torneios__event_id__classificacao_patch"];
         trace?: never;
     };
-    "/api/v1/torneios/{event_id}/export-log": {
+    "/api/v1/torneios/{event_id}/premiacao": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Premiacao Torneio */
+        get: operations["premiacao_torneio_api_v1_torneios__event_id__premiacao_get"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/torneios/{event_id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
         /** Export Log */
-        post: operations["export_log_api_v1_torneios__event_id__export_log_post"];
+        get: operations["export_log_api_v1_torneios__event_id__export_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -447,10 +698,54 @@ export interface components {
             /** Band Creditos */
             band_creditos?: number[] | null;
         };
+        /** ChangePasswordBody */
+        ChangePasswordBody: {
+            /** Current Password */
+            current_password: string;
+            /** New Password */
+            new_password: string;
+        };
+        /** ClaimInviteBody */
+        ClaimInviteBody: {
+            /** Token */
+            token: string;
+            /** Password */
+            password: string;
+            /** Birth Date */
+            birth_date?: string | null;
+            /** Guardian Name */
+            guardian_name?: string | null;
+            /** Guardian Phone */
+            guardian_phone?: string | null;
+            /** Guardian Relation */
+            guardian_relation?: string | null;
+        };
         /** ClassificacaoPatch */
         ClassificacaoPatch: {
             /** Updates */
             updates: components["schemas"]["DecklistUpdate"][];
+        };
+        /** CreateUserBody */
+        CreateUserBody: {
+            /** Display Name */
+            display_name: string;
+            /** Email */
+            email: string;
+            /** Phone */
+            phone: string;
+            /**
+             * Role
+             * @default player
+             */
+            role: string;
+            /** Birth Date */
+            birth_date?: string | null;
+            /** Guardian Name */
+            guardian_name?: string | null;
+            /** Guardian Phone */
+            guardian_phone?: string | null;
+            /** Guardian Relation */
+            guardian_relation?: string | null;
         };
         /** DecklistUpdate */
         DecklistUpdate: {
@@ -474,6 +769,60 @@ export interface components {
             /** Preset Id */
             preset_id?: string | null;
         };
+        /** ExternalPlacement */
+        ExternalPlacement: {
+            /** Placement */
+            placement: number;
+            /** Display Name */
+            display_name: string;
+            /** User Id */
+            user_id?: number | null;
+            /** Email */
+            email?: string | null;
+            /** Phone */
+            phone?: string | null;
+            /**
+             * Create Account
+             * @default false
+             */
+            create_account: boolean;
+            /** Decklist */
+            decklist?: string | null;
+            /**
+             * Is Drop
+             * @default false
+             */
+            is_drop: boolean;
+        };
+        /** ExternalTorneioCreate */
+        ExternalTorneioCreate: {
+            /** Name */
+            name: string;
+            /**
+             * Event Date
+             * Format: date
+             */
+            event_date: string;
+            /**
+             * Format
+             * @default swiss
+             */
+            format: string;
+            /**
+             * Premiacao Preset Id
+             * @default standard
+             */
+            premiacao_preset_id: string;
+            /**
+             * Entry Fee
+             * @default 0
+             */
+            entry_fee: number;
+            /** Notes */
+            notes?: string | null;
+            /** Placements */
+            placements: components["schemas"]["ExternalPlacement"][];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -485,6 +834,32 @@ export interface components {
             name: string;
             /** Seed */
             seed?: number | null;
+            /** User Id */
+            user_id?: number | null;
+            /** Email */
+            email?: string | null;
+            /** Phone */
+            phone?: string | null;
+            /**
+             * Create Account
+             * @default false
+             */
+            create_account: boolean;
+            /**
+             * Attendance
+             * @default checked_in
+             * @enum {string}
+             */
+            attendance: "pending" | "checked_in";
+        };
+        /** LoginBody */
+        LoginBody: {
+            /** Email */
+            email: string;
+            /** Password */
+            password: string;
+            /** Username */
+            username?: string | null;
         };
         /** MatchUpdate */
         MatchUpdate: {
@@ -522,6 +897,8 @@ export interface components {
             r: number;
             /** Casas Decimais */
             casas_decimais: number;
+            /** Fp K */
+            fp_k?: number | null;
         };
         /** PresetsResponse */
         PresetsResponse: {
@@ -538,6 +915,25 @@ export interface components {
             exports_desatualizados: boolean;
             /** Presets Updated At */
             presets_updated_at?: number | null;
+        };
+        /** RegisterBody */
+        RegisterBody: {
+            /** Display Name */
+            display_name: string;
+            /** Email */
+            email: string;
+            /** Phone */
+            phone: string;
+            /** Password */
+            password: string;
+            /** Birth Date */
+            birth_date?: string | null;
+            /** Guardian Name */
+            guardian_name?: string | null;
+            /** Guardian Phone */
+            guardian_phone?: string | null;
+            /** Guardian Relation */
+            guardian_relation?: string | null;
         };
         /** TabelaLinha */
         TabelaLinha: {
@@ -590,6 +986,11 @@ export interface components {
             se_bo_config?: {
                 [key: string]: number;
             } | null;
+            /**
+             * Registration Open
+             * @default false
+             */
+            registration_open: boolean;
         };
         /** TorneioUpdate */
         TorneioUpdate: {
@@ -609,6 +1010,8 @@ export interface components {
             se_bo_config?: {
                 [key: string]: number;
             } | null;
+            /** Registration Open */
+            registration_open?: boolean | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -654,7 +1057,7 @@ export interface operations {
             };
         };
     };
-    list_presets_api_v1_premiacao_presets_get: {
+    auth_status_api_v1_auth_status_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -669,7 +1072,421 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    auth_me_api_v1_auth_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    login_api_v1_auth_login_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    register_api_v1_auth_register_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    logout_api_v1_auth_logout_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    auth_change_password_api_v1_auth_change_password_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    auth_claim_invite_api_v1_auth_claim_invite_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClaimInviteBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_users_api_v1_users_get: {
+        parameters: {
+            query?: {
+                q?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_user_api_v1_users_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateUserBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    invite_user_api_v1_users__user_id__invite_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_users_api_v1_users_search_get: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    public_ranking_api_v1_ranking_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    public_profile_api_v1_jogadores__user_id__perfil_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_presets_api_v1_premiacao_presets_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "application/json": components["schemas"]["PresetsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -681,7 +1498,9 @@ export interface operations {
             path: {
                 preset_id: string;
             };
-            cookie?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
@@ -714,7 +1533,9 @@ export interface operations {
             path: {
                 preset_id: string;
             };
-            cookie?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
         };
         requestBody: {
             content: {
@@ -747,7 +1568,9 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
         };
         requestBody: {
             content: {
@@ -783,7 +1606,9 @@ export interface operations {
             };
             header?: never;
             path?: never;
-            cookie?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
@@ -812,7 +1637,9 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
         };
         requestBody: {
             content: {
@@ -845,7 +1672,9 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
@@ -858,6 +1687,15 @@ export interface operations {
                     "application/json": unknown;
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
     create_torneio_api_v1_torneios_post: {
@@ -865,11 +1703,48 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
         };
         requestBody: {
             content: {
                 "application/json": components["schemas"]["TorneioCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_external_api_v1_torneios_externos_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExternalTorneioCreate"];
             };
         };
         responses: {
@@ -900,7 +1775,9 @@ export interface operations {
             path: {
                 event_id: number;
             };
-            cookie?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
@@ -924,6 +1801,37 @@ export interface operations {
             };
         };
     };
+    delete_torneio_api_v1_torneios__event_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: number;
+            };
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     update_torneio_api_v1_torneios__event_id__patch: {
         parameters: {
             query?: never;
@@ -931,7 +1839,9 @@ export interface operations {
             path: {
                 event_id: number;
             };
-            cookie?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
         };
         requestBody: {
             content: {
@@ -966,13 +1876,82 @@ export interface operations {
             path: {
                 event_id: number;
             };
-            cookie?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
         };
         requestBody: {
             content: {
                 "application/json": components["schemas"]["JogadorCreate"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    self_inscribe_api_v1_torneios__event_id__inscrever_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: number;
+            };
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_in_api_v1_torneios__event_id__jogadores__player_id__check_in_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: number;
+                player_id: number;
+            };
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -1002,7 +1981,9 @@ export interface operations {
                 event_id: number;
                 player_id: number;
             };
-            cookie?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
@@ -1031,7 +2012,9 @@ export interface operations {
             path: {
                 event_id: number;
             };
-            cookie?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
@@ -1062,7 +2045,9 @@ export interface operations {
             path: {
                 event_id: number;
             };
-            cookie?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
@@ -1086,15 +2071,17 @@ export interface operations {
             };
         };
     };
-    get_rodada_api_v1_torneios__event_id__rodadas__number__get: {
+    get_rodada_api_v1_torneios__event_id__rodadas__round_number__get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 event_id: number;
-                number: number;
+                round_number: number;
             };
-            cookie?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
@@ -1118,7 +2105,7 @@ export interface operations {
             };
         };
     };
-    update_match_api_v1_torneios__event_id__matches__match_id__patch: {
+    update_partida_api_v1_torneios__event_id__matches__match_id__patch: {
         parameters: {
             query?: never;
             header?: never;
@@ -1126,7 +2113,9 @@ export interface operations {
                 event_id: number;
                 match_id: number;
             };
-            cookie?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
         };
         requestBody: {
             content: {
@@ -1154,40 +2143,6 @@ export interface operations {
             };
         };
     };
-    drop_jogador_api_v1_torneios__event_id__jogadores__player_id__drop_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                event_id: number;
-                player_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DropRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     avancar_api_v1_torneios__event_id__avancar_post: {
         parameters: {
             query?: never;
@@ -1195,7 +2150,9 @@ export interface operations {
             path: {
                 event_id: number;
             };
-            cookie?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
@@ -1226,7 +2183,9 @@ export interface operations {
             path: {
                 event_id: number;
             };
-            cookie?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
@@ -1252,14 +2211,14 @@ export interface operations {
     };
     reabrir_rodada_api_v1_torneios__event_id__rodadas_reabrir_post: {
         parameters: {
-            query?: {
-                number?: number | null;
-            };
+            query?: never;
             header?: never;
             path: {
                 event_id: number;
             };
-            cookie?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
@@ -1271,6 +2230,42 @@ export interface operations {
                 content: {
                     "application/json": unknown;
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    drop_jogador_api_v1_torneios__event_id__jogadores__player_id__drop_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: number;
+                player_id: number;
+            };
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DropRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -1290,7 +2285,9 @@ export interface operations {
             path: {
                 event_id: number;
             };
-            cookie?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
@@ -1314,45 +2311,16 @@ export interface operations {
             };
         };
     };
-    get_premiacao_api_v1_torneios__event_id__premiacao_get: {
+    classificacao_api_v1_torneios__event_id__classificacao_get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 event_id: number;
             };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
+            cookie?: {
+                tcgtools_session?: string | null;
             };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_classificacao_api_v1_torneios__event_id__classificacao_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                event_id: number;
-            };
-            cookie?: never;
         };
         requestBody?: never;
         responses: {
@@ -1383,7 +2351,9 @@ export interface operations {
             path: {
                 event_id: number;
             };
-            cookie?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
         };
         requestBody: {
             content: {
@@ -1392,11 +2362,13 @@ export interface operations {
         };
         responses: {
             /** @description Successful Response */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": unknown;
+                };
             };
             /** @description Validation Error */
             422: {
@@ -1409,14 +2381,49 @@ export interface operations {
             };
         };
     };
-    export_log_api_v1_torneios__event_id__export_log_post: {
+    premiacao_torneio_api_v1_torneios__event_id__premiacao_get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 event_id: number;
             };
-            cookie?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_log_api_v1_torneios__event_id__export_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: number;
+            };
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
         };
         requestBody?: never;
         responses: {
