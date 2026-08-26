@@ -2051,11 +2051,13 @@ th {
 .ranking-podium-card {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0.55rem;
   padding: 0.85rem 0.9rem;
   border-radius: 12px;
   border: 1px solid var(--border);
   background: var(--surface);
+  text-align: center;
 }
 
 .ranking-podium-1 {
@@ -2073,20 +2075,28 @@ th {
 
 .ranking-podium-player {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.45rem;
   text-decoration: none;
   color: inherit;
   min-width: 0;
+  width: 100%;
 }
 
 .ranking-podium-player:hover .ranking-player-name {
   color: var(--primary);
 }
 
+.ranking-podium-player .ranking-player-name {
+  white-space: normal;
+  text-align: center;
+}
+
 .ranking-podium-fp {
   display: flex;
   align-items: baseline;
+  justify-content: center;
   gap: 0.35rem;
   font-size: 1.35rem;
 }
