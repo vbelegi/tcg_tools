@@ -51,3 +51,24 @@ def test_auth_api_flow(db_session: Session):
     assert client.post("/api/v1/auth/logout").status_code == 200
     assert client.get("/api/v1/premiacao/presets").status_code == 401
     app.dependency_overrides.clear()
+
+
+def test_register_player_api(db_session: Session):
+    def _override_db():
+        yield db_session
+
+    app.dependency_overrides[get_db] = _override_db
+    client = TestClient(app)
+    r = client.post(
+        "/api/v1/auth/register",
+        json={
+            "display_name": "Novo Player",
+            "email": "novo.player@example.com",
+            "phone": "+5511988776655",
+            "password": "abcdef",
+        },
+    )
+    assert r.status_code == 201, r.text
+    assert r.json()["role"] == "player"
+    assert client.get("/api/v1/auth/me").status_code == 200
+    app.dependency_overrides.clear()

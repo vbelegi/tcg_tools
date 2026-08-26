@@ -200,6 +200,47 @@ def create_incomplete_user(
     return user
 
 
+def register_player(
+    db: DbSession,
+    *,
+    display_name: str,
+    email: str,
+    phone: str,
+    password: str,
+    birth_date: date | None = None,
+    guardian_name: str | None = None,
+    guardian_phone: str | None = None,
+    guardian_relation: str | None = None,
+) -> User:
+    """Public self-signup: creates an active player with password."""
+    name = (display_name or "").strip()
+    if not name:
+        raise AuthError("Nome de exibição é obrigatório.")
+    validate_password_plain(password)
+    email_n, phone_n = ensure_unique_email_phone(db, email=email, phone=phone)
+    if not phone_n:
+        raise AuthError("Celular é obrigatório.")
+    now = _now()
+    user = User(
+        email=email_n,
+        display_name=name,
+        phone=phone_n,
+        role=UserRole.player.value,
+        status=UserStatus.active.value,
+        password_hash=hash_password(password),
+        birth_date=birth_date,
+        guardian_name=guardian_name,
+        guardian_phone=guardian_phone,
+        guardian_relation=guardian_relation,
+        created_at=now,
+        updated_at=now,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
 def create_invite(db: DbSession, user: User) -> InviteToken:
     if user.status == UserStatus.active.value:
         raise AuthError("Conta já está ativa.")

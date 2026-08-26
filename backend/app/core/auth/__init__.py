@@ -16,6 +16,7 @@ from app.core.auth.service import (
     get_user_for_token,
     private_user_dict,
     public_user_dict,
+    register_player,
     revoke_session,
     upsert_admin_password,
 )
@@ -43,6 +44,7 @@ __all__ = [
     "hash_password",
     "private_user_dict",
     "public_user_dict",
+    "register_player",
     "revoke_session",
     "upsert_admin_password",
     "verify_password",
