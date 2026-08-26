@@ -38,7 +38,7 @@ describe("Home", () => {
   it("shows public shortcuts when logged out", async () => {
     renderHome();
     expect(screen.getByRole("link", { name: /torneios/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /ranking fp/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /ranking fourse points/i })).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.queryByRole("link", { name: /premiação/i })).not.toBeInTheDocument();
     });

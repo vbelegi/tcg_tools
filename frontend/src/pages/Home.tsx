@@ -21,8 +21,8 @@ export function Home() {
           <p>Eventos, resultados e inscrições.</p>
         </Link>
         <Link to="/ranking" className="card">
-          <h2>Ranking FP</h2>
-          <p>Fourse Points acumulados pelos jogadores.</p>
+          <h2>Ranking Fourse Points</h2>
+          <p>Pontos acumulados pelos jogadores.</p>
         </Link>
         {isStaff && (
           <>

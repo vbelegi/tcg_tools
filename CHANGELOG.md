@@ -29,6 +29,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 ### Changed
 
 - **Perfil:** seção renomeada para **Insights**; `/conta/senha` redireciona à home
+- **Nav/Home:** “Ranking Fourse Points” (FP só como abreviação em colunas/espaços curtos)
 - **Torneio:** `tcg_game_id` obrigatório na criação (API + UI interno/externo)
 - **Perfil:** FP oculto para visitantes (visível para dono e admin); decklists e histórico públicos
 - **Inscrição aberta:** guest/player veem drafts com `registration_open` (vitrine + CTA); draft fechado continua oculto

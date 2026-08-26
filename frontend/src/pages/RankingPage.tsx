@@ -12,7 +12,7 @@ export function RankingPage() {
   return (
     <div>
       <h1>Ranking Fourse Points</h1>
-      <p>FP acumulados em torneios finalizados (internos e externos).</p>
+      <p>Fourse Points acumulados em torneios finalizados (internos e externos).</p>
       {isLoading && <p>Carregando...</p>}
       <table>
         <thead>
