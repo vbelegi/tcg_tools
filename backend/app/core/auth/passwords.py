@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import bcrypt
 
-ADMIN_USERNAME = "admin"
+ADMIN_EMAIL = "admin@local"
 MIN_PASSWORD_LEN = 6
 
 
@@ -20,13 +20,27 @@ def validate_password_plain(password: str) -> str:
     return password
 
 
+def normalize_email(email: str) -> str:
+    value = (email or "").strip().lower()
+    if not value or "@" not in value:
+        raise AuthError("E-mail inválido.")
+    return value
+
+
+def normalize_phone(phone: str) -> str:
+    digits = "".join(ch for ch in (phone or "") if ch.isdigit())
+    if len(digits) < 10 or len(digits) > 13:
+        raise AuthError("Celular inválido. Use DDD + número (10 a 13 dígitos).")
+    return digits
+
+
 def hash_password(password: str) -> str:
     validate_password_plain(password)
     hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
     return hashed.decode("ascii")
 
 
-def verify_password(password: str, password_hash: str) -> bool:
+def verify_password(password: str, password_hash: str | None) -> bool:
     if not password or not password_hash:
         return False
     try:

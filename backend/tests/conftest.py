@@ -153,7 +153,7 @@ def api_client(db_session: Session) -> Generator[TestClient, None, None]:
 
     app.dependency_overrides[get_db] = _override_db
     client = TestClient(app)
-    r = client.post("/api/v1/auth/login", json={"username": "admin", "password": "testpass"})
+    r = client.post("/api/v1/auth/login", json={"email": "admin@local", "password": "testpass"})
     assert r.status_code == 200, r.text
     yield client
     app.dependency_overrides.clear()
