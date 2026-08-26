@@ -1016,34 +1016,36 @@ export function TorneioDetailPage() {
               <div className="match-card-list match-card-list-compact">
                 {lastCompletedRound.matches.map((m, idx) => (
                   <article key={m.id} className="match-card match-card-readonly">
-                    <div className="match-card-top">
-                      <span className="match-card-num">Mesa {idx + 1}</span>
-                      {m.is_bye && <span className="badge">BYE</span>}
-                      {m.is_walkover && <span className="badge">WO</span>}
-                      {m.had_rematch && <span className="badge badge-rematch">Rematch</span>}
-                      {m.is_third_place && <span className="badge">3º–4º</span>}
+                    <div className="match-scoreline-wrap">
+                      <div className="match-card-meta">
+                        <span className="match-card-num">Mesa {idx + 1}</span>
+                        {m.is_bye && <span className="badge">BYE</span>}
+                        {m.is_walkover && <span className="badge">WO</span>}
+                        {m.had_rematch && <span className="badge badge-rematch">Rematch</span>}
+                        {m.is_third_place && <span className="badge">3º–4º</span>}
+                      </div>
+                      {m.is_bye ? (
+                        <div className="match-scoreline match-scoreline-bye">
+                          <span className="match-cell-name">{m.player1_name}</span>
+                        </div>
+                      ) : (
+                        <div className="match-scoreline">
+                          <span className="match-cell-name match-scoreline-p1">{m.player1_name}</span>
+                          <span className="match-scoreline-score">
+                            {m.scores_submitted || m.is_walkover ? m.score_p1 : "—"}
+                          </span>
+                          <span className="match-scoreline-vs" aria-hidden>
+                            ×
+                          </span>
+                          <span className="match-scoreline-score">
+                            {m.scores_submitted || m.is_walkover ? m.score_p2 : "—"}
+                          </span>
+                          <span className="match-cell-name match-scoreline-p2">
+                            {m.player2_name ?? "—"}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                    {m.is_bye ? (
-                      <div className="match-scoreline match-scoreline-bye">
-                        <span className="match-cell-name">{m.player1_name}</span>
-                      </div>
-                    ) : (
-                      <div className="match-scoreline">
-                        <span className="match-cell-name match-scoreline-p1">{m.player1_name}</span>
-                        <span className="match-scoreline-score">
-                          {m.scores_submitted || m.is_walkover ? m.score_p1 : "—"}
-                        </span>
-                        <span className="match-scoreline-vs" aria-hidden>
-                          ×
-                        </span>
-                        <span className="match-scoreline-score">
-                          {m.scores_submitted || m.is_walkover ? m.score_p2 : "—"}
-                        </span>
-                        <span className="match-cell-name match-scoreline-p2">
-                          {m.player2_name ?? "—"}
-                        </span>
-                      </div>
-                    )}
                   </article>
                 ))}
               </div>
@@ -1067,10 +1069,10 @@ export function TorneioDetailPage() {
               <p className="field-hint">
                 Drop entre rodadas remove o jogador sem WO na partida atual.
               </p>
-              <ul className="player-draft-list">
+              <ul className="entre-rodadas-chips">
                 {activePlayers.map((p) => (
-                  <li key={p.id} className="player-row">
-                    <span className="player-row-name">{p.name}</span>
+                  <li key={p.id} className="entre-rodadas-chip">
+                    {p.name}
                   </li>
                 ))}
               </ul>
