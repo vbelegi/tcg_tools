@@ -4,6 +4,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-08-26
+
 ### Fixed
 
 - **CI smoke:** `requirements-prod.lock` inclui Pillow (avatars); `test-staging.ps1` imprime log do uvicorn se o processo cair
@@ -113,6 +115,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 - Scripts Windows: `setup.ps1`, `Iniciar TCG Tools.bat`
 - Alembic migrations (001 schema, 002 scores_submitted)
 
+[1.3.0]: compare/v1.2.0...v1.3.0
 [1.2.0]: compare/v1.1.0...v1.2.0
 [1.1.0]: compare/v1.0.0...v1.1.0
 [1.0.0]: releases/tag/v1.0.0
