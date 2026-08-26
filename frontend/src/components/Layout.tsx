@@ -1,10 +1,14 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useEffect, useMemo } from "react";
+import { NavLink, Outlet, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "../api/client";
+import { AuthModal, type AuthModalMode } from "./AuthModal";
 
 export function Layout() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [params, setParams] = useSearchParams();
   const qc = useQueryClient();
   const { data: me } = useQuery({
     queryKey: ["auth-me"],
@@ -12,16 +16,44 @@ export function Layout() {
     retry: false,
   });
 
+  const authParam = params.get("auth");
+  const authOpen = authParam === "login" || authParam === "register";
+  const authMode: AuthModalMode = authParam === "register" ? "register" : "login";
+  const nextPath = params.get("next");
+
+  const closeAuth = () => {
+    const next = new URLSearchParams(params);
+    next.delete("auth");
+    next.delete("next");
+    setParams(next, { replace: true });
+  };
+
+  const openAuth = (mode: AuthModalMode) => {
+    const next = new URLSearchParams(params);
+    next.set("auth", mode);
+    setParams(next, { replace: true });
+  };
+
+  useEffect(() => {
+    if (me && authOpen) closeAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- close once when session appears
+  }, [me]);
+
   const logout = useMutation({
     mutationFn: () => api.logout(),
     onSuccess: async () => {
       await qc.resetQueries({ queryKey: ["auth-me"] });
-      navigate("/login", { replace: true });
+      navigate("/", { replace: true });
     },
   });
 
   const isStaff = me && (me.role === "admin" || me.role === "staff");
   const isAdmin = me?.role === "admin";
+
+  const fromState = useMemo(
+    () => (location.state as { from?: string } | null)?.from,
+    [location.state],
+  );
 
   return (
     <div className="app-shell">
@@ -56,9 +88,14 @@ export function Layout() {
               Sair ({me.display_name})
             </button>
           ) : (
-            <NavLink to="/login" className="primary" style={{ display: "block", textAlign: "center" }}>
+            <button
+              className="primary"
+              type="button"
+              style={{ width: "100%" }}
+              onClick={() => openAuth("login")}
+            >
               Entrar
-            </NavLink>
+            </button>
           )}
         </div>
         <footer className="sidebar-footer">
@@ -76,6 +113,13 @@ export function Layout() {
       <main className="main-content">
         <Outlet />
       </main>
+      <AuthModal
+        open={authOpen && !me}
+        mode={authMode}
+        onModeChange={openAuth}
+        onClose={closeAuth}
+        nextPath={nextPath || fromState || null}
+      />
     </div>
   );
 }

@@ -39,7 +39,7 @@ describe("Layout", () => {
     expect(screen.queryByText("Alterar senha")).not.toBeInTheDocument();
     expect(screen.getByText("Powered by")).toBeInTheDocument();
     expect(screen.getByText("FOURSE")).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByText("Entrar")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("button", { name: "Entrar" })).toBeInTheDocument());
   });
 
   it("shows staff links when authenticated as admin", async () => {

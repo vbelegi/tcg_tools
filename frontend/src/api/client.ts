@@ -84,7 +84,7 @@ export const api = {
   health: () => request<{ status: string }>("/health"),
 
   authStatus: () =>
-    request<{ configured: boolean; login_hint: string; min_password_length: number }>("/auth/status"),
+    request<{ configured: boolean; min_password_length: number }>("/auth/status"),
 
   authMe: () =>
     request<{
@@ -104,6 +104,26 @@ export const api = {
     }>("/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
+    }),
+
+  register: (body: {
+    display_name: string;
+    email: string;
+    phone: string;
+    password: string;
+    birth_date?: string;
+    guardian_name?: string;
+    guardian_phone?: string;
+    guardian_relation?: string;
+  }) =>
+    request<{
+      id: number;
+      email: string;
+      display_name: string;
+      role: string;
+    }>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(body),
     }),
 
   logout: () => request<{ ok: boolean }>("/auth/logout", { method: "POST" }),
@@ -260,14 +280,15 @@ export const api = {
 
     request<Torneio>(`/torneios/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
 
-  addJogador: (id: number, name: string, seed?: number) =>
-
+  addJogador: (
+    id: number,
+    name: string,
+    seed?: number,
+    extra?: { email?: string; phone?: string; create_account?: boolean },
+  ) =>
     request<Player>(`/torneios/${id}/jogadores`, {
-
       method: "POST",
-
-      body: JSON.stringify({ name, seed }),
-
+      body: JSON.stringify({ name, seed, ...extra }),
     }),
 
   removeJogador: (id: number, pid: number) =>

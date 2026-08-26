@@ -13,7 +13,8 @@ export function RequireAuth() {
 
   if (isLoading) return <p>Carregando...</p>;
   if (isError || !data) {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+    const next = encodeURIComponent(location.pathname + location.search);
+    return <Navigate to={`/?auth=login&next=${next}`} replace />;
   }
   return <Outlet />;
 }

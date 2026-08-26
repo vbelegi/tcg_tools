@@ -6,12 +6,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Auth modal:** login e criar conta (player completo) sem sair da página; `/login` redireciona para `/?auth=login`
+- **Auto-cadastro player:** `POST /auth/register` (nome, e-mail, celular, senha → conta ativa)
 - **Multi-usuário / Fourse Points:** papéis `admin` | `staff` | `player`; login por e-mail (`admin@local`); contas incompletas + convite (7 dias); check-in / bloqueio de início com pendências; ledger FP no finalize; torneios externos; ranking e perfis públicos
 - **Docs:** contrato em `docs/PLATFORM_USERS_FP.md`
 
 ### Changed
 
-- **Auth:** login deixa de usar username `admin` e passa a usar e-mail (`admin@local`; legado `admin` ainda aceito no login)
+- **Home:** atalhos Premiação/Sorteador só para staff/admin
+- **Torneio draft:** opção de criar conta incompleta (e-mail + celular) ao adicionar jogador
+- **Auth:** login deixa de usar username `admin` e passa a usar e-mail (`admin@local`; legado `admin` ainda aceito no login); UI sem dicas de bootstrap
 
 ## [1.2.0] - 2026-08-25
 

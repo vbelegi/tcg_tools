@@ -12,12 +12,12 @@ Contrato de produto (LAN v1 → web v2). Moeda: **Fourse Points (FP)**.
 
 ## Identidade
 
-- Login: **email + senha** (sem username de login).
+- Login: **email + senha** (sem username de login); UI em **modal** (sem hints de bootstrap na interface).
 - Nome de exibição: não precisa ser único.
 - Email e celular: **únicos**; erro se já existirem.
-- Conta rápida (staff): nome + celular + email → status `incomplete` (sem senha).
-- Finalização: **só link de convite** (7 dias, uso único); jogador define senha.
-- Menor de 18: responsável como metadado (`guardian_*`).
+- **Auto-cadastro (player):** nome + e-mail + celular + senha → status `active` (conta completa).
+- **Conta rápida incomplete (só staff/admin):** na ficha do torneio (ou painel Usuários) → nome + celular + email, sem senha; finalização via **link de convite** (7 dias, uso único).
+- Menor de 18: responsável como metadado (`guardian_*`) no cadastro/claim.
 - LAN v1: convite gera token (envio de e-mail fica para v2 web).
 
 ## Inscrição e presença

@@ -22,6 +22,9 @@ export function TorneioDetailPage() {
   const isStaff = me && (me.role === "admin" || me.role === "staff");
   const [playerName, setPlayerName] = useState("");
   const [playerSeed, setPlayerSeed] = useState("");
+  const [playerEmail, setPlayerEmail] = useState("");
+  const [playerPhone, setPlayerPhone] = useState("");
+  const [createAccount, setCreateAccount] = useState(false);
   const [error, setError] = useState("");
   const [removeTarget, setRemoveTarget] = useState<{ id: number; name: string } | null>(null);
   const [dropModalOpen, setDropModalOpen] = useState(false);
@@ -65,15 +68,28 @@ export function TorneioDetailPage() {
   };
 
   const addPlayer = useMutation({
-    mutationFn: async (payload: { names: string[]; seed?: number }) => {
+    mutationFn: async (payload: {
+      names: string[];
+      seed?: number;
+      email?: string;
+      phone?: string;
+      create_account?: boolean;
+    }) => {
       for (const name of payload.names) {
-        await api.addJogador(eventId, name, payload.seed);
+        await api.addJogador(eventId, name, payload.seed, {
+          email: payload.email,
+          phone: payload.phone,
+          create_account: payload.create_account,
+        });
       }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["torneio", eventId] });
       setPlayerName("");
       setPlayerSeed("");
+      setPlayerEmail("");
+      setPlayerPhone("");
+      setCreateAccount(false);
       setError("");
       setPlayerAddedFlash(true);
       focusNameField();
@@ -215,19 +231,26 @@ export function TorneioDetailPage() {
   const canSubmitPlayer =
     Boolean(playerName.trim()) &&
     !addPlayer.isPending &&
-    !(seedRequired && !playerSeed.trim());
+    !(seedRequired && !playerSeed.trim()) &&
+    (!createAccount || (Boolean(playerEmail.trim()) && Boolean(playerPhone.trim())));
 
   const submitPlayer = () => {
     if (!canSubmitPlayer) return;
     addPlayer.mutate({
       names: [playerName.trim()],
       seed: playerSeed.trim() ? parseInt(playerSeed, 10) : undefined,
+      email: createAccount ? playerEmail.trim() : undefined,
+      phone: createAccount ? playerPhone.trim() : undefined,
+      create_account: createAccount || undefined,
     });
   };
 
   const clearPlayerForm = () => {
     setPlayerName("");
     setPlayerSeed("");
+    setPlayerEmail("");
+    setPlayerPhone("");
+    setCreateAccount(false);
     setError("");
     focusNameField();
   };
@@ -467,6 +490,42 @@ export function TorneioDetailPage() {
                   </p>
                 )}
               </div>
+              <div className="form-row">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={createAccount}
+                    onChange={(e) => setCreateAccount(e.target.checked)}
+                    disabled={addPlayer.isPending}
+                  />{" "}
+                  Criar conta incompleta (e-mail + celular → convite depois)
+                </label>
+              </div>
+              {createAccount && (
+                <>
+                  <div className="form-row">
+                    <label htmlFor="player-email">E-mail</label>
+                    <input
+                      id="player-email"
+                      type="email"
+                      value={playerEmail}
+                      onChange={(e) => setPlayerEmail(e.target.value)}
+                      required
+                      disabled={addPlayer.isPending}
+                    />
+                  </div>
+                  <div className="form-row">
+                    <label htmlFor="player-phone">Celular</label>
+                    <input
+                      id="player-phone"
+                      value={playerPhone}
+                      onChange={(e) => setPlayerPhone(e.target.value)}
+                      required
+                      disabled={addPlayer.isPending}
+                    />
+                  </div>
+                </>
+              )}
               <button
                 className="secondary"
                 type="button"

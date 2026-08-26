@@ -46,7 +46,7 @@ export function UsuariosPage() {
   return (
     <div>
       <h1>Usuários</h1>
-      <p>Contas incompletas aguardam o link de convite (7 dias).</p>
+      <p>Contas incompletas aguardam o link de convite (7 dias). Admin pode criar staff/admin.</p>
       {error && <p className="error">{error}</p>}
       {inviteMsg && <p className="success">{inviteMsg}</p>}
 
