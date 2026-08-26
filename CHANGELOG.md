@@ -4,6 +4,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Resultado:** `GET/PATCH /classificacao` responde `{ standings: [...] }` — corrige tela em branco ao finalizar
+
 ### Added
 
 - **Auth modal:** login e criar conta (player completo) sem sair da página; `/login` redireciona para `/?auth=login`

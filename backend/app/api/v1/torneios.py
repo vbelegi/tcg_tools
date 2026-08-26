@@ -440,7 +440,7 @@ def classificacao(
             registration_open=bool(event.get("registration_open")),
             db=db,
         )
-        return svc.get_classificacao(event_id)
+        return {"standings": svc.get_classificacao(event_id)}
     except TorneioError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
@@ -454,7 +454,7 @@ def patch_classificacao(
 ):
     try:
         svc.update_decklists(event_id, [u.model_dump() for u in body.updates])
-        return svc.get_classificacao(event_id)
+        return {"standings": svc.get_classificacao(event_id)}
     except TorneioError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 

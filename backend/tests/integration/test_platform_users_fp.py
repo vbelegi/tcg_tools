@@ -240,6 +240,10 @@ def test_guest_sees_finished_and_open_registration(api_client: TestClient):
     assert api_client.get(f"/api/v1/torneios/{open_id}").status_code == 200
     assert api_client.get(f"/api/v1/torneios/{finished_id}").status_code == 200
     assert api_client.get(f"/api/v1/torneios/{finished_id}/classificacao").status_code == 200
+    clf = api_client.get(f"/api/v1/torneios/{finished_id}/classificacao").json()
+    assert isinstance(clf, dict)
+    assert "standings" in clf
+    assert isinstance(clf["standings"], list)
     assert api_client.get(f"/api/v1/torneios/{closed_id}/classificacao").status_code == 404
 
 
