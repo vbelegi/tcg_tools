@@ -12,7 +12,7 @@ from app.api.deps import RequireAdmin, RequireStaff, get_optional_user
 from app.core.auth import AuthError, create_incomplete_user, create_invite, private_user_dict, public_user_dict
 from app.core.auth.fourse_points import ranking
 from app.db.session import get_db
-from app.models import Player, User, UserRole, UserStatus
+from app.models import User, UserRole, UserStatus
 from app.services.profile_service import build_public_profile
 
 router = APIRouter(tags=["users"])
@@ -122,9 +122,6 @@ def public_player_search(
     )
     out = []
     for u in rows:
-        if u.role == UserRole.admin.value:
-            if db.query(Player).filter(Player.user_id == u.id).count() == 0:
-                continue
         out.append(
             {
                 "id": u.id,
@@ -145,8 +142,6 @@ def public_ranking(db: Session = Depends(get_db), limit: int = Query(default=50,
 @router.get("/jogadores/{user_id}/perfil")
 def public_profile(user_id: int, db: Session = Depends(get_db), viewer: User | None = Depends(get_optional_user)):
     user = db.query(User).filter(User.id == user_id).one_or_none()
-    if user is None or user.role == UserRole.admin.value:
-        entries = db.query(Player).filter(Player.user_id == user_id).count()
-        if user is None or (user.role == UserRole.admin.value and entries == 0):
-            raise HTTPException(status_code=404, detail="Jogador não encontrado.")
+    if user is None:
+        raise HTTPException(status_code=404, detail="Jogador não encontrado.")
     return build_public_profile(db, user, viewer)

@@ -143,6 +143,20 @@ def test_create_torneio_requires_tcg(api_client: TestClient):
     assert r.status_code == 422
 
 
+def test_admin_has_native_profile(api_client: TestClient, db_session: Session):
+    from app.core.auth import get_admin
+
+    admin = get_admin(db_session)
+    assert admin is not None
+    r = api_client.get(f"/api/v1/jogadores/{admin.id}/perfil")
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["id"] == admin.id
+    assert body["display_name"]
+    assert body["can_edit"] is True
+    assert body["fourse_points_visible"] is True
+
+
 def test_public_player_search(api_client: TestClient, db_session: Session):
     register_player(
         db_session,

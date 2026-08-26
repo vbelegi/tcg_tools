@@ -28,6 +28,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- **Perfil:** admin bootstrap tem perfil nativo (sem precisar ter jogado torneio)
 - **Perfil:** seção renomeada para **Insights**; `/conta/senha` redireciona à home
 - **Nav/Home:** “Ranking Fourse Points” (FP só como abreviação em colunas/espaços curtos)
 - **Torneio:** `tcg_game_id` obrigatório na criação (API + UI interno/externo)

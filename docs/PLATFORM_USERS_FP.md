@@ -60,6 +60,8 @@ Sem login / player: vê torneios **`finished`**, drafts com **`registration_open
 
 Público: stats (torneios, títulos, top 8, melhor colocação), **Insights** heurísticos, badges de TCG (torneios **finalizados**), gráficos FP por jogo/mês, histórico + decklists.
 
+**Perfil:** todo usuário `active` (inclui **admin** criado no bootstrap) tem perfil em `/jogadores/{id}` — stats/histórico vazios até jogar. Sem exigência de inscrição em torneio.
+
 **Acesso:** Ranking Fourse Points; **Meu Perfil** no sidebar (logado); nome linkado em `/usuarios` (admin); busca pública no topo do perfil (`GET /jogadores/buscar?q=` → só `id`, `display_name`, `avatar_url`).
 
 **FP:** visível só para o **próprio jogador** e **admin**.
