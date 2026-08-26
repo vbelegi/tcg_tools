@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, Navigate, useParams } from "react-router-dom";
 
 import { ConfirmModal } from "../../components/ConfirmModal";
 import { MatchBadges } from "../../components/MatchBadges";
@@ -104,14 +104,23 @@ export function TorneioRodadaPage() {
   const [completarModalOpen, setCompletarModalOpen] = useState(false);
   const [highlightIncomplete, setHighlightIncomplete] = useState(false);
 
+  const { data: me, isFetched: meFetched } = useQuery({
+    queryKey: ["auth-me"],
+    queryFn: () => api.authMe(),
+    retry: false,
+  });
+  const isStaff = Boolean(me && (me.role === "admin" || me.role === "staff"));
+
   const { data: torneio } = useQuery({
     queryKey: ["torneio", eventId],
     queryFn: () => api.getTorneio(eventId),
+    enabled: isStaff,
   });
 
   const { data: rodada, refetch } = useQuery({
     queryKey: ["rodada", eventId, roundNum],
     queryFn: () => api.getRodada(eventId, roundNum),
+    enabled: isStaff,
   });
 
   useEffect(() => {
@@ -212,6 +221,10 @@ export function TorneioRodadaPage() {
         ?.focus();
     });
   }, [eventId, roundNum, rodada?.status]);
+
+  if (meFetched && !isStaff) {
+    return <Navigate to={`/torneios/${eventId}`} replace />;
+  }
 
   if (!rodada || !torneio) return <p>Carregando...</p>;
 

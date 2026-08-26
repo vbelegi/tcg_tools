@@ -54,10 +54,32 @@ export function TorneioDetailPage() {
   });
 
   const completedRoundNum = torneio?.completed_rounds ?? 0;
+  const isRunningPreview = torneio?.status === "running";
+  const hasActiveRoundPreview =
+    isRunningPreview && !torneio?.between_rounds && (torneio?.current_round ?? 0) > 0;
+
   const { data: lastCompletedRound } = useQuery({
     queryKey: ["rodada", eventId, completedRoundNum],
     queryFn: () => api.getRodada(eventId, completedRoundNum),
     enabled: Boolean(torneio?.between_rounds && completedRoundNum > 0),
+  });
+
+  const { data: activeRound } = useQuery({
+    queryKey: ["rodada", eventId, torneio?.current_round],
+    queryFn: () => api.getRodada(eventId, torneio!.current_round),
+    enabled: Boolean(hasActiveRoundPreview && (torneio?.current_round ?? 0) > 0),
+  });
+
+  const { data: liveClassificacao } = useQuery({
+    queryKey: ["classificacao", eventId],
+    queryFn: () => api.getClassificacao(eventId),
+    enabled: Boolean(
+      meFetched &&
+        !isStaff &&
+        torneio &&
+        isRunningPreview &&
+        (torneio.between_rounds || !activeRound?.matches?.length),
+    ),
   });
 
   useEffect(() => {
@@ -408,7 +430,7 @@ export function TorneioDetailPage() {
       {isDraft && (
         <>
           <h2>Jogadores ({torneio.players?.length ?? 0})</h2>
-          {torneio.format === "single_elimination" && (
+          {isStaff && torneio.format === "single_elimination" && (
             <>
               <SeFormatOptions
                 thirdPlaceMatch={thirdPlaceMatch}
@@ -671,7 +693,7 @@ export function TorneioDetailPage() {
         </>
       )}
 
-      {isRunning && hasActiveRound && (
+      {isRunning && hasActiveRound && isStaff && (
         <>
           <p>
             Rodada ativa: {torneio.current_round} / {torneio.max_rounds}
@@ -679,7 +701,12 @@ export function TorneioDetailPage() {
           <Link
             to={`/torneios/${eventId}/rodadas/${torneio.current_round}`}
             className="primary"
-            style={{ display: "inline-block", marginTop: "1rem", padding: "0.6rem 1.25rem", borderRadius: 999 }}
+            style={{
+              display: "inline-block",
+              marginTop: "1rem",
+              padding: "0.6rem 1.25rem",
+              borderRadius: 999,
+            }}
           >
             Gerenciar rodada {torneio.current_round}
           </Link>
@@ -697,7 +724,66 @@ export function TorneioDetailPage() {
         </>
       )}
 
-      {isRunning && torneio.between_rounds && (
+      {isRunning && !isStaff && (
+        <div style={{ marginTop: "1rem" }}>
+          <p>
+            {hasActiveRound
+              ? `Rodada ${torneio.current_round} / ${torneio.max_rounds}`
+              : torneio.between_rounds
+                ? `Rodada ${torneio.completed_rounds} concluída — aguardando próxima`
+                : "Torneio em andamento"}
+          </p>
+          {hasActiveRound && activeRound?.matches && activeRound.matches.length > 0 ? (
+            <RoundMatchesTable
+              title={`Pairings — rodada ${torneio.current_round}`}
+              matches={activeRound.matches}
+            />
+          ) : (
+            <>
+              {torneio.between_rounds && lastCompletedRound && (
+                <RoundMatchesTable
+                  title={`Resultados — rodada ${lastCompletedRound.number}`}
+                  matches={lastCompletedRound.matches}
+                />
+              )}
+              {liveClassificacao && (
+                <>
+                  <h2 style={{ marginTop: "1.5rem" }}>Classificação atual</h2>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Jogador</th>
+                        <th>Pts</th>
+                        <th>OMW%</th>
+                        <th>GW%</th>
+                        <th>OGW%</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {liveClassificacao.standings.map((s) => (
+                        <tr key={s.player_id}>
+                          <td>{s.rank_label ?? s.rank}</td>
+                          <td>{s.name}</td>
+                          <td>{s.is_drop ? "—" : s.points}</td>
+                          <td>{s.is_drop ? "—" : `${(s.omw * 100).toFixed(1)}%`}</td>
+                          <td>{s.is_drop ? "—" : `${(s.gw * 100).toFixed(1)}%`}</td>
+                          <td>{s.is_drop ? "—" : `${(s.ogw * 100).toFixed(1)}%`}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </>
+              )}
+              {!liveClassificacao && !(torneio.between_rounds && lastCompletedRound) && (
+                <p style={{ opacity: 0.85 }}>Aguardando pairings da rodada.</p>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {isRunning && torneio.between_rounds && isStaff && (
         <div className="card" style={{ marginTop: "1.5rem" }}>
           <h2>Entre rodadas</h2>
           <p>

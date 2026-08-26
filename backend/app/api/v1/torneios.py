@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import RequireAdmin, RequireStaff, get_current_user, get_optional_user
 from app.db.session import get_db
-from app.models import User, UserRole
+from app.models import Player, User, UserRole
 from app.schemas.torneio import (
     ClassificacaoPatch,
     DropRequest,
@@ -27,11 +27,53 @@ def get_torneio_service(db: Session = Depends(get_db)) -> TorneioService:
     return TorneioService(db)
 
 
-def _ensure_guest_finished(viewer: User | None, status: str) -> None:
-    """Anonymous visitors may only access finished events."""
-    if viewer is not None:
-        return
-    if status != "finished":
+def _role_value(user: User) -> str:
+    return user.role.value if hasattr(user.role, "value") else str(user.role)
+
+
+def _is_staff_user(user: User) -> bool:
+    return _role_value(user) in {UserRole.admin.value, UserRole.staff.value}
+
+
+def _registered_event_ids(db: Session, user_id: int) -> set[int]:
+    rows = db.query(Player.event_id).filter(Player.user_id == user_id).all()
+    return {int(r[0]) for r in rows}
+
+
+def _can_view_event(
+    viewer: User | None,
+    *,
+    event_id: int,
+    status: str,
+    registered_ids: set[int] | None = None,
+    db: Session | None = None,
+) -> bool:
+    if viewer is None:
+        return status == "finished"
+    if _is_staff_user(viewer):
+        return True
+    if status == "finished":
+        return True
+    if registered_ids is not None:
+        return event_id in registered_ids
+    if db is None:
+        return False
+    return (
+        db.query(Player.id)
+        .filter(Player.event_id == event_id, Player.user_id == viewer.id)
+        .first()
+        is not None
+    )
+
+
+def _ensure_can_view_event(
+    viewer: User | None,
+    *,
+    event_id: int,
+    status: str,
+    db: Session,
+) -> None:
+    if not _can_view_event(viewer, event_id=event_id, status=status, db=db):
         raise HTTPException(status_code=404, detail="Torneio não encontrado.")
 
 
@@ -103,11 +145,19 @@ def create_external(
 def list_torneios(
     svc: TorneioService = Depends(get_torneio_service),
     viewer: User | None = Depends(get_optional_user),
+    db: Session = Depends(get_db),
 ):
     events = svc.list_events()
     if viewer is None:
         return [e for e in events if e.get("status") == "finished"]
-    return events
+    if _is_staff_user(viewer):
+        return events
+    registered = _registered_event_ids(db, viewer.id)
+    return [
+        e
+        for e in events
+        if e.get("status") == "finished" or int(e["id"]) in registered
+    ]
 
 
 @router.get("/{event_id}")
@@ -115,10 +165,13 @@ def get_torneio(
     event_id: int,
     svc: TorneioService = Depends(get_torneio_service),
     viewer: User | None = Depends(get_optional_user),
+    db: Session = Depends(get_db),
 ):
     try:
         data = svc.get_event(event_id)
-        _ensure_guest_finished(viewer, data.get("status", ""))
+        _ensure_can_view_event(
+            viewer, event_id=event_id, status=data.get("status", ""), db=db
+        )
         return data
     except TorneioError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -230,10 +283,15 @@ def iniciar(
 @router.get("/{event_id}/rodadas")
 def list_rodadas(
     event_id: int,
-    _: RequireStaff,
     svc: TorneioService = Depends(get_torneio_service),
+    viewer: User | None = Depends(get_optional_user),
+    db: Session = Depends(get_db),
 ):
     try:
+        event = svc.get_event(event_id)
+        _ensure_can_view_event(
+            viewer, event_id=event_id, status=event.get("status", ""), db=db
+        )
         return svc.get_rounds(event_id)
     except TorneioError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -243,10 +301,15 @@ def list_rodadas(
 def get_rodada(
     event_id: int,
     round_number: int,
-    _: RequireStaff,
     svc: TorneioService = Depends(get_torneio_service),
+    viewer: User | None = Depends(get_optional_user),
+    db: Session = Depends(get_db),
 ):
     try:
+        event = svc.get_event(event_id)
+        _ensure_can_view_event(
+            viewer, event_id=event_id, status=event.get("status", ""), db=db
+        )
         return svc.get_round(event_id, round_number)
     except TorneioError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -338,10 +401,13 @@ def classificacao(
     event_id: int,
     svc: TorneioService = Depends(get_torneio_service),
     viewer: User | None = Depends(get_optional_user),
+    db: Session = Depends(get_db),
 ):
     try:
         event = svc.get_event(event_id)
-        _ensure_guest_finished(viewer, event.get("status", ""))
+        _ensure_can_view_event(
+            viewer, event_id=event_id, status=event.get("status", ""), db=db
+        )
         return svc.get_classificacao(event_id)
     except TorneioError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -366,10 +432,13 @@ def premiacao_torneio(
     event_id: int,
     svc: TorneioService = Depends(get_torneio_service),
     viewer: User | None = Depends(get_optional_user),
+    db: Session = Depends(get_db),
 ):
     try:
         event = svc.get_event(event_id)
-        _ensure_guest_finished(viewer, event.get("status", ""))
+        _ensure_can_view_event(
+            viewer, event_id=event_id, status=event.get("status", ""), db=db
+        )
         return svc.get_premiacao(event_id)
     except TorneioError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc

@@ -223,3 +223,90 @@ def test_guest_sees_only_finished_torneios(api_client: TestClient):
     assert api_client.get(f"/api/v1/torneios/{finished_id}").status_code == 200
     assert api_client.get(f"/api/v1/torneios/{finished_id}/classificacao").status_code == 200
     assert api_client.get(f"/api/v1/torneios/{draft_id}/classificacao").status_code == 404
+
+
+def test_player_sees_finished_or_enrolled_only(api_client: TestClient, db_session: Session):
+    from app.core.auth import register_player
+
+    player = register_player(
+        db_session,
+        display_name="Belegi",
+        email="belegi.player@example.com",
+        phone="+5511999990099",
+        password="abcdef",
+        birth_date=date(1990, 1, 1),
+    )
+
+    other = api_client.post(
+        "/api/v1/torneios",
+        json={
+            "name": "Other Draft",
+            "event_date": date.today().isoformat(),
+            "format": "swiss",
+            "max_rounds": 2,
+            "entry_fee": 10,
+            "best_of": 3,
+            "premiacao_preset_id": "standard",
+        },
+    )
+    assert other.status_code == 200
+    other_id = other.json()["id"]
+
+    mine = api_client.post(
+        "/api/v1/torneios",
+        json={
+            "name": "My Draft",
+            "event_date": date.today().isoformat(),
+            "format": "swiss",
+            "max_rounds": 2,
+            "entry_fee": 10,
+            "best_of": 3,
+            "premiacao_preset_id": "standard",
+        },
+    )
+    assert mine.status_code == 200
+    mine_id = mine.json()["id"]
+    assert (
+        api_client.post(
+            f"/api/v1/torneios/{mine_id}/jogadores",
+            json={"name": "Belegi", "user_id": player.id},
+        ).status_code
+        == 200
+    )
+
+    finished = api_client.post(
+        "/api/v1/torneios/externos",
+        json={
+            "name": "Finished For Player",
+            "event_date": date.today().isoformat(),
+            "format": "swiss",
+            "premiacao_preset_id": "standard",
+            "entry_fee": 10,
+            "placements": [
+                {"placement": 1, "display_name": "A"},
+                {"placement": 2, "display_name": "B"},
+                {"placement": 3, "display_name": "C"},
+                {"placement": 4, "display_name": "D"},
+            ],
+        },
+    )
+    assert finished.status_code == 200, finished.text
+    finished_id = finished.json()["id"]
+
+    assert api_client.post("/api/v1/auth/logout").status_code == 200
+    login = api_client.post(
+        "/api/v1/auth/login",
+        json={"email": "belegi.player@example.com", "password": "abcdef"},
+    )
+    assert login.status_code == 200
+
+    listed = api_client.get("/api/v1/torneios")
+    assert listed.status_code == 200
+    ids = {e["id"] for e in listed.json()}
+    assert mine_id in ids
+    assert finished_id in ids
+    assert other_id not in ids
+
+    assert api_client.get(f"/api/v1/torneios/{mine_id}").status_code == 200
+    assert api_client.get(f"/api/v1/torneios/{other_id}").status_code == 404
+    assert api_client.get(f"/api/v1/torneios/{finished_id}").status_code == 200

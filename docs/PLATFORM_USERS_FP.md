@@ -44,11 +44,13 @@ FP_i = \mathrm{round}(\mathrm{premio\_fracao}(i) \times N \times K)
 
 ## Visibilidade pública
 
-Sem login: **apenas torneios `finished`** (lista → resultado com classificação, premiação e decklists em leitura); perfis públicos (nome de exibição, histórico, decklists); ranking FP. Draft/running ficam ocultos.
+Sem login: **apenas torneios `finished`** (lista → resultado com classificação, premiação e decklists em leitura); perfis públicos; ranking FP.
+
+**Player logado:** vê `finished` **ou** torneios em que está inscrito (`players.user_id`). Em torneio em andamento: pairings só leitura (se gerados) ou classificação atual — sem gerenciar rodada. Staff/admin veem e operam todos os status.
 
 **Nunca** expor email, celular, nascimento ou responsável em endpoints públicos.
 
-Logado (player ativo): + inscrição em torneios com `registration_open`. Staff/admin veem e operam todos os status.
+Player ativo: + inscrição em torneios com `registration_open` (quando o evento já estiver acessível / inscrito via staff).
 
 ## Torneios externos
 
