@@ -193,6 +193,7 @@ class User(Base):
     role: Mapped[str] = mapped_column(String(16), nullable=False, default=UserRole.player.value)
     status: Mapped[str] = mapped_column(String(16), nullable=False, default=UserStatus.incomplete.value)
     password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    avatar_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

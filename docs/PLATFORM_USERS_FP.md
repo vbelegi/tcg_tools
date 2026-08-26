@@ -52,7 +52,17 @@ Sem login / player: vê torneios **`finished`**, drafts com **`registration_open
 - running → só inscrito ou staff
 - draft fechado → só infos (sem CTA)
 
-**TCG:** catálogo admin (`/tcgs`) com nome + cor hex para chips do calendário. Torneio pode ter `tcg_game_id`, `description`, `start_time`. Default de criação: **inscrição aberta**.
+**TCG:** catálogo admin (`/tcgs`) com nome + cor hex para chips do calendário. Torneio **exige** `tcg_game_id` na criação (interno e externo). Campos opcionais: `description`, `start_time`. Default de criação: **inscrição aberta**.
+
+Ícones estáticos em `frontend/public/tcg-icons/` (`magic_the_gathering.png`, …; fallback `other.png`).
+
+## Perfil do jogador (`/jogadores/{id}`)
+
+Público: stats (torneios, títulos, top 8, melhor colocação), insights heurísticos, badges de TCG (torneios **finalizados**), gráficos FP por jogo/mês, histórico + decklists.
+
+**FP:** visível só para o **próprio jogador** e **admin**.
+
+**Avatar:** upload próprio (`POST /auth/me/avatar`, máx. 512 KB; redimensiona para 256×256 WebP em `data/media/avatars/`). Placeholder: `/avatars/default.png`. Edição de nome: `PATCH /auth/me`.
 
 Staff/admin: todos os status e operação completa.
 

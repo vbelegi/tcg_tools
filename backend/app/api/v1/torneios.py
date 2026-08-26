@@ -130,13 +130,12 @@ def create_torneio(
         raw.registration_open = bool(body.registration_open)
         raw.description = (body.description or "").strip() or None
         raw.start_time = body.start_time
-        if body.tcg_game_id is not None:
-            from app.models import TcgGame
+        from app.models import TcgGame
 
-            game = svc._db.query(TcgGame).filter(TcgGame.id == body.tcg_game_id).one_or_none()
-            if game is None or not game.active:
-                raise HTTPException(status_code=422, detail="TCG inválido.")
-            raw.tcg_game_id = body.tcg_game_id
+        game = svc._db.query(TcgGame).filter(TcgGame.id == body.tcg_game_id).one_or_none()
+        if game is None or not game.active:
+            raise HTTPException(status_code=422, detail="TCG inválido.")
+        raw.tcg_game_id = body.tcg_game_id
         svc._commit()
         return svc.get_event(event.id)
     except TorneioError as exc:
@@ -150,6 +149,11 @@ def create_external(
     svc: TorneioService = Depends(get_torneio_service),
 ):
     try:
+        from app.models import TcgGame
+
+        game = svc._db.query(TcgGame).filter(TcgGame.id == body.tcg_game_id).one_or_none()
+        if game is None or not game.active:
+            raise HTTPException(status_code=422, detail="TCG inválido.")
         event = svc.create_external_event(
             name=body.name,
             event_date=body.event_date,
@@ -159,6 +163,7 @@ def create_external(
             notes=body.notes,
             placements=[p.model_dump() for p in body.placements],
             created_by_user_id=user.id,
+            tcg_game_id=body.tcg_game_id,
         )
         return svc.get_event(event.id)
     except TorneioError as exc:

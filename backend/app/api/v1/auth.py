@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, File, HTTPException, Request, Response, UploadFile
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
@@ -23,6 +23,7 @@ from app.core.auth import (
     register_player,
     revoke_session,
 )
+from app.core.auth.avatars import AvatarError, save_user_avatar
 from app.core.auth.passwords import MIN_PASSWORD_LEN
 from app.db.session import get_db
 from app.models import User
@@ -62,6 +63,9 @@ class ClaimInviteBody(BaseModel):
     guardian_relation: str | None = None
 
 
+class UpdateMeBody(BaseModel):
+    display_name: str = Field(min_length=1, max_length=120)
+
 @router.get("/status")
 def auth_status(db: Session = Depends(get_db)):
     admin = get_admin(db)
@@ -73,6 +77,40 @@ def auth_status(db: Session = Depends(get_db)):
 
 @router.get("/me")
 def auth_me(user: User = Depends(get_current_user)):
+    return private_user_dict(user)
+
+
+@router.patch("/me")
+def auth_update_me(
+    body: UpdateMeBody,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    name = body.display_name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Nome inválido.")
+    user.display_name = name
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return private_user_dict(user)
+
+
+@router.post("/me/avatar")
+async def auth_upload_avatar(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    file: UploadFile = File(...),
+):
+    data = await file.read()
+    try:
+        rel = save_user_avatar(user.id, data, file.content_type)
+    except AvatarError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    user.avatar_path = rel
+    db.add(user)
+    db.commit()
+    db.refresh(user)
     return private_user_dict(user)
 
 

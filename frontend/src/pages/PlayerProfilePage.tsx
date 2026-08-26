@@ -1,58 +1,429 @@
-import { useQuery } from "@tanstack/react-query";
+import { FormEvent, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import { api } from "../api/client";
+import type { ProfileHistoryRow } from "../api/types";
+import { resolveAvatarUrl, tcgIconUrl } from "../utils/tcgIcons";
 
-type HistoryRow = {
-  event_id: number;
-  event_name: string;
-  event_date: string;
-  source: string;
-  rank: number | null;
-  rank_label: string | null;
-  is_drop: boolean;
-  decklist: string | null;
-};
+function formatFinish(rank: number | null | undefined): string {
+  if (rank == null) return "—";
+  return `${rank}º`;
+}
+
+function historyVisible(rows: ProfileHistoryRow[], filter: string, limit: number) {
+  const filtered =
+    filter === "all"
+      ? rows
+      : rows.filter((h) => (h.tcg_game?.name ?? "Outros") === filter);
+  return { total: filtered.length, rows: filtered.slice(0, limit) };
+}
 
 export function PlayerProfilePage() {
   const { id = "" } = useParams();
   const userId = Number(id);
-  const { data, isLoading, error } = useQuery({
+  const qc = useQueryClient();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [nameDraft, setNameDraft] = useState("");
+  const [editingName, setEditingName] = useState(false);
+  const [historyFilter, setHistoryFilter] = useState("all");
+  const [historyLimit, setHistoryLimit] = useState(8);
+  const [error, setError] = useState("");
+
+  const { data, isLoading, error: loadError } = useQuery({
     queryKey: ["profile", userId],
-    queryFn: () => api.publicProfile(userId) as Promise<{
-      display_name: string;
-      fourse_points: number;
-      history: HistoryRow[];
-    }>,
+    queryFn: () => api.publicProfile(userId),
     enabled: Number.isFinite(userId),
   });
 
+  const { data: me } = useQuery({
+    queryKey: ["auth-me"],
+    queryFn: () => api.authMe(),
+    retry: false,
+  });
+
+  const saveName = useMutation({
+    mutationFn: () => api.updateMe({ display_name: nameDraft }),
+    onSuccess: async () => {
+      setEditingName(false);
+      await qc.invalidateQueries({ queryKey: ["profile", userId] });
+      await qc.invalidateQueries({ queryKey: ["auth-me"] });
+    },
+    onError: (e) => setError((e as Error).message),
+  });
+
+  const uploadAvatar = useMutation({
+    mutationFn: (file: File) => api.uploadAvatar(file),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["profile", userId] });
+      await qc.invalidateQueries({ queryKey: ["auth-me"] });
+    },
+    onError: (e) => setError((e as Error).message),
+  });
+
+  const filters = useMemo(() => {
+    if (!data) return ["all"];
+    const names = new Set<string>();
+    for (const h of data.history) {
+      names.add(h.tcg_game?.name ?? "Outros");
+    }
+    return ["all", ...Array.from(names).sort()];
+  }, [data]);
+
+  const chartGames = useMemo(
+    () =>
+      (data?.fp_by_game ?? []).map((g) => ({
+        name: g.tcg_name.length > 10 ? g.tcg_name.slice(0, 9) + "…" : g.tcg_name,
+        full: g.tcg_name,
+        points: g.points,
+      })),
+    [data],
+  );
+
+  const chartMonths = useMemo(
+    () =>
+      (data?.fp_by_month ?? []).map((m) => ({
+        month: m.month.slice(5) + "/" + m.month.slice(2, 4),
+        points: m.points,
+      })),
+    [data],
+  );
+
   if (isLoading) return <p>Carregando...</p>;
-  if (error) return <p className="error">{(error as Error).message}</p>;
+  if (loadError) return <p className="error">{(loadError as Error).message}</p>;
   if (!data) return null;
 
+  const canEdit = Boolean(data.can_edit || (me && me.id === data.id));
+  const showFp = data.fourse_points_visible && data.fourse_points != null;
+  const sinceYear = data.created_at ? new Date(data.created_at).getFullYear() : null;
+  const { total: histTotal, rows: histRows } = historyVisible(
+    data.history,
+    historyFilter,
+    historyLimit,
+  );
+  const mainGame = data.fp_by_game[0]?.tcg_name ?? "—";
+
+  const onSaveName = (e: FormEvent) => {
+    e.preventDefault();
+    saveName.mutate();
+  };
+
   return (
-    <div>
-      <h1>{data.display_name}</h1>
-      <p>
-        <strong>{data.fourse_points}</strong> Fourse Points (FP)
-      </p>
-      <h2>Torneios</h2>
-      {data.history.length === 0 && <p>Nenhum torneio finalizado vinculado.</p>}
-      <ul className="participant-list">
-        {data.history.map((h) => (
-          <li key={`${h.event_id}-${h.rank_label}`}>
-            <Link to={`/torneios/${h.event_id}/resultado`}>
-              {h.event_name}
-            </Link>{" "}
-            ({h.event_date}) — {h.is_drop ? "DROP" : h.rank_label || "—"}
-            {h.source === "external" ? " · externo" : ""}
-            {h.decklist ? (
-              <pre style={{ whiteSpace: "pre-wrap", fontSize: "0.85rem" }}>{h.decklist}</pre>
-            ) : null}
-          </li>
-        ))}
-      </ul>
+    <div className="profile-page">
+      {error && <p className="error">{error}</p>}
+
+      <section className="profile-hero">
+        <div className="profile-hero-main">
+          <div className="profile-avatar-wrap">
+            <img
+              className="profile-avatar"
+              src={resolveAvatarUrl(data.avatar_url)}
+              alt=""
+              width={96}
+              height={96}
+            />
+            {canEdit && (
+              <>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  hidden
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setError("");
+                      uploadAvatar.mutate(file);
+                    }
+                    e.target.value = "";
+                  }}
+                />
+                <button
+                  type="button"
+                  className="secondary profile-avatar-btn"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploadAvatar.isPending}
+                >
+                  Trocar foto
+                </button>
+              </>
+            )}
+          </div>
+          <div className="profile-hero-text">
+            {editingName && canEdit ? (
+              <form className="profile-name-form" onSubmit={onSaveName}>
+                <input
+                  value={nameDraft}
+                  onChange={(e) => setNameDraft(e.target.value)}
+                  maxLength={120}
+                  required
+                />
+                <button type="submit" className="primary" disabled={saveName.isPending}>
+                  Salvar
+                </button>
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={() => setEditingName(false)}
+                >
+                  Cancelar
+                </button>
+              </form>
+            ) : (
+              <div className="profile-name-row">
+                <h1>{data.display_name}</h1>
+                {canEdit && (
+                  <button
+                    type="button"
+                    className="secondary"
+                    onClick={() => {
+                      setNameDraft(data.display_name);
+                      setEditingName(true);
+                    }}
+                  >
+                    Editar nome
+                  </button>
+                )}
+              </div>
+            )}
+            <div className="profile-badges-row">
+              {data.ranking_position != null && (
+                <span className="profile-pill">#{data.ranking_position} no Ranking</span>
+              )}
+              {sinceYear != null && (
+                <span className="profile-pill muted">Desde {sinceYear}</span>
+              )}
+              {data.badge_games.map((g) => (
+                <img
+                  key={g.id}
+                  className="profile-tcg-badge"
+                  src={tcgIconUrl(g.name)}
+                  alt={g.name}
+                  title={g.name}
+                  width={36}
+                  height={36}
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = "/tcg-icons/other.png";
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+        {showFp && (
+          <div className="profile-fp-card">
+            <span className="profile-fp-label">Fourse Points</span>
+            <strong className="profile-fp-value">{data.fourse_points}</strong>
+          </div>
+        )}
+      </section>
+
+      <section className="profile-stats">
+        <div className="profile-stat">
+          <span>Torneios</span>
+          <strong>{data.stats.tournaments}</strong>
+        </div>
+        <div className="profile-stat">
+          <span>Títulos</span>
+          <strong className="accent-gold">{data.stats.titles}</strong>
+        </div>
+        <div className="profile-stat">
+          <span>Top 8</span>
+          <strong className="accent-blue">{data.stats.top8}</strong>
+        </div>
+        <div className="profile-stat">
+          <span>Melhor colocação</span>
+          <strong className="accent-green">{formatFinish(data.stats.best_finish)}</strong>
+        </div>
+      </section>
+
+      {data.insights.length > 0 && (
+        <section className="profile-section">
+          <h2>Perfil inteligente</h2>
+          <div className="profile-insights">
+            {data.insights.map((text) => (
+              <article key={text} className="profile-insight">
+                {text}
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section className="profile-section">
+        <h2>Perfil resumido</h2>
+        <div className="profile-summary-grid">
+          <article className="profile-summary-card">
+            <span>Jogo principal</span>
+            <strong>{mainGame}</strong>
+          </article>
+          <article className="profile-summary-card">
+            <span>Melhor colocação</span>
+            <strong>{formatFinish(data.stats.best_finish)} lugar</strong>
+          </article>
+          <article className="profile-summary-card">
+            <span>Torneios finalizados</span>
+            <strong>{data.stats.tournaments}</strong>
+          </article>
+        </div>
+      </section>
+
+      <div className="profile-charts">
+        <section className="profile-section profile-chart-card">
+          <h2>Pontos por jogo</h2>
+          {chartGames.length === 0 ? (
+            <p className="muted">Sem dados ainda.</p>
+          ) : (
+            <div className="profile-chart">
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={chartGames}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#3a2a4a" />
+                  <XAxis dataKey="name" stroke="#a898b8" fontSize={12} />
+                  <YAxis stroke="#a898b8" fontSize={12} />
+                  <Tooltip
+                    contentStyle={{ background: "#1c1028", border: "1px solid #3a2a4a" }}
+                    labelFormatter={(_, payload) =>
+                      (payload?.[0]?.payload as { full?: string } | undefined)?.full ?? ""
+                    }
+                  />
+                  <Bar dataKey="points" fill="#9b2de0" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </section>
+
+        <section className="profile-section profile-chart-card">
+          <h2>Desempenho por temporada</h2>
+          {chartMonths.length === 0 ? (
+            <p className="muted">Sem dados ainda.</p>
+          ) : (
+            <div className="profile-chart">
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={chartMonths}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#3a2a4a" />
+                  <XAxis dataKey="month" stroke="#a898b8" fontSize={12} />
+                  <YAxis stroke="#a898b8" fontSize={12} />
+                  <Tooltip
+                    contentStyle={{ background: "#1c1028", border: "1px solid #3a2a4a" }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="points"
+                    stroke="#9b2de0"
+                    strokeWidth={2}
+                    dot={{ r: 4, fill: "#9b2de0" }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </section>
+      </div>
+
+      <section className="profile-section">
+        <div className="profile-history-head">
+          <h2>Histórico completo de torneios</h2>
+          <div className="profile-filters">
+            {filters.map((f) => (
+              <button
+                key={f}
+                type="button"
+                className={historyFilter === f ? "primary" : "secondary"}
+                onClick={() => {
+                  setHistoryFilter(f);
+                  setHistoryLimit(8);
+                }}
+              >
+                {f === "all" ? "Todos" : f}
+              </button>
+            ))}
+          </div>
+        </div>
+        {histTotal === 0 ? (
+          <p className="muted">Nenhum torneio finalizado vinculado.</p>
+        ) : (
+          <>
+            <div className="table-wrap">
+              <table className="profile-history-table">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Torneio</th>
+                    <th>Jogo</th>
+                    <th>Colocação</th>
+                    <th>Participantes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {histRows.map((h) => (
+                    <tr key={`${h.event_id}-${h.rank_label}`}>
+                      <td>{h.event_date.split("-").reverse().join("/")}</td>
+                      <td>
+                        <Link to={`/torneios/${h.event_id}/resultado`}>{h.event_name}</Link>
+                      </td>
+                      <td
+                        style={{
+                          color: h.tcg_game?.color_hex ?? "var(--muted)",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {h.tcg_game?.name ?? "—"}
+                      </td>
+                      <td>
+                        {h.is_drop ? (
+                          "DROP"
+                        ) : h.rank != null && h.rank <= 8 ? (
+                          <span className="profile-place-badge">{formatFinish(h.rank)}</span>
+                        ) : (
+                          formatFinish(h.rank)
+                        )}
+                      </td>
+                      <td>{h.player_count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {histTotal > historyLimit && (
+              <button
+                type="button"
+                className="secondary"
+                style={{ display: "block", margin: "1rem auto 0" }}
+                onClick={() => setHistoryLimit((n) => n + 12)}
+              >
+                Ver todos ({histTotal})
+              </button>
+            )}
+            {histRows.some((h) => h.decklist) && (
+              <div className="profile-decklists">
+                <h3>Decklists</h3>
+                {histRows
+                  .filter((h) => h.decklist)
+                  .map((h) => (
+                    <details key={`deck-${h.event_id}`}>
+                      <summary>
+                        {h.event_name} ({h.event_date})
+                      </summary>
+                      <pre>{h.decklist}</pre>
+                    </details>
+                  ))}
+              </div>
+            )}
+          </>
+        )}
+      </section>
     </div>
   );
 }

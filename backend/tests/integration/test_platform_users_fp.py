@@ -52,6 +52,7 @@ def test_pending_attendance_blocks_start(api_client: TestClient, db_session: Ses
             "entry_fee": 10,
             "best_of": 3,
             "premiacao_preset_id": "standard",
+            "tcg_game_id": 1,
         },
     )
     eid = r.json()["id"]
@@ -93,6 +94,7 @@ def test_finalize_awards_fp(api_client: TestClient, db_session: Session):
             "entry_fee": 10,
             "best_of": 3,
             "premiacao_preset_id": "standard",
+            "tcg_game_id": 1,
         },
     )
     eid = r.json()["id"]
@@ -121,6 +123,7 @@ def test_external_torneio_creates_fp(api_client: TestClient, db_session: Session
             "event_date": date.today().isoformat(),
             "format": "swiss",
             "premiacao_preset_id": "standard",
+            "tcg_game_id": 1,
             "entry_fee": 20,
             "placements": [
                 {
@@ -167,6 +170,7 @@ def test_delete_torneio_admin(api_client: TestClient):
             "entry_fee": 10,
             "best_of": 3,
             "premiacao_preset_id": "standard",
+            "tcg_game_id": 1,
         },
     )
     assert r.status_code == 200
@@ -186,6 +190,7 @@ def test_guest_sees_finished_and_open_registration(api_client: TestClient):
             "entry_fee": 10,
             "best_of": 3,
             "premiacao_preset_id": "standard",
+            "tcg_game_id": 1,
             "registration_open": False,
         },
     )
@@ -202,6 +207,7 @@ def test_guest_sees_finished_and_open_registration(api_client: TestClient):
             "entry_fee": 15,
             "best_of": 3,
             "premiacao_preset_id": "standard",
+            "tcg_game_id": 1,
             "registration_open": True,
         },
     )
@@ -215,6 +221,7 @@ def test_guest_sees_finished_and_open_registration(api_client: TestClient):
             "event_date": date.today().isoformat(),
             "format": "swiss",
             "premiacao_preset_id": "standard",
+            "tcg_game_id": 1,
             "entry_fee": 10,
             "placements": [
                 {"placement": 1, "display_name": "A"},
@@ -271,6 +278,7 @@ def test_player_sees_finished_enrolled_or_open_registration(
             "entry_fee": 10,
             "best_of": 3,
             "premiacao_preset_id": "standard",
+            "tcg_game_id": 1,
             "registration_open": False,
         },
     )
@@ -287,6 +295,7 @@ def test_player_sees_finished_enrolled_or_open_registration(
             "entry_fee": 10,
             "best_of": 3,
             "premiacao_preset_id": "standard",
+            "tcg_game_id": 1,
             "registration_open": True,
         },
     )
@@ -303,6 +312,7 @@ def test_player_sees_finished_enrolled_or_open_registration(
             "entry_fee": 10,
             "best_of": 3,
             "premiacao_preset_id": "standard",
+            "tcg_game_id": 1,
         },
     )
     assert mine.status_code == 200
@@ -322,6 +332,7 @@ def test_player_sees_finished_enrolled_or_open_registration(
             "event_date": date.today().isoformat(),
             "format": "swiss",
             "premiacao_preset_id": "standard",
+            "tcg_game_id": 1,
             "entry_fee": 10,
             "placements": [
                 {"placement": 1, "display_name": "A"},

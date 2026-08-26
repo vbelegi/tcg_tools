@@ -142,6 +142,15 @@ def run_se_bracket(
 
 
 @pytest.fixture
+def default_tcg_id(db_session: Session) -> int:
+    from app.models import TcgGame
+
+    row = db_session.query(TcgGame).order_by(TcgGame.id.asc()).first()
+    assert row is not None
+    return int(row.id)
+
+
+@pytest.fixture
 def api_client(db_session: Session) -> Generator[TestClient, None, None]:
     """FastAPI client with real DB session (Alembic-migrated) and admin login."""
     from app.core.auth import upsert_admin_password

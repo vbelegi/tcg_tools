@@ -2,6 +2,7 @@ import type {
   CalcularResponse,
   Match,
   Player,
+  PlayerProfile,
   Preset,
   PresetsResponse,
   Round,
@@ -84,7 +85,38 @@ export const api = {
       display_name: string;
       role: string;
       status: string;
+      avatar_url?: string | null;
+      created_at?: string | null;
     }>("/auth/me"),
+
+  updateMe: (body: { display_name: string }) =>
+    request<{
+      id: number;
+      email: string;
+      display_name: string;
+      role: string;
+      status: string;
+      avatar_url?: string | null;
+    }>("/auth/me", { method: "PATCH", body: JSON.stringify(body) }),
+
+  uploadAvatar: async (file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    const res = await fetch(`${BASE}/auth/me/avatar`, {
+      method: "POST",
+      credentials: "include",
+      body: form,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(formatApiError(err.detail, res.statusText || "Erro no upload"));
+    }
+    return res.json() as Promise<{
+      id: number;
+      display_name: string;
+      avatar_url?: string | null;
+    }>;
+  },
 
   login: (email: string, password: string) =>
     request<{
@@ -174,7 +206,7 @@ export const api = {
       "/ranking",
     ),
 
-  publicProfile: (userId: number) => request(`/jogadores/${userId}/perfil`),
+  publicProfile: (userId: number) => request<PlayerProfile>(`/jogadores/${userId}/perfil`),
 
   checkInPlayer: (eventId: number, playerId: number) =>
     request(`/torneios/${eventId}/jogadores/${playerId}/check-in`, { method: "POST" }),

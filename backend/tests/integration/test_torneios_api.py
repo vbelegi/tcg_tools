@@ -22,6 +22,7 @@ def _create_swiss(client: TestClient) -> int:
             "entry_fee": 35,
             "best_of": 3,
             "premiacao_preset_id": "standard",
+            "tcg_game_id": 1,
         },
     )
     assert r.status_code == 200
@@ -98,6 +99,7 @@ def _create_se(client: TestClient, player_count: int = 4) -> int:
             "entry_fee": 35,
             "best_of": 1,
             "premiacao_preset_id": "standard",
+            "tcg_game_id": 1,
             "third_place_match": True,
             "se_bo_config": {"1": 3, "2": 1},
         },
@@ -142,6 +144,7 @@ def test_create_se_invalid_bo_config(api_client: TestClient):
             "entry_fee": 10,
             "best_of": 3,
             "premiacao_preset_id": "standard",
+            "tcg_game_id": 1,
             "se_bo_config": {"1": 7},
         },
     )

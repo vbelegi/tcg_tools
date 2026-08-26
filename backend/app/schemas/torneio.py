@@ -21,7 +21,7 @@ class TorneioCreateRequest(BaseModel):
     registration_open: bool = True
     description: str | None = None
     start_time: str | None = None
-    tcg_game_id: int | None = None
+    tcg_game_id: int
 
     @field_validator("se_bo_config")
     @classmethod
@@ -142,4 +142,5 @@ class ExternalTorneioCreate(BaseModel):
     premiacao_preset_id: str = "standard"
     entry_fee: float = 0
     notes: str | None = None
+    tcg_game_id: int
     placements: list[ExternalPlacement]

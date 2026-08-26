@@ -316,11 +316,15 @@ def claim_invite(
 
 
 def public_user_dict(user: User) -> dict:
+    from app.core.auth.avatars import media_url
+
     return {
         "id": user.id,
         "display_name": user.display_name,
         "role": user.role,
         "status": user.status,
+        "avatar_url": media_url(user.avatar_path),
+        "created_at": user.created_at.isoformat() if user.created_at else None,
     }
 
 
@@ -333,5 +337,4 @@ def private_user_dict(user: User) -> dict:
         "guardian_name": user.guardian_name,
         "guardian_phone": user.guardian_phone,
         "guardian_relation": user.guardian_relation,
-        "created_at": user.created_at.isoformat() if user.created_at else None,
     }

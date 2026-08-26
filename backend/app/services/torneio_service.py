@@ -1010,6 +1010,7 @@ class TorneioService:
         notes: str | None,
         placements: list[dict[str, Any]],
         created_by_user_id: int | None = None,
+        tcg_game_id: int | None = None,
     ) -> Event:
         """Admin import of an external tournament for FP + public history."""
         from app.core.auth import AuthError, create_incomplete_user
@@ -1040,6 +1041,8 @@ class TorneioService:
         event.source = EventSource.external.value
         event.external_notes = notes
         event.created_by_user_id = created_by_user_id
+        if tcg_game_id is not None:
+            event.tcg_game_id = tcg_game_id
         event.registration_open = False
         self._db.flush()
 

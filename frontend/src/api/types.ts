@@ -154,4 +154,48 @@ export interface Standing {
 
 }
 
+export interface ProfileHistoryRow {
+  event_id: number;
+  event_name: string;
+  event_date: string;
+  source: string;
+  rank: number | null;
+  rank_label: string | null;
+  is_drop: boolean;
+  decklist: string | null;
+  player_count: number;
+  tcg_game: TcgGame | null;
+  fp_earned: number;
+}
+
+export interface PlayerProfile {
+  id: number;
+  display_name: string;
+  role: string;
+  status: string;
+  created_at: string | null;
+  avatar_url: string | null;
+  fourse_points: number | null;
+  fourse_points_visible: boolean;
+  ranking_position: number | null;
+  can_edit: boolean;
+  viewer_authenticated: boolean;
+  stats: {
+    tournaments: number;
+    titles: number;
+    top8: number;
+    best_finish: number | null;
+  };
+  insights: string[];
+  badge_games: TcgGame[];
+  fp_by_game: Array<{
+    tcg_name: string;
+    tcg_game: TcgGame | null;
+    points: number;
+    tournaments: number;
+  }>;
+  fp_by_month: Array<{ month: string; points: number; tournaments: number }>;
+  history: ProfileHistoryRow[];
+}
+
 

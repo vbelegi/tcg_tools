@@ -151,7 +151,7 @@ export function CalendarPage() {
                 >
                   {day != null && <span className="calendar-day-num">{day}</span>}
                   <div className="calendar-chips">
-                    {dayEvents.slice(0, 3).map((ev) => (
+                    {dayEvents.slice(0, 2).map((ev) => (
                       <span
                         key={ev.id}
                         className="calendar-chip"
@@ -161,11 +161,11 @@ export function CalendarPage() {
                         }}
                         title={ev.name}
                       >
-                        Torneio: {ev.name}
+                        {ev.name}
                       </span>
                     ))}
-                    {dayEvents.length > 3 && (
-                      <span className="calendar-chip-more">+{dayEvents.length - 3}</span>
+                    {dayEvents.length > 2 && (
+                      <span className="calendar-chip-more">+{dayEvents.length - 2}</span>
                     )}
                   </div>
                 </button>

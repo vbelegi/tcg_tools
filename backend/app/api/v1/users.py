@@ -10,9 +10,10 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import RequireAdmin, RequireStaff, get_optional_user
 from app.core.auth import AuthError, create_incomplete_user, create_invite, private_user_dict, public_user_dict
-from app.core.auth.fourse_points import ranking, user_fp_total
+from app.core.auth.fourse_points import ranking
 from app.db.session import get_db
-from app.models import Event, Player, User, UserRole, UserStatus
+from app.models import Player, User, UserRole
+from app.services.profile_service import build_public_profile
 
 router = APIRouter(tags=["users"])
 
@@ -113,36 +114,7 @@ def public_ranking(db: Session = Depends(get_db), limit: int = Query(default=50,
 def public_profile(user_id: int, db: Session = Depends(get_db), viewer: User | None = Depends(get_optional_user)):
     user = db.query(User).filter(User.id == user_id).one_or_none()
     if user is None or user.role == UserRole.admin.value:
-        # Hide pure admin accounts from public directory unless they also play
         entries = db.query(Player).filter(Player.user_id == user_id).count()
         if user is None or (user.role == UserRole.admin.value and entries == 0):
             raise HTTPException(status_code=404, detail="Jogador não encontrado.")
-    history = []
-    players = db.query(Player).filter(Player.user_id == user_id).all()
-    event_ids = [p.event_id for p in players]
-    events = {e.id: e for e in db.query(Event).filter(Event.id.in_(event_ids)).all()} if event_ids else {}
-    for p in players:
-        ev = events.get(p.event_id)
-        if not ev or ev.status != "finished":
-            continue
-        snap = (ev.premiacao_resultado or {}).get("standings_snapshot") or []
-        row = next((s for s in snap if s.get("player_id") == p.id), None)
-        history.append(
-            {
-                "event_id": ev.id,
-                "event_name": ev.name,
-                "event_date": ev.event_date.isoformat(),
-                "source": ev.source,
-                "rank": row.get("rank") if row else None,
-                "rank_label": row.get("rank_label") if row else None,
-                "is_drop": row.get("is_drop") if row else bool(p.dropped_at),
-                "decklist": p.decklist,
-            }
-        )
-    history.sort(key=lambda h: h["event_date"], reverse=True)
-    return {
-        **public_user_dict(user),
-        "fourse_points": user_fp_total(db, user.id),
-        "history": history,
-        "viewer_authenticated": viewer is not None,
-    }
+    return build_public_profile(db, user, viewer)

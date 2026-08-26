@@ -27,23 +27,30 @@ function emptyRow(placement: number): PlacementRow {
 export function TorneioExternoPage() {
   const navigate = useNavigate();
   const { data: presets } = useQuery({ queryKey: ["presets"], queryFn: api.getPresets });
+  const { data: tcgGames } = useQuery({
+    queryKey: ["tcg-games"],
+    queryFn: () => api.listTcgGames(),
+  });
   const [name, setName] = useState("");
   const [eventDate, setEventDate] = useState(new Date().toISOString().slice(0, 10));
   const [entryFee, setEntryFee] = useState("0");
   const [presetId, setPresetId] = useState("standard");
+  const [tcgGameId, setTcgGameId] = useState("");
   const [notes, setNotes] = useState("");
   const [rows, setRows] = useState<PlacementRow[]>([emptyRow(1), emptyRow(2), emptyRow(3), emptyRow(4)]);
   const [error, setError] = useState("");
 
   const mutation = useMutation({
-    mutationFn: () =>
-      api.createExternalTorneio({
+    mutationFn: () => {
+      if (!tcgGameId) throw new Error("Selecione o TCG do torneio.");
+      return api.createExternalTorneio({
         name,
         event_date: eventDate,
         format: "swiss",
         premiacao_preset_id: presetId,
         entry_fee: parseFloat(entryFee) || 0,
         notes: notes || undefined,
+        tcg_game_id: Number(tcgGameId),
         placements: rows
           .filter((r) => r.display_name.trim())
           .map((r) => ({
@@ -54,7 +61,8 @@ export function TorneioExternoPage() {
             create_account: r.create_account,
             is_drop: r.is_drop,
           })),
-      }),
+      });
+    },
     onSuccess: (t: { id: number }) => navigate(`/torneios/${t.id}`),
     onError: (e) => setError((e as Error).message),
   });
@@ -75,6 +83,22 @@ export function TorneioExternoPage() {
         <div className="form-row">
           <label>Nome</label>
           <input value={name} onChange={(e) => setName(e.target.value)} required />
+        </div>
+        <div className="form-row">
+          <label htmlFor="externo-tcg">TCG</label>
+          <select
+            id="externo-tcg"
+            value={tcgGameId}
+            onChange={(e) => setTcgGameId(e.target.value)}
+            required
+          >
+            <option value="">— selecionar —</option>
+            {tcgGames?.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="form-row">
           <label>Data</label>

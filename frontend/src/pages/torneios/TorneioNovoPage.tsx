@@ -42,6 +42,9 @@ export function TorneioNovoPage() {
         );
         if (!ok) throw new Error("cancelado");
       }
+      if (!tcgGameId) {
+        throw new Error("Selecione o TCG do torneio.");
+      }
       return api.createTorneio({
         name,
         event_date: eventDate,
@@ -58,7 +61,7 @@ export function TorneioNovoPage() {
         registration_open: registrationOpen,
         description: description.trim() || null,
         start_time: startTime || null,
-        tcg_game_id: tcgGameId ? Number(tcgGameId) : null,
+        tcg_game_id: Number(tcgGameId),
       });
     },
     onSuccess: (t) => navigate(`/torneios/${t.id}`),
@@ -82,6 +85,7 @@ export function TorneioNovoPage() {
           id="torneio-tcg"
           value={tcgGameId}
           onChange={(e) => setTcgGameId(e.target.value)}
+          required
         >
           <option value="">— selecionar —</option>
           {tcgGames?.map((g) => (

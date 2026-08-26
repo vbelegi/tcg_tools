@@ -10,8 +10,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Perfil do jogador:** dashboard com stats, insights, badges TCG, Recharts (FP por jogo/mês), histórico filtrável; avatar + editar nome
+- **Avatar:** `POST /auth/me/avatar` (512 KB, WebP 256px) servido em `/media`; placeholder `/avatars/default.png`
+- **PATCH /auth/me:** atualizar `display_name`
 - **Calendário público** (`/calendario`): grade mensal com todos os torneios, painel do dia e CTAs por status/auth
-- **TCGs:** catálogo com cor hex (admin `/tcgs`); seed Magic/Pokémon/Yu-Gi-Oh!/One Piece/Digimon/Lorcana/Riftbound
+- **TCGs:** catálogo com cor hex (admin `/tcgs`); seed Magic/Pokémon/Yu-Gi-Oh!/One Piece/Digimon/Lorcana/Riftbound; ícones em `frontend/public/tcg-icons/`
 - **Torneio:** campos `description`, `start_time`, `tcg_game_id`; default inscrição aberta
 - **Auth modal:** login e criar conta (player completo) sem sair da página; `/login` redireciona para `/?auth=login`
 - **Auto-cadastro player:** `POST /auth/register` (nome, e-mail, celular, senha → conta ativa)
@@ -23,6 +26,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- **Torneio:** `tcg_game_id` obrigatório na criação (API + UI interno/externo)
+- **Perfil:** FP oculto para visitantes (visível para dono e admin); decklists e histórico públicos
 - **Inscrição aberta:** guest/player veem drafts com `registration_open` (vitrine + CTA); draft fechado continua oculto
 - **Walk-in:** validação de celular com erro junto ao formulário (hint DDD + número)
 - **Player:** lista só `finished` ou inscritos; detalhe sem “Gerenciar rodada” (pairings/classificação só leitura); GET rodada liberado para quem pode ver o evento
