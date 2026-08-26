@@ -1,23 +1,15 @@
 import type {
-
   CalcularResponse,
-
   Match,
-
   Player,
-
+  PlayerProfile,
   Preset,
-
   PresetsResponse,
-
   Round,
-
   Standing,
-
   TabelaLinha,
-
+  TcgGame,
   Torneio,
-
 } from "./types";
 
 
@@ -84,17 +76,157 @@ export const api = {
   health: () => request<{ status: string }>("/health"),
 
   authStatus: () =>
-    request<{ configured: boolean; username: string; min_password_length: number }>("/auth/status"),
+    request<{ configured: boolean; min_password_length: number }>("/auth/status"),
 
-  authMe: () => request<{ username: string }>("/auth/me"),
+  authMe: () =>
+    request<{
+      id: number;
+      email: string;
+      display_name: string;
+      role: string;
+      status: string;
+      avatar_url?: string | null;
+      created_at?: string | null;
+    }>("/auth/me"),
 
-  login: (username: string, password: string) =>
-    request<{ username: string }>("/auth/login", {
+  updateMe: (body: { display_name: string }) =>
+    request<{
+      id: number;
+      email: string;
+      display_name: string;
+      role: string;
+      status: string;
+      avatar_url?: string | null;
+    }>("/auth/me", { method: "PATCH", body: JSON.stringify(body) }),
+
+  uploadAvatar: async (file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    const res = await fetch(`${BASE}/auth/me/avatar`, {
       method: "POST",
-      body: JSON.stringify({ username, password }),
+      credentials: "include",
+      body: form,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(formatApiError(err.detail, res.statusText || "Erro no upload"));
+    }
+    return res.json() as Promise<{
+      id: number;
+      display_name: string;
+      avatar_url?: string | null;
+    }>;
+  },
+
+  login: (email: string, password: string) =>
+    request<{
+      id: number;
+      email: string;
+      display_name: string;
+      role: string;
+    }>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    }),
+
+  register: (body: {
+    display_name: string;
+    email: string;
+    phone: string;
+    password: string;
+    birth_date: string;
+    guardian_name?: string;
+    guardian_phone?: string;
+    guardian_relation?: string;
+  }) =>
+    request<{
+      id: number;
+      email: string;
+      display_name: string;
+      role: string;
+    }>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(body),
     }),
 
   logout: () => request<{ ok: boolean }>("/auth/logout", { method: "POST" }),
+
+  claimInvite: (body: {
+    token: string;
+    password: string;
+    birth_date: string;
+    guardian_name?: string;
+    guardian_phone?: string;
+    guardian_relation?: string;
+  }) =>
+    request<{ id: number; email: string; display_name: string }>("/auth/claim-invite", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  listUsers: (q?: string) =>
+    request<
+      Array<{
+        id: number;
+        email: string;
+        display_name: string;
+        phone: string | null;
+        role: string;
+        status: string;
+      }>
+    >(`/users${q ? `?q=${encodeURIComponent(q)}` : ""}`),
+
+  searchUsers: (q: string) =>
+    request<
+      Array<{
+        id: number;
+        display_name: string;
+        email?: string;
+        phone?: string | null;
+        role: string;
+        status: string;
+      }>
+    >(`/users/search?q=${encodeURIComponent(q)}`),
+
+  searchPlayers: (q: string) =>
+    request<Array<{ id: number; display_name: string; avatar_url: string | null }>>(
+      `/jogadores/buscar?q=${encodeURIComponent(q)}`,
+    ),
+
+  createUser: (body: {
+    display_name: string;
+    email: string;
+    phone: string;
+    role?: string;
+  }) =>
+    request("/users", { method: "POST", body: JSON.stringify(body) }),
+
+  inviteUser: (userId: number) =>
+    request<{ token: string; claim_path: string; expires_at: string }>(`/users/${userId}/invite`, {
+      method: "POST",
+    }),
+
+  ranking: () =>
+    request<
+      Array<{
+        rank: number;
+        user_id: number;
+        display_name: string;
+        points: number;
+        avatar_url: string | null;
+      }>
+    >("/ranking"),
+
+  publicProfile: (userId: number) => request<PlayerProfile>(`/jogadores/${userId}/perfil`),
+
+  checkInPlayer: (eventId: number, playerId: number) =>
+    request(`/torneios/${eventId}/jogadores/${playerId}/check-in`, { method: "POST" }),
+
+  selfRegister: (eventId: number) =>
+    request(`/torneios/${eventId}/inscrever`, { method: "POST" }),
+
+  createExternalTorneio: (body: unknown) =>
+    request<Torneio>("/torneios/externos", { method: "POST", body: JSON.stringify(body) }),
 
   changePassword: (current_password: string, new_password: string) =>
     request<{ ok: boolean; message: string }>("/auth/change-password", {
@@ -184,24 +316,55 @@ export const api = {
 
   listTorneios: () => request<Torneio[]>("/torneios"),
 
+  listCalendarTorneios: (year: number, month: number) =>
+    request<Torneio[]>(`/torneios/calendar?year=${year}&month=${month}`),
+
+  listTcgGames: (includeInactive = false) =>
+    request<TcgGame[]>(`/tcg-games${includeInactive ? "?include_inactive=true" : ""}`),
+
+  createTcgGame: (body: { name: string; color_hex: string; slug?: string; active?: boolean }) =>
+    request<TcgGame>("/tcg-games", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  updateTcgGame: (
+    id: number,
+    body: { name?: string; color_hex?: string; slug?: string; active?: boolean },
+  ) =>
+    request<TcgGame>(`/tcg-games/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
+
+  deleteTcgGame: (id: number) => request<void>(`/tcg-games/${id}`, { method: "DELETE" }),
+
   getTorneio: (id: number) => request<Torneio & { players: Player[] }>(`/torneios/${id}`),
 
   createTorneio: (body: object) =>
-
     request<Torneio>("/torneios", { method: "POST", body: JSON.stringify(body) }),
+
+  deleteTorneio: (id: number) =>
+    request<void>(`/torneios/${id}`, { method: "DELETE" }),
 
   updateTorneio: (id: number, body: object) =>
 
     request<Torneio>(`/torneios/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
 
-  addJogador: (id: number, name: string, seed?: number) =>
-
+  addJogador: (
+    id: number,
+    name: string,
+    seed?: number,
+    extra?: {
+      email?: string;
+      phone?: string;
+      create_account?: boolean;
+      user_id?: number;
+    },
+  ) =>
     request<Player>(`/torneios/${id}/jogadores`, {
-
       method: "POST",
-
-      body: JSON.stringify({ name, seed }),
-
+      body: JSON.stringify({ name, seed, ...extra }),
     }),
 
   removeJogador: (id: number, pid: number) =>

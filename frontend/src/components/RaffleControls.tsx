@@ -9,12 +9,14 @@ type RaffleControlsProps = {
   /** Texto auxiliar acima dos controles (ex.: tamanho da pool). */
   description?: string;
   primaryButtonLabel?: string;
+  compact?: boolean;
 };
 
 export function RaffleControls({
   participants,
   description,
   primaryButtonLabel = "Sortear",
+  compact = false,
 }: RaffleControlsProps) {
   const modeFieldId = useId();
   const [mode, setMode] = useState<RaffleMode>("batch");
@@ -76,10 +78,8 @@ export function RaffleControls({
   const canDrawNext = chainActive ? chainRemaining.length > 0 : canDraw;
 
   return (
-    <div className="raffle-controls">
-      {description && (
-        <p style={{ fontSize: "0.9rem", opacity: 0.85 }}>{description}</p>
-      )}
+    <div className={`raffle-controls${compact ? " raffle-controls-compact" : ""}`}>
+      {description && <p className="field-hint">{description}</p>}
       {error && <p className="error">{error}</p>}
 
       <fieldset className="raffle-mode">
@@ -106,14 +106,14 @@ export function RaffleControls({
               resetChain();
             }}
           />
-          Encadeado (1 a 1, sem repetir)
+          Encadeado (1 a 1)
         </label>
       </fieldset>
 
       {mode === "batch" ? (
-        <>
-          <div className="form-row">
-            <label htmlFor={`${modeFieldId}-count`}>Número de sorteados</label>
+        <div className="raffle-batch-row">
+          <div className="form-row raffle-count-row">
+            <label htmlFor={`${modeFieldId}-count`}>Sorteados</label>
             <input
               id={`${modeFieldId}-count`}
               type="number"
@@ -125,21 +125,20 @@ export function RaffleControls({
             />
           </div>
           <button
-            className="secondary"
+            className="primary"
             type="button"
-            style={{ marginTop: "0.75rem" }}
             onClick={runBatch}
             disabled={!canDraw}
           >
             {primaryButtonLabel}
           </button>
-        </>
+        </div>
       ) : (
         <>
-          <p style={{ fontSize: "0.9rem", opacity: 0.85 }}>
+          <p className="field-hint">
             {chainActive
               ? `Já sorteados: ${winners.length} · Restam: ${chainRemaining.length}`
-              : `Pool: ${participants.length} participante(s). Cada clique sorteia um sem repetir.`}
+              : `Pool: ${participants.length}. Cada clique sorteia um sem repetir.`}
           </p>
           {chainActive && winners.length > 0 && (
             <ol className="raffle-winners raffle-winners-inline">
@@ -154,7 +153,7 @@ export function RaffleControls({
           {!modalOpen && (
             <div className="raffle-chain-actions">
               <button
-                className="secondary"
+                className="primary"
                 type="button"
                 onClick={drawNextInChain}
                 disabled={!canDrawNext}
@@ -163,7 +162,7 @@ export function RaffleControls({
               </button>
               {chainActive && (
                 <button className="secondary" type="button" onClick={resetChain}>
-                  Reiniciar encadeado
+                  Reiniciar
                 </button>
               )}
             </div>

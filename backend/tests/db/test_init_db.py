@@ -84,6 +84,34 @@ def test_init_db_legacy_create_all_path(tmp_path: Path, monkeypatch: pytest.Monk
                 """
             )
         )
+        conn.execute(
+            text(
+                """
+                CREATE TABLE players (
+                    id INTEGER PRIMARY KEY,
+                    event_id INTEGER NOT NULL,
+                    name VARCHAR NOT NULL,
+                    user_id INTEGER,
+                    seed INTEGER,
+                    dropped_at DATETIME,
+                    registration_order INTEGER NOT NULL,
+                    decklist TEXT
+                )
+                """
+            )
+        )
+        conn.execute(
+            text(
+                """
+                CREATE TABLE rounds (
+                    id INTEGER PRIMARY KEY,
+                    event_id INTEGER NOT NULL,
+                    number INTEGER NOT NULL,
+                    status VARCHAR NOT NULL
+                )
+                """
+            )
+        )
     engine.dispose()
 
     import app.db.init_db as init_mod

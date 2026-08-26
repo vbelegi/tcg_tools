@@ -35,7 +35,7 @@ Em produção use **TCGTools.exe** (mutex `Local\TCGTools_SingleInstance`, por u
 
 ### Tela pede login ou API retorna 401
 
-O app exige usuário **admin** e senha. Sem senha gravada, o login falha.
+O app exige login com e-mail (bootstrap **admin@local**) e senha. Sem senha gravada, o login falha.
 
 **Instalação (setup.exe):** defina/altere a senha no wizard (ou modo “Apenas alterar senha”).
 

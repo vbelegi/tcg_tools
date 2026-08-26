@@ -60,7 +60,7 @@ def validar_config(config: dict) -> None:
         if chave not in config:
             raise ConfigError(f"Campo obrigatório ausente: {chave}.")
 
-    extras = set(config) - set(REQUIRED_CONFIG_KEYS) - {"label"}
+    extras = set(config) - set(REQUIRED_CONFIG_KEYS) - {"label", "fp_k"}
     if extras:
         raise ConfigError(f"Campos desconhecidos: {', '.join(sorted(extras))}.")
 
@@ -70,6 +70,11 @@ def validar_config(config: dict) -> None:
             raise ConfigError(f"{chave} deve ser um número inteiro.")
         if valor < 0:
             raise ConfigError(f"{chave} não pode ser negativo.")
+
+    if "fp_k" in config and config["fp_k"] is not None:
+        fp_k = config["fp_k"]
+        if isinstance(fp_k, bool) or not isinstance(fp_k, int) or fp_k < 1:
+            raise ConfigError("fp_k deve ser um inteiro >= 1.")
 
     for chave in FLOAT_CONFIG_KEYS:
         valor = config[chave]

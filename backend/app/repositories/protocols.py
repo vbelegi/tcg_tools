@@ -28,9 +28,21 @@ class EventRepositoryProtocol(Protocol):
 
     def list_all(self) -> list[Event]: ...
 
-    def add_player(self, event_id: int, name: str, seed: int | None, order: int) -> Player: ...
+    def add_player(
+        self,
+        event_id: int,
+        name: str,
+        seed: int | None,
+        order: int,
+        *,
+        user_id: int | None = None,
+        attendance: str = "checked_in",
+        registration_source: str = "staff",
+    ) -> Player: ...
 
     def remove_player(self, player: Player) -> None: ...
+
+    def delete_event(self, event: Event) -> None: ...
 
     def to_tournament_state(self, event: Event) -> TournamentState: ...
 

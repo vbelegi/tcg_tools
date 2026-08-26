@@ -11,8 +11,14 @@ export function PremiacaoPage() {
   const [tab, setTab] = useState<Tab>("calcular");
 
   return (
-    <div>
-      <h1>Premiação</h1>
+    <div className="admin-page">
+      <header className="torneio-manage-header">
+        <div>
+          <h1>Premiação</h1>
+          <p className="torneio-manage-meta">Calcular split · tabela por N · presets</p>
+        </div>
+      </header>
+
       <div className="tabs">
         {(["calcular", "tabela", "presets"] as Tab[]).map((t) => (
           <button key={t} className={tab === t ? "active" : ""} onClick={() => setTab(t)}>
@@ -56,28 +62,44 @@ function CalcularTab() {
   const presetIds = presetsData ? Object.keys(presetsData.presets) : ["standard"];
 
   return (
-    <div>
-      <div className="form-row">
-        <label>Preset</label>
-        <select value={presetId} onChange={(e) => setPresetId(e.target.value)}>
-          {presetIds.map((id) => (
-            <option key={id} value={id}>
-              {presetsData?.presets[id]?.label ?? id}
-            </option>
-          ))}
-        </select>
+    <section className="resultado-section">
+      <div className="admin-form-grid">
+        <div className="form-row">
+          <label>Preset</label>
+          <select value={presetId} onChange={(e) => setPresetId(e.target.value)}>
+            {presetIds.map((id) => (
+              <option key={id} value={id}>
+                {presetsData?.presets[id]?.label ?? id}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="form-row">
+          <label>Formato</label>
+          <select value={formato} onChange={(e) => setFormato(e.target.value as typeof formato)}>
+            <option value="swiss">Suíço</option>
+            <option value="single_elimination">Eliminatória</option>
+          </select>
+        </div>
+        <div className="form-row">
+          <label>Jogadores</label>
+          <input
+            type="number"
+            min={4}
+            value={jogadores}
+            onChange={(e) => setJogadores(+e.target.value)}
+          />
+        </div>
+        <div className="form-row">
+          <label>Valor inscrição (R$) — opcional</label>
+          <input type="number" step="0.01" value={valor} onChange={(e) => setValor(e.target.value)} />
+        </div>
       </div>
-      <div className="form-row">
-        <label>Formato</label>
-        <select value={formato} onChange={(e) => setFormato(e.target.value as typeof formato)}>
-          <option value="swiss">Suíço</option>
-          <option value="single_elimination">Eliminatória</option>
-        </select>
-      </div>
+
       {formato === "single_elimination" && (
-        <>
+        <div className="admin-form-dense">
           <div className="form-row">
-            <label>Melhor de (referência para torneios)</label>
+            <label>Melhor de (referência)</label>
             <select value={bestOf} onChange={(e) => setBestOf(+e.target.value)}>
               <option value={1}>1</option>
               <option value={3}>3</option>
@@ -92,69 +114,72 @@ function CalcularTab() {
             defaultBestOf={bestOf}
             maxRounds={sePhaseRounds}
           />
-          <p style={{ fontSize: "0.9rem", opacity: 0.85 }}>
-            O cálculo abaixo mostra pools por faixa; Bo por fase vale ao criar um torneio eliminatória.
+          <p className="field-hint">
+            O cálculo mostra pools por faixa; Bo por fase vale ao criar um torneio eliminatória.
           </p>
-        </>
-      )}
-      <div className="form-row">
-        <label>Jogadores</label>
-        <input type="number" min={4} value={jogadores} onChange={(e) => setJogadores(+e.target.value)} />
-      </div>
-      <div className="form-row">
-        <label>Valor inscrição (R$) — opcional</label>
-        <input type="number" step="0.01" value={valor} onChange={(e) => setValor(e.target.value)} />
-      </div>
-      <button className="primary" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
-        Calcular
-      </button>
-      {mutation.error && <p className="error">{(mutation.error as Error).message}</p>}
-      {mutation.data && (
-        <div style={{ marginTop: "1.5rem" }}>
-          <p>
-            <strong>Top {mutation.data.premiados}</strong> — Total: {mutation.data.total_inscricoes}{" "}
-            inscrições
-          </p>
-          {mutation.data.total_creditos != null && (
-            <p>
-              Total em créditos na loja: <strong>R$ {mutation.data.total_creditos.toFixed(2)}</strong>
-              {valor && (
-                <span style={{ opacity: 0.85 }}>
-                  {" "}
-                  (= {jogadores} × R$ {parseFloat(valor).toFixed(2)})
-                </span>
-              )}
-            </p>
-          )}
-          {mutation.data.bands && mutation.data.bands.length > 0 ? (
-            <PremiacaoBandsTable
-              bands={mutation.data.bands}
-              bandCreditos={mutation.data.band_creditos ?? undefined}
-              entryFee={valor ? parseFloat(valor) : undefined}
-            />
-          ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>Colocação</th>
-                  <th>Inscrições</th>
-                  {mutation.data.creditos && <th>Créditos na Loja</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {mutation.data.premios.map((p, i) => (
-                  <tr key={i}>
-                    <td>{i + 1}º</td>
-                    <td>{p.toFixed(2)}</td>
-                    {mutation.data!.creditos && <td>R$ {mutation.data!.creditos![i].toFixed(2)}</td>}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
         </div>
       )}
-    </div>
+
+      <div className="resultado-section-actions">
+        <button className="primary" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+          {mutation.isPending ? "Calculando…" : "Calcular"}
+        </button>
+      </div>
+
+      {mutation.error && <p className="error">{(mutation.error as Error).message}</p>}
+
+      {mutation.data && (
+        <div className="admin-result-block">
+          <p className="resultado-total">
+            <strong>Top {mutation.data.premiados}</strong>
+            {" · "}
+            Total: {mutation.data.total_inscricoes} inscrições
+            {mutation.data.total_creditos != null && (
+              <>
+                {" · "}
+                Créditos: <strong>R$ {mutation.data.total_creditos.toFixed(2)}</strong>
+                {valor && (
+                  <span className="muted">
+                    {" "}
+                    (= {jogadores} × R$ {parseFloat(valor).toFixed(2)})
+                  </span>
+                )}
+              </>
+            )}
+          </p>
+          <div className="resultado-table-wrap resultado-table-wrap-narrow">
+            {mutation.data.bands && mutation.data.bands.length > 0 ? (
+              <PremiacaoBandsTable
+                bands={mutation.data.bands}
+                bandCreditos={mutation.data.band_creditos ?? undefined}
+                entryFee={valor ? parseFloat(valor) : undefined}
+              />
+            ) : (
+              <table className="resultado-table">
+                <thead>
+                  <tr>
+                    <th>Colocação</th>
+                    <th>Inscrições</th>
+                    {mutation.data.creditos && <th>Créditos na Loja</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {mutation.data.premios.map((p, i) => (
+                    <tr key={i}>
+                      <td>{i + 1}º</td>
+                      <td>{p.toFixed(2)}</td>
+                      {mutation.data!.creditos && (
+                        <td>R$ {mutation.data!.creditos![i].toFixed(2)}</td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -172,52 +197,60 @@ function TabelaTab() {
   const presetIds = presetsData ? Object.keys(presetsData.presets) : ["standard"];
 
   return (
-    <div>
-      <div className="form-row">
-        <label>Preset</label>
-        <select value={presetId} onChange={(e) => setPresetId(e.target.value)}>
-          {presetIds.map((id) => (
-            <option key={id} value={id}>{presetsData?.presets[id]?.label ?? id}</option>
-          ))}
-        </select>
+    <section className="resultado-section">
+      <div className="admin-form-grid">
+        <div className="form-row">
+          <label>Preset</label>
+          <select value={presetId} onChange={(e) => setPresetId(e.target.value)}>
+            {presetIds.map((id) => (
+              <option key={id} value={id}>
+                {presetsData?.presets[id]?.label ?? id}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="form-row">
+          <label>Até N jogadores</label>
+          <input type="number" min={4} value={ate} onChange={(e) => setAte(+e.target.value)} />
+        </div>
       </div>
-      <div className="form-row">
-        <label>Até N jogadores</label>
-        <input type="number" min={4} value={ate} onChange={(e) => setAte(+e.target.value)} />
-      </div>
-      <button className="primary" onClick={() => refetch()} disabled={isFetching}>Gerar tabela</button>
-      {data && data.linhas.length > 0 && (
-        <>
-          <div style={{ overflowX: "auto", marginTop: "1rem" }}>
-            <table>
-              <thead>
-                <tr>
-                  <th>Jogadores</th>
-                  <th>Premiados</th>
-                  {data.linhas[0].premios.map((_, i) => (
-                    <th key={i}>{i + 1}º</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {data.linhas.map((l) => (
-                  <tr key={l.jogadores}>
-                    <td>{l.jogadores}</td>
-                    <td>{l.premiados}</td>
-                    {l.premios.map((p, i) => (
-                      <td key={i}>{p.toFixed(2)}</td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <button className="secondary" style={{ marginTop: "1rem" }} onClick={() => api.exportCsv(ate, presetId)}>
+      <div className="resultado-section-actions">
+        <button className="primary" onClick={() => refetch()} disabled={isFetching}>
+          {isFetching ? "Gerando…" : "Gerar tabela"}
+        </button>
+        {data && data.linhas.length > 0 && (
+          <button className="secondary" type="button" onClick={() => api.exportCsv(ate, presetId)}>
             Exportar CSV
           </button>
-        </>
+        )}
+      </div>
+      {data && data.linhas.length > 0 && (
+        <div className="resultado-table-wrap">
+          <table className="resultado-table">
+            <thead>
+              <tr>
+                <th>Jogadores</th>
+                <th>Premiados</th>
+                {data.linhas[0].premios.map((_, i) => (
+                  <th key={i}>{i + 1}º</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {data.linhas.map((l) => (
+                <tr key={l.jogadores}>
+                  <td>{l.jogadores}</td>
+                  <td>{l.premiados}</td>
+                  {l.premios.map((p, i) => (
+                    <td key={i}>{p.toFixed(2)}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
-    </div>
+    </section>
   );
 }
 
@@ -250,30 +283,48 @@ function PresetsTab() {
   };
 
   return (
-    <div>
+    <section className="resultado-section">
       {data.exports_desatualizados && (
         <p className="warning" role="alert">
-          Exports CSV podem estar desatualizados — os presets foram alterados após a última exportação.
-          Gere novamente na aba Tabela.
+          Exports CSV podem estar desatualizados — os presets foram alterados após a última
+          exportação. Gere novamente na aba Tabela.
         </p>
       )}
-      <ul>
+
+      <ul className="entre-rodadas-chips preset-chips">
         {Object.entries(data.presets).map(([id, p]) => (
-          <li key={id} style={{ marginBottom: "0.5rem" }}>
-            <strong>{p.label}</strong> ({id}){" "}
-            <button className="secondary" onClick={() => startEdit(id)}>Editar</button>
+          <li key={id}>
+            <button
+              type="button"
+              className={`entre-rodadas-chip raffle-chip${editId === id ? " raffle-chip-on" : ""}`}
+              onClick={() => startEdit(id)}
+            >
+              {p.label}
+              <span className="muted"> ({id})</span>
+            </button>
           </li>
         ))}
       </ul>
+
       {editId && form && (
-        <div className="card" style={{ marginTop: "1rem" }}>
+        <div className="admin-create-panel admin-form-dense">
           <h3>Editar: {editId}</h3>
-          {(["label", "min_jogadores", "min_premiados", "max_premiados", "crescimento", "r", "casas_decimais"] as const).map(
-            (key) => (
+          <div className="admin-form-grid">
+            {(
+              [
+                "label",
+                "min_jogadores",
+                "min_premiados",
+                "max_premiados",
+                "crescimento",
+                "r",
+                "casas_decimais",
+              ] as const
+            ).map((key) => (
               <div className="form-row" key={key}>
                 <label>{key}</label>
                 <input
-                  value={String(form[key])}
+                  value={String(form[key] ?? "")}
                   onChange={(e) =>
                     setForm({
                       ...form,
@@ -282,12 +333,29 @@ function PresetsTab() {
                   }
                 />
               </div>
-            ),
-          )}
-          <button className="primary" onClick={save}>Salvar</button>
+            ))}
+            <div className="form-row">
+              <label>fp_k (vazio = 10)</label>
+              <input
+                type="number"
+                min={1}
+                value={form.fp_k ?? ""}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setForm({
+                    ...form,
+                    fp_k: v === "" ? undefined : Number(v),
+                  } as Preset);
+                }}
+              />
+            </div>
+          </div>
+          <button className="primary" type="button" onClick={save}>
+            Salvar
+          </button>
         </div>
       )}
       {msg && <p className={msg.includes("salvo") ? "success" : "error"}>{msg}</p>}
-    </div>
+    </section>
   );
 }

@@ -43,16 +43,16 @@ Se aparecer aviso de exports desatualizados, os presets foram editados — regen
 1. **Torneios** → **Novo torneio**.
 2. Preencha nome, data, formato (Suíço ou Eliminatória), melhor de, inscrição e preset de premiação.
 3. **Eliminatória:** opcionalmente marque **Disputa de 3º–4º** e configure **melhor de por fase** (Final, Semi, Quartas…). Bronze usa o Bo da final. Opções editáveis só em rascunho.
-4. Adicione jogadores (mínimo **4**). Seeds são opcionais.
-5. **Iniciar torneio** — confirme se o número de rodadas está adequado.
+4. Inscreva jogadores (mínimo **4**): busca por conta → se não achar, criar incomplete (nome + e-mail + celular). Seeds em opções avançadas (all-or-nothing). Sem walk-in só com nome.
+5. Marque check-in dos inscritos e **Iniciar torneio** — confirme o número de rodadas.
 
 ### 2. Durante cada rodada
 
-1. Na página do torneio, clique **Gerenciar rodada N**.
-2. Informe placares de cada mesa (ex.: 2-0, 2-1, 1-0 por tempo, 0-0 empate no Suíço).
+1. Na ficha do torneio, com rodada ativa você é levado a **Rodada N** (ou use o atalho da rodada).
+2. Informe placares de cada mesa (botões 0/1/2 ou digitação; ex.: 2-0, 2-1, 1-0 por tempo, 0-0 empate no Suíço).
 3. **Concluir rodada** quando todas as mesas estiverem preenchidas.
 
-> **WO (walkover):** use **Drop na rodada** na mesa — o oponente recebe vitória automática. WO **não** pode ser editado depois.
+> **WO (walkover):** na mesa, use **Walkover (WO)** e confirme digitando o nome — o oponente recebe vitória automática. WO **não** pode ser editado depois.
 
 > **Rematch:** na mesa, o badge **Rematch** indica que os dois jogadores já se enfrentaram em rodada anterior. O pareamento tenta evitar isso (inclusive com **uppair/downpair** entre brackets de pontos); só repete adversário quando não há outra opção.
 
@@ -95,8 +95,9 @@ Use quando digitou placar errado **depois** de concluir a rodada:
 - **DROP** na classificação: jogadores que desistiram aparecem no final com label DROP.
 - **Desempate (Suíço):** Pts → OMW% → GW% → OGW% → seed → ordem de inscrição (tooltip na tela Resultado).
 - **Seeds:** all-or-nothing — se um jogador tem seed, todos precisam; caso contrário o torneio não inicia.
-- **Atalhos:** Enter adiciona jogador (com seed: Nome→Seed→Nome); Esc limpa/fecha modal; colar lista de nomes; na rodada, foco na próxima partida e Ctrl+Enter para concluir; no sorteio encadeado, Enter/Espaço = próximo.
-- **Login:** sempre exige usuário `admin` + senha (definida no instalador). Alterar senha: menu lateral ou reexecução do setup.
+- **Atalhos:** Esc limpa/fecha modal; na rodada, foco na próxima partida e Ctrl+Enter para concluir; no sorteio encadeado, Enter/Espaço = próximo. Inscrição é 1 a 1 via busca (sem colar lista de nomes).
+- **Login:** e-mail + senha (bootstrap `admin@local`; o legado `admin` ainda funciona no login). Alterar senha: **Meu Perfil** (modal) ou reexecução do setup. Papéis: admin, staff, player — ver `docs/PLATFORM_USERS_FP.md`.
+- **Inscrições:** check-in obrigatório antes de iniciar; pendentes bloqueiam o start. Drop/WO = 0 FP.
 - **Marca:** identidade visual Fourse (roxo/laranja); rodapé “Powered by FOURSE”.
 - **LAN:** opcional no instalador; outros devices acessam `http://IP:porta` na mesma rede (com login).
 - **Sorteio:** modo “todos de uma vez” ou **encadeado** (1 a 1 sem repetir). No resultado do torneio, dá para excluir jogadores da pool (ex.: campeão) sem afetar a classificação.
@@ -107,6 +108,7 @@ Use quando digitou placar errado **depois** de concluir a rodada:
 ## Checklist rápido na mesa
 
 - [ ] 4+ jogadores antes de iniciar
+- [ ] Check-in de todas as inscrições pendentes
 - [ ] Todos os placares antes de concluir rodada
 - [ ] Drops entre rodadas (não durante rodada ativa, exceto WO mid-round)
 - [ ] Revisar classificação antes de finalizar

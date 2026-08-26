@@ -1,28 +1,76 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+
 import { api } from "../../api/client";
 
 export function TorneiosListPage() {
-  const { data, isLoading } = useQuery({ queryKey: ["torneios"], queryFn: api.listTorneios });
+  const { data: me, isFetched: meFetched } = useQuery({
+    queryKey: ["auth-me"],
+    queryFn: () => api.authMe(),
+    retry: false,
+  });
+  const canManage = me && (me.role === "admin" || me.role === "staff");
+  const isGuest = meFetched && !me;
+  const { data, isLoading } = useQuery({
+    queryKey: ["torneios", me?.id ?? "guest"],
+    queryFn: api.listTorneios,
+    enabled: meFetched,
+  });
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "0.75rem",
+          flexWrap: "wrap",
+        }}
+      >
         <h1>Torneios</h1>
-        <Link to="/torneios/novo" className="primary">
-          Novo torneio
-        </Link>
+        {canManage && (
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+            {me.role === "admin" && (
+              <Link to="/torneios/externo" className="secondary">
+                Importar externo
+              </Link>
+            )}
+            <Link to="/torneios/novo" className="primary">
+              Novo torneio
+            </Link>
+          </div>
+        )}
       </div>
       {isLoading && <p>Carregando...</p>}
-      {data && data.length === 0 && <p>Nenhum torneio cadastrado.</p>}
+      {data && data.length === 0 && (
+        <p>
+          {isGuest
+            ? "Nenhum torneio aberto ou finalizado no momento."
+            : "Nenhum torneio cadastrado."}
+        </p>
+      )}
       <div className="card-grid" style={{ marginTop: "1rem" }}>
-        {data?.map((t) => (
-          <Link key={t.id} to={`/torneios/${t.id}`} className="card">
-            <h2>{t.name}</h2>
-            <p>{t.event_date} — <span className="badge">{t.status}</span></p>
-            <p>{t.format === "swiss" ? "Suíço" : "Eliminatória"} · {t.player_count} jogadores</p>
-          </Link>
-        ))}
+        {data?.map((t) => {
+          const to =
+            t.status === "finished" ? `/torneios/${t.id}/resultado` : `/torneios/${t.id}`;
+          return (
+            <Link key={t.id} to={to} className="card">
+              <h2>{t.name}</h2>
+              <p>
+                {t.event_date} — <span className="badge">{t.status}</span>
+                {t.source === "external" && <span className="badge"> externo</span>}
+                {t.status === "draft" && t.registration_open && (
+                  <span className="badge"> inscrição aberta</span>
+                )}
+              </p>
+              <p>
+                {t.format === "swiss" ? "Suíço" : "Eliminatória"} · {t.player_count} jogadores
+                {t.entry_fee != null && ` · R$ ${t.entry_fee}`}
+              </p>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

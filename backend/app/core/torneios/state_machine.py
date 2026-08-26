@@ -38,9 +38,14 @@ def validate_seeds_all_or_nothing(players: list[PlayerRecord]) -> None:
     )
 
 
-def validate_start(state: TournamentState) -> None:
+def validate_start(state: TournamentState, *, pending_attendance: int = 0) -> None:
     if state.status != "draft":
         raise StateMachineError("Torneio já iniciado.")
+    if pending_attendance > 0:
+        raise StateMachineError(
+            f"Há {pending_attendance} inscrição(ões) pendente(s) de check-in. "
+            "Confirme a presença ou remova os ausentes antes de iniciar."
+        )
     active = [p for p in state.players if not p.dropped_at]
     if len(active) < 4:
         raise StateMachineError("Mínimo de 4 jogadores para iniciar.")

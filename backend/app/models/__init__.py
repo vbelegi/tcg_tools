@@ -17,6 +17,7 @@ from sqlalchemy import (
     JSON,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -34,10 +35,49 @@ class EventStatus(str, enum.Enum):
     finished = "finished"
 
 
+class EventSource(str, enum.Enum):
+    internal = "internal"
+    external = "external"
+
+
 class RoundStatus(str, enum.Enum):
     pending = "pending"
     active = "active"
     completed = "completed"
+
+
+class UserRole(str, enum.Enum):
+    admin = "admin"
+    staff = "staff"
+    player = "player"
+
+
+class UserStatus(str, enum.Enum):
+    incomplete = "incomplete"
+    active = "active"
+
+
+class Attendance(str, enum.Enum):
+    pending = "pending"
+    checked_in = "checked_in"
+
+
+class RegistrationSource(str, enum.Enum):
+    staff = "staff"
+    self = "self"
+
+
+class TcgGame(Base):
+    __tablename__ = "tcg_games"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(120), nullable=False, unique=True)
+    slug: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    color_hex: Mapped[str] = mapped_column(String(7), nullable=False)
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    events: Mapped[list[Event]] = relationship(back_populates="tcg_game")
 
 
 class Event(Base):
@@ -58,9 +98,22 @@ class Event(Base):
     shuffle_seed: Mapped[int | None] = mapped_column(Integer, nullable=True)
     third_place_match: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     se_bo_config: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    source: Mapped[str] = mapped_column(String(16), nullable=False, default=EventSource.internal.value)
+    registration_open: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    fp_n_at_start: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    external_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    start_time: Mapped[str | None] = mapped_column(String(5), nullable=True)
+    tcg_game_id: Mapped[int | None] = mapped_column(
+        ForeignKey("tcg_games.id", ondelete="SET NULL"), nullable=True
+    )
 
+    tcg_game: Mapped[TcgGame | None] = relationship(back_populates="events")
     players: Mapped[list[Player]] = relationship(back_populates="event", cascade="all, delete-orphan")
     rounds: Mapped[list[Round]] = relationship(back_populates="event", cascade="all, delete-orphan")
+    fp_entries: Mapped[list[FoursePointsLedger]] = relationship(
+        back_populates="event", cascade="all, delete-orphan"
+    )
 
 
 class Player(Base):
@@ -75,6 +128,10 @@ class Player(Base):
     dropped_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     registration_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     decklist: Mapped[str | None] = mapped_column(Text, nullable=True)
+    attendance: Mapped[str] = mapped_column(String(16), nullable=False, default=Attendance.checked_in.value)
+    registration_source: Mapped[str] = mapped_column(
+        String(16), nullable=False, default=RegistrationSource.staff.value
+    )
 
     event: Mapped[Event] = relationship(back_populates="players")
 
@@ -119,14 +176,30 @@ class Match(Base):
 
 class User(Base):
     __tablename__ = "users"
+    __table_args__ = (
+        UniqueConstraint("email", name="uq_users_email"),
+        UniqueConstraint("phone", name="uq_users_phone"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    username: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
-    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    username: Mapped[str | None] = mapped_column(String(64), nullable=True, unique=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False)
+    display_name: Mapped[str] = mapped_column(String(120), nullable=False)
+    phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    birth_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    guardian_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    guardian_phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    guardian_relation: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    role: Mapped[str] = mapped_column(String(16), nullable=False, default=UserRole.player.value)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default=UserStatus.incomplete.value)
+    password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    avatar_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     sessions: Mapped[list[Session]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    invites: Mapped[list[InviteToken]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    fp_entries: Mapped[list[FoursePointsLedger]] = relationship(back_populates="user")
 
 
 class Session(Base):
@@ -142,3 +215,36 @@ class Session(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
     user: Mapped[User] = relationship(back_populates="sessions")
+
+
+class InviteToken(Base):
+    __tablename__ = "invite_tokens"
+    __table_args__ = (Index("ix_invite_tokens_user_id", "user_id"),)
+
+    token: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    user: Mapped[User] = relationship(back_populates="invites")
+
+
+class FoursePointsLedger(Base):
+    __tablename__ = "fourse_points_ledger"
+    __table_args__ = (
+        UniqueConstraint("user_id", "event_id", name="uq_fp_user_event"),
+        Index("ix_fp_ledger_user_id", "user_id"),
+        Index("ix_fp_ledger_event_id", "event_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    event_id: Mapped[int] = mapped_column(ForeignKey("events.id", ondelete="CASCADE"), nullable=False)
+    placement: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    points: Mapped[int] = mapped_column(Integer, nullable=False)
+    reason: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    user: Mapped[User] = relationship(back_populates="fp_entries")
+    event: Mapped[Event] = relationship(back_populates="fp_entries")

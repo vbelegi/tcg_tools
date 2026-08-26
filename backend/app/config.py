@@ -52,10 +52,19 @@ class Settings(BaseSettings):
             return self.frontend_dist
         return paths.default_frontend_dist()
 
+    @property
+    def resolved_media_dir(self) -> Path:
+        return self.data_dir / "media"
+
+    @property
+    def resolved_avatars_dir(self) -> Path:
+        return self.resolved_media_dir / "avatars"
+
     def ensure_dirs(self) -> None:
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.resolved_exports_dir.mkdir(parents=True, exist_ok=True)
         self.resolved_logs_dir.mkdir(parents=True, exist_ok=True)
+        self.resolved_avatars_dir.mkdir(parents=True, exist_ok=True)
         presets = self.resolved_presets_file
         if not presets.exists():
             bundled = paths.bundled_presets_file()

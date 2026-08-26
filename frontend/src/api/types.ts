@@ -26,66 +26,56 @@ export type TabelaLinha = Schemas["TabelaLinha"];
 
 
 
-export interface Torneio {
-
+export interface TcgGame {
   id: number;
-
   name: string;
-
-  event_date: string;
-
-  format: "swiss" | "single_elimination";
-
-  max_rounds: number | null;
-
-  entry_fee: number;
-
-  best_of: number;
-
-  status: "draft" | "running" | "finished";
-
-  player_count: number;
-
-  current_round: number;
-
-  between_rounds?: boolean;
-
-  can_start_next_round?: boolean;
-
-  can_finalize?: boolean;
-
-  can_reopen_round?: boolean;
-
-  recommended_rounds?: number;
-
-  completed_rounds?: number;
-
-  third_place_match?: boolean;
-
-  se_bo_config?: Record<string, number> | null;
-
-  config_warnings?: string[];
-
-  players?: Player[];
-
+  slug: string;
+  color_hex: string;
+  active?: boolean;
 }
 
-
+export interface Torneio {
+  id: number;
+  name: string;
+  event_date: string;
+  format: "swiss" | "single_elimination";
+  max_rounds: number | null;
+  entry_fee: number;
+  best_of: number;
+  status: "draft" | "running" | "finished";
+  player_count: number;
+  current_round: number;
+  between_rounds?: boolean;
+  can_start_next_round?: boolean;
+  can_finalize?: boolean;
+  can_reopen_round?: boolean;
+  recommended_rounds?: number;
+  completed_rounds?: number;
+  third_place_match?: boolean;
+  se_bo_config?: Record<string, number> | null;
+  config_warnings?: string[];
+  players?: Player[];
+  source?: "internal" | "external";
+  registration_open?: boolean;
+  fp_n_at_start?: number | null;
+  pending_checkins?: number;
+  description?: string | null;
+  start_time?: string | null;
+  tcg_game_id?: number | null;
+  tcg_game?: TcgGame | null;
+  participant_user_ids?: number[];
+}
 
 export interface Player {
-
   id: number;
-
   name: string;
-
   seed: number | null;
-
   dropped_at: string | null;
-
   registration_order: number;
-
   decklist: string | null;
-
+  user_id?: number | null;
+  attendance?: "pending" | "checked_in";
+  registration_source?: string;
 }
 
 
@@ -162,6 +152,50 @@ export interface Standing {
 
   rank_label?: string | null;
 
+}
+
+export interface ProfileHistoryRow {
+  event_id: number;
+  event_name: string;
+  event_date: string;
+  source: string;
+  rank: number | null;
+  rank_label: string | null;
+  is_drop: boolean;
+  decklist: string | null;
+  player_count: number;
+  tcg_game: TcgGame | null;
+  fp_earned: number;
+}
+
+export interface PlayerProfile {
+  id: number;
+  display_name: string;
+  role: string;
+  status: string;
+  created_at: string | null;
+  avatar_url: string | null;
+  fourse_points: number | null;
+  fourse_points_visible: boolean;
+  ranking_position: number | null;
+  can_edit: boolean;
+  viewer_authenticated: boolean;
+  stats: {
+    tournaments: number;
+    titles: number;
+    top8: number;
+    best_finish: number | null;
+  };
+  insights: string[];
+  badge_games: TcgGame[];
+  fp_by_game: Array<{
+    tcg_name: string;
+    tcg_game: TcgGame | null;
+    points: number;
+    tournaments: number;
+  }>;
+  fp_by_month: Array<{ month: string; points: number; tournaments: number }>;
+  history: ProfileHistoryRow[];
 }
 
 

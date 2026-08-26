@@ -124,7 +124,7 @@ begin
   PasswordOnlyCheck.Checked := False;
 
   AuthPage := CreateInputQueryPage(PortPage.ID,
-    'Senha do admin', 'Usuario fixo: admin',
+    'Senha do admin', 'Login: admin@local',
     'Minimo 6 caracteres. Em upgrade, desmarque "Definir/alterar senha" para manter a atual.');
   AuthPage.Add('Senha:', True);
   AuthPage.Add('Confirmar senha:', True);

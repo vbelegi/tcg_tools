@@ -52,6 +52,7 @@ class EventRepository(EventRepositoryProtocol):
             self._db.query(Event)
             .options(
                 joinedload(Event.players),
+                joinedload(Event.tcg_game),
                 joinedload(Event.rounds).joinedload(Round.matches),
             )
             .filter(Event.id == event_id)
@@ -59,16 +60,55 @@ class EventRepository(EventRepositoryProtocol):
         )
 
     def list_all(self) -> list[Event]:
-        return self._db.query(Event).order_by(Event.created_at.desc()).all()
+        return (
+            self._db.query(Event)
+            .options(joinedload(Event.tcg_game), joinedload(Event.players))
+            .order_by(Event.created_at.desc())
+            .all()
+        )
 
-    def add_player(self, event_id: int, name: str, seed: int | None, order: int) -> Player:
-        player = Player(event_id=event_id, name=name, seed=seed, registration_order=order)
+    def list_by_month(self, year: int, month: int) -> list[Event]:
+        from calendar import monthrange
+
+        start = date(year, month, 1)
+        end = date(year, month, monthrange(year, month)[1])
+        return (
+            self._db.query(Event)
+            .options(joinedload(Event.tcg_game), joinedload(Event.players))
+            .filter(Event.event_date >= start, Event.event_date <= end)
+            .order_by(Event.event_date.asc(), Event.id.asc())
+            .all()
+        )
+
+    def add_player(
+        self,
+        event_id: int,
+        name: str,
+        seed: int | None,
+        order: int,
+        *,
+        user_id: int | None = None,
+        attendance: str = "checked_in",
+        registration_source: str = "staff",
+    ) -> Player:
+        player = Player(
+            event_id=event_id,
+            name=name,
+            seed=seed,
+            registration_order=order,
+            user_id=user_id,
+            attendance=attendance,
+            registration_source=registration_source,
+        )
         self._db.add(player)
         self._db.flush()
         return player
 
     def remove_player(self, player: Player) -> None:
         self._db.delete(player)
+
+    def delete_event(self, event: Event) -> None:
+        self._db.delete(event)
 
     def to_tournament_state(self, event: Event) -> TournamentState:
         players = [

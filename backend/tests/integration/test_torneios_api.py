@@ -8,7 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.services.torneio_service import TorneioService
-from tests.conftest import run_se_bracket, score_all_matches
+from tests.conftest import enroll_named_players_api, run_se_bracket, score_all_matches
 
 
 def _create_swiss(client: TestClient) -> int:
@@ -22,12 +22,12 @@ def _create_swiss(client: TestClient) -> int:
             "entry_fee": 35,
             "best_of": 3,
             "premiacao_preset_id": "standard",
+            "tcg_game_id": 1,
         },
     )
     assert r.status_code == 200
     eid = r.json()["id"]
-    for name in ("A", "B", "C", "D"):
-        assert client.post(f"/api/v1/torneios/{eid}/jogadores", json={"name": name}).status_code == 200
+    enroll_named_players_api(client, eid, ("A", "B", "C", "D"))
     return eid
 
 
@@ -98,20 +98,14 @@ def _create_se(client: TestClient, player_count: int = 4) -> int:
             "entry_fee": 35,
             "best_of": 1,
             "premiacao_preset_id": "standard",
+            "tcg_game_id": 1,
             "third_place_match": True,
             "se_bo_config": {"1": 3, "2": 1},
         },
     )
     assert r.status_code == 200
     eid = r.json()["id"]
-    for i in range(player_count):
-        assert (
-            client.post(
-                f"/api/v1/torneios/{eid}/jogadores",
-                json={"name": f"P{i + 1}"},
-            ).status_code
-            == 200
-        )
+    enroll_named_players_api(client, eid, [f"P{i + 1}" for i in range(player_count)])
     return eid
 
 
@@ -142,6 +136,7 @@ def test_create_se_invalid_bo_config(api_client: TestClient):
             "entry_fee": 10,
             "best_of": 3,
             "premiacao_preset_id": "standard",
+            "tcg_game_id": 1,
             "se_bo_config": {"1": 7},
         },
     )

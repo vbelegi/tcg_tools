@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -22,9 +20,12 @@ async def lifespan(app: FastAPI):
 
 
 settings = get_settings()
+settings.resolved_media_dir.mkdir(parents=True, exist_ok=True)
+settings.resolved_avatars_dir.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(title="TCG Tools", version="1.0.0", lifespan=lifespan)
 app.include_router(api_v1_router)
+app.mount("/media", StaticFiles(directory=settings.resolved_media_dir), name="media")
 
 dist = settings.resolved_frontend_dist
 index_html = dist / "index.html"
@@ -37,7 +38,7 @@ if dist.exists() and index_html.exists():
 
     @app.get("/{full_path:path}")
     async def spa_fallback(request: Request, full_path: str) -> FileResponse:
-        if full_path.startswith("api/"):
+        if full_path.startswith("api/") or full_path.startswith("media/"):
             from fastapi import HTTPException
 
             raise HTTPException(status_code=404)

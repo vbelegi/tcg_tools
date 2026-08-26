@@ -27,6 +27,595 @@
         }
       }
     },
+    "/api/v1/auth/status": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Auth Status",
+        "operationId": "auth_status_api_v1_auth_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Auth Me",
+        "operationId": "auth_me_api_v1_auth_me_get",
+        "parameters": [
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Login",
+        "operationId": "login_api_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Register",
+        "operationId": "register_api_v1_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Logout",
+        "operationId": "logout_api_v1_auth_logout_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/change-password": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Auth Change Password",
+        "operationId": "auth_change_password_api_v1_auth_change_password_post",
+        "parameters": [
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/claim-invite": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Auth Claim Invite",
+        "operationId": "auth_claim_invite_api_v1_auth_claim_invite_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClaimInviteBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "List Users",
+        "operationId": "list_users_api_v1_users_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Create User",
+        "operationId": "create_user_api_v1_users_post",
+        "parameters": [
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{user_id}/invite": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Invite User",
+        "operationId": "invite_user_api_v1_users__user_id__invite_post",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/search": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Search Users",
+        "operationId": "search_users_api_v1_users_search_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "title": "Q"
+            }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ranking": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Public Ranking",
+        "operationId": "public_ranking_api_v1_ranking_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jogadores/{user_id}/perfil": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Public Profile",
+        "operationId": "public_profile_api_v1_jogadores__user_id__perfil_get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/premiacao/presets": {
       "get": {
         "tags": [
@@ -34,6 +623,24 @@
         ],
         "summary": "List Presets",
         "operationId": "list_presets_api_v1_premiacao_presets_get",
+        "parameters": [
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -41,6 +648,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PresetsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -63,6 +680,22 @@
             "schema": {
               "type": "string",
               "title": "Preset Id"
+            }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
             }
           }
         ],
@@ -120,6 +753,22 @@
               ],
               "title": "X-Presets-Mtime"
             }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
           }
         ],
         "requestBody": {
@@ -163,15 +812,33 @@
         ],
         "summary": "Calcular Endpoint",
         "operationId": "calcular_endpoint_api_v1_premiacao_calcular_post",
+        "parameters": [
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CalcularRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -230,6 +897,22 @@
               ],
               "title": "Preset Id"
             }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
           }
         ],
         "responses": {
@@ -263,15 +946,33 @@
         ],
         "summary": "Export Csv",
         "operationId": "export_csv_api_v1_premiacao_export_post",
+        "parameters": [
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ExportRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -296,12 +997,40 @@
       }
     },
     "/api/v1/torneios": {
-      "get": {
+      "post": {
         "tags": [
           "torneios"
         ],
-        "summary": "List Torneios",
-        "operationId": "list_torneios_api_v1_torneios_get",
+        "summary": "Create Torneio",
+        "operationId": "create_torneio_api_v1_torneios_post",
+        "parameters": [
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TorneioCreateRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -310,24 +1039,99 @@
                 "schema": {}
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
           }
         }
       },
+      "get": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "List Torneios",
+        "operationId": "list_torneios_api_v1_torneios_get",
+        "parameters": [
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/torneios/externos": {
       "post": {
         "tags": [
           "torneios"
         ],
-        "summary": "Create Torneio",
-        "operationId": "create_torneio_api_v1_torneios_post",
+        "summary": "Create External",
+        "operationId": "create_external_api_v1_torneios_externos_post",
+        "parameters": [
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/TorneioCreateRequest"
+                "$ref": "#/components/schemas/ExternalTorneioCreate"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -367,6 +1171,22 @@
               "type": "integer",
               "title": "Event Id"
             }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
           }
         ],
         "responses": {
@@ -377,6 +1197,55 @@
                 "schema": {}
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "Delete Torneio",
+        "operationId": "delete_torneio_api_v1_torneios__event_id__delete",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -404,6 +1273,22 @@
             "schema": {
               "type": "integer",
               "title": "Event Id"
+            }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
             }
           }
         ],
@@ -455,6 +1340,22 @@
               "type": "integer",
               "title": "Event Id"
             }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
           }
         ],
         "requestBody": {
@@ -467,6 +1368,127 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/torneios/{event_id}/inscrever": {
+      "post": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "Self Inscribe",
+        "operationId": "self_inscribe_api_v1_torneios__event_id__inscrever_post",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/torneios/{event_id}/jogadores/{player_id}/check-in": {
+      "post": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "Check In",
+        "operationId": "check_in_api_v1_torneios__event_id__jogadores__player_id__check_in_post",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          },
+          {
+            "name": "player_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Player Id"
+            }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -514,6 +1536,22 @@
               "type": "integer",
               "title": "Player Id"
             }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
           }
         ],
         "responses": {
@@ -548,6 +1586,22 @@
             "schema": {
               "type": "integer",
               "title": "Event Id"
+            }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
             }
           }
         ],
@@ -589,6 +1643,22 @@
               "type": "integer",
               "title": "Event Id"
             }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
           }
         ],
         "responses": {
@@ -613,13 +1683,13 @@
         }
       }
     },
-    "/api/v1/torneios/{event_id}/rodadas/{number}": {
+    "/api/v1/torneios/{event_id}/rodadas/{round_number}": {
       "get": {
         "tags": [
           "torneios"
         ],
         "summary": "Get Rodada",
-        "operationId": "get_rodada_api_v1_torneios__event_id__rodadas__number__get",
+        "operationId": "get_rodada_api_v1_torneios__event_id__rodadas__round_number__get",
         "parameters": [
           {
             "name": "event_id",
@@ -631,12 +1701,28 @@
             }
           },
           {
-            "name": "number",
+            "name": "round_number",
             "in": "path",
             "required": true,
             "schema": {
               "type": "integer",
-              "title": "Number"
+              "title": "Round Number"
+            }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
             }
           }
         ],
@@ -667,8 +1753,8 @@
         "tags": [
           "torneios"
         ],
-        "summary": "Update Match",
-        "operationId": "update_match_api_v1_torneios__event_id__matches__match_id__patch",
+        "summary": "Update Partida",
+        "operationId": "update_partida_api_v1_torneios__event_id__matches__match_id__patch",
         "parameters": [
           {
             "name": "event_id",
@@ -687,6 +1773,22 @@
               "type": "integer",
               "title": "Match Id"
             }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
           }
         ],
         "requestBody": {
@@ -699,6 +1801,174 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/torneios/{event_id}/avancar": {
+      "post": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "Avancar",
+        "operationId": "avancar_api_v1_torneios__event_id__avancar_post",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/torneios/{event_id}/iniciar-proxima-rodada": {
+      "post": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "Iniciar Proxima Rodada",
+        "operationId": "iniciar_proxima_rodada_api_v1_torneios__event_id__iniciar_proxima_rodada_post",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/torneios/{event_id}/rodadas/reabrir": {
+      "post": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "Reabrir Rodada",
+        "operationId": "reabrir_rodada_api_v1_torneios__event_id__rodadas_reabrir_post",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -746,6 +2016,22 @@
               "type": "integer",
               "title": "Player Id"
             }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
           }
         ],
         "requestBody": {
@@ -761,144 +2047,6 @@
         "responses": {
           "204": {
             "description": "Successful Response"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/torneios/{event_id}/avancar": {
-      "post": {
-        "tags": [
-          "torneios"
-        ],
-        "summary": "Avancar",
-        "description": "Conclui a rodada ativa (sem iniciar a pr\u00f3xima).",
-        "operationId": "avancar_api_v1_torneios__event_id__avancar_post",
-        "parameters": [
-          {
-            "name": "event_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Event Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/torneios/{event_id}/iniciar-proxima-rodada": {
-      "post": {
-        "tags": [
-          "torneios"
-        ],
-        "summary": "Iniciar Proxima Rodada",
-        "operationId": "iniciar_proxima_rodada_api_v1_torneios__event_id__iniciar_proxima_rodada_post",
-        "parameters": [
-          {
-            "name": "event_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Event Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/torneios/{event_id}/rodadas/reabrir": {
-      "post": {
-        "tags": [
-          "torneios"
-        ],
-        "summary": "Reabrir Rodada",
-        "description": "Reabre a \u00faltima rodada conclu\u00edda (ou a anterior \u00e0 rodada ativa) para corre\u00e7\u00f5es.",
-        "operationId": "reabrir_rodada_api_v1_torneios__event_id__rodadas_reabrir_post",
-        "parameters": [
-          {
-            "name": "event_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Event Id"
-            }
-          },
-          {
-            "name": "number",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Number"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
           },
           "422": {
             "description": "Validation Error",
@@ -929,45 +2077,21 @@
               "type": "integer",
               "title": "Event Id"
             }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/torneios/{event_id}/premiacao": {
-      "get": {
-        "tags": [
-          "torneios"
-        ],
-        "summary": "Get Premiacao",
-        "operationId": "get_premiacao_api_v1_torneios__event_id__premiacao_get",
-        "parameters": [
           {
-            "name": "event_id",
-            "in": "path",
-            "required": true,
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
             "schema": {
-              "type": "integer",
-              "title": "Event Id"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
             }
           }
         ],
@@ -998,8 +2122,8 @@
         "tags": [
           "torneios"
         ],
-        "summary": "Get Classificacao",
-        "operationId": "get_classificacao_api_v1_torneios__event_id__classificacao_get",
+        "summary": "Classificacao",
+        "operationId": "classificacao_api_v1_torneios__event_id__classificacao_get",
         "parameters": [
           {
             "name": "event_id",
@@ -1008,6 +2132,22 @@
             "schema": {
               "type": "integer",
               "title": "Event Id"
+            }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
             }
           }
         ],
@@ -1047,6 +2187,22 @@
               "type": "integer",
               "title": "Event Id"
             }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
           }
         ],
         "requestBody": {
@@ -1060,8 +2216,13 @@
           }
         },
         "responses": {
-          "204": {
-            "description": "Successful Response"
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -1076,13 +2237,13 @@
         }
       }
     },
-    "/api/v1/torneios/{event_id}/export-log": {
-      "post": {
+    "/api/v1/torneios/{event_id}/premiacao": {
+      "get": {
         "tags": [
           "torneios"
         ],
-        "summary": "Export Log",
-        "operationId": "export_log_api_v1_torneios__event_id__export_log_post",
+        "summary": "Premiacao Torneio",
+        "operationId": "premiacao_torneio_api_v1_torneios__event_id__premiacao_get",
         "parameters": [
           {
             "name": "event_id",
@@ -1091,6 +2252,78 @@
             "schema": {
               "type": "integer",
               "title": "Event Id"
+            }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/torneios/{event_id}/export": {
+      "get": {
+        "tags": [
+          "torneios"
+        ],
+        "summary": "Export Log",
+        "operationId": "export_log_api_v1_torneios__event_id__export_get",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
             }
           }
         ],
@@ -1286,6 +2519,81 @@
         ],
         "title": "CalcularResponse"
       },
+      "ChangePasswordBody": {
+        "properties": {
+          "current_password": {
+            "type": "string",
+            "title": "Current Password"
+          },
+          "new_password": {
+            "type": "string",
+            "title": "New Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "title": "ChangePasswordBody"
+      },
+      "ClaimInviteBody": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "title": "Token"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          },
+          "birth_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Birth Date"
+          },
+          "guardian_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Guardian Name"
+          },
+          "guardian_phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Guardian Phone"
+          },
+          "guardian_relation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Guardian Relation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token",
+          "password",
+          "birth_date"
+        ],
+        "title": "ClaimInviteBody"
+      },
       "ClassificacaoPatch": {
         "properties": {
           "updates": {
@@ -1301,6 +2609,79 @@
           "updates"
         ],
         "title": "ClassificacaoPatch"
+      },
+      "CreateUserBody": {
+        "properties": {
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "phone": {
+            "type": "string",
+            "title": "Phone"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role",
+            "default": "player"
+          },
+          "birth_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Birth Date"
+          },
+          "guardian_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Guardian Name"
+          },
+          "guardian_phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Guardian Phone"
+          },
+          "guardian_relation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Guardian Relation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "display_name",
+          "email",
+          "phone"
+        ],
+        "title": "CreateUserBody"
       },
       "DecklistUpdate": {
         "properties": {
@@ -1362,6 +2743,132 @@
         ],
         "title": "ExportRequest"
       },
+      "ExternalPlacement": {
+        "properties": {
+          "placement": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Placement"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "create_account": {
+            "type": "boolean",
+            "title": "Create Account",
+            "default": false
+          },
+          "decklist": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decklist"
+          },
+          "is_drop": {
+            "type": "boolean",
+            "title": "Is Drop",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "placement",
+          "display_name"
+        ],
+        "title": "ExternalPlacement"
+      },
+      "ExternalTorneioCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "event_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Event Date"
+          },
+          "format": {
+            "type": "string",
+            "title": "Format",
+            "default": "swiss"
+          },
+          "premiacao_preset_id": {
+            "type": "string",
+            "title": "Premiacao Preset Id",
+            "default": "standard"
+          },
+          "entry_fee": {
+            "type": "number",
+            "title": "Entry Fee",
+            "default": 0
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "placements": {
+            "items": {
+              "$ref": "#/components/schemas/ExternalPlacement"
+            },
+            "type": "array",
+            "title": "Placements"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "event_date",
+          "placements"
+        ],
+        "title": "ExternalTorneioCreate"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1391,6 +2898,53 @@
               }
             ],
             "title": "Seed"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "create_account": {
+            "type": "boolean",
+            "title": "Create Account",
+            "default": false
+          },
+          "attendance": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "checked_in"
+            ],
+            "title": "Attendance",
+            "default": "checked_in"
           }
         },
         "type": "object",
@@ -1398,6 +2952,35 @@
           "name"
         ],
         "title": "JogadorCreate"
+      },
+      "LoginBody": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginBody"
       },
       "MatchUpdate": {
         "properties": {
@@ -1488,6 +3071,19 @@
           "casas_decimais": {
             "type": "integer",
             "title": "Casas Decimais"
+          },
+          "fp_k": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fp K"
           }
         },
         "type": "object",
@@ -1538,6 +3134,73 @@
           "presets"
         ],
         "title": "PresetsResponse"
+      },
+      "RegisterBody": {
+        "properties": {
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "phone": {
+            "type": "string",
+            "title": "Phone"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          },
+          "birth_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Birth Date"
+          },
+          "guardian_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Guardian Name"
+          },
+          "guardian_phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Guardian Phone"
+          },
+          "guardian_relation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Guardian Relation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "display_name",
+          "email",
+          "phone",
+          "password",
+          "birth_date"
+        ],
+        "title": "RegisterBody"
       },
       "TabelaLinha": {
         "properties": {
@@ -1642,6 +3305,11 @@
               }
             ],
             "title": "Se Bo Config"
+          },
+          "registration_open": {
+            "type": "boolean",
+            "title": "Registration Open",
+            "default": false
           }
         },
         "type": "object",
@@ -1736,6 +3404,17 @@
               }
             ],
             "title": "Se Bo Config"
+          },
+          "registration_open": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Registration Open"
           }
         },
         "type": "object",

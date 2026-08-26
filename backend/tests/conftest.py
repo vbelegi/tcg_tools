@@ -62,7 +62,7 @@ def torneio_service(db_session: Session) -> TorneioService:
 
 @pytest.fixture
 def swiss_event(torneio_service: TorneioService):
-    """Draft Swiss event with 4 players."""
+    """Draft Swiss event with 4 players (each with incomplete account)."""
     event = torneio_service.create_event(
         name="Swiss Test",
         event_date=date.today(),
@@ -72,9 +72,38 @@ def swiss_event(torneio_service: TorneioService):
         best_of=3,
         premiacao_preset_id="standard",
     )
-    for name in ("A", "B", "C", "D"):
-        torneio_service.add_player(event.id, name)
+    enroll_named_players(torneio_service, event.id, ("A", "B", "C", "D"))
     return event
+
+
+def enroll_named_players(svc: TorneioService, event_id: int, names: tuple[str, ...] | list[str]) -> None:
+    """Enroll players via create_account (no nameless walk-in)."""
+    for i, name in enumerate(names):
+        slug = "".join(ch for ch in name.lower() if ch.isalnum()) or f"p{i}"
+        svc.add_player(
+            event_id,
+            name,
+            create_account=True,
+            email=f"{slug}.{event_id}.{i}@test.local",
+            phone=f"+55119{event_id % 10000:04d}{i:04d}",
+        )
+
+
+def enroll_named_players_api(client: TestClient, event_id: int, names: tuple[str, ...] | list[str]) -> None:
+    for i, name in enumerate(names):
+        slug = "".join(ch for ch in name.lower() if ch.isalnum()) or f"p{i}"
+        assert (
+            client.post(
+                f"/api/v1/torneios/{event_id}/jogadores",
+                json={
+                    "name": name,
+                    "create_account": True,
+                    "email": f"{slug}.{event_id}.{i}@api.test",
+                    "phone": f"+55118{event_id % 10000:04d}{i:04d}",
+                },
+            ).status_code
+            == 200
+        )
 
 
 def score_all_matches(
@@ -118,8 +147,7 @@ def create_se_event(
         third_place_match=third_place_match,
         se_bo_config=se_bo_config,
     )
-    for i in range(player_count):
-        svc.add_player(event.id, f"P{i + 1}")
+    enroll_named_players(svc, event.id, [f"P{i + 1}" for i in range(player_count)])
     return event
 
 
@@ -142,6 +170,15 @@ def run_se_bracket(
 
 
 @pytest.fixture
+def default_tcg_id(db_session: Session) -> int:
+    from app.models import TcgGame
+
+    row = db_session.query(TcgGame).order_by(TcgGame.id.asc()).first()
+    assert row is not None
+    return int(row.id)
+
+
+@pytest.fixture
 def api_client(db_session: Session) -> Generator[TestClient, None, None]:
     """FastAPI client with real DB session (Alembic-migrated) and admin login."""
     from app.core.auth import upsert_admin_password
@@ -153,7 +190,7 @@ def api_client(db_session: Session) -> Generator[TestClient, None, None]:
 
     app.dependency_overrides[get_db] = _override_db
     client = TestClient(app)
-    r = client.post("/api/v1/auth/login", json={"username": "admin", "password": "testpass"})
+    r = client.post("/api/v1/auth/login", json={"email": "admin@local", "password": "testpass"})
     assert r.status_code == 200, r.text
     yield client
     app.dependency_overrides.clear()

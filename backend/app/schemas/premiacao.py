@@ -15,6 +15,7 @@ class PresetBody(BaseModel):
     crescimento: int
     r: float
     casas_decimais: int
+    fp_k: int | None = Field(default=None, ge=1, le=1000)
 
 
 class PresetsResponse(BaseModel):
