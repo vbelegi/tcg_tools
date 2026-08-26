@@ -58,11 +58,13 @@ Sem login / player: vê torneios **`finished`**, drafts com **`registration_open
 
 ## Perfil do jogador (`/jogadores/{id}`)
 
-Público: stats (torneios, títulos, top 8, melhor colocação), **Insights** heurísticos, badges de TCG (torneios **finalizados**), gráficos FP por jogo/mês, histórico + decklists.
+Público: stats (torneios, títulos, top 8, melhor colocação), **Insights** heurísticos, badges de TCG (torneios **finalizados**), histórico + decklists. Gráficos e totais FP só para dono/admin (abaixo).
 
 **Perfil:** todo usuário `active` (inclui **admin** criado no bootstrap) tem perfil em `/jogadores/{id}` — stats/histórico vazios até jogar. Sem exigência de inscrição em torneio.
 
-**Acesso:** Ranking Fourse Points (pódio top 3 + lista; `GET /ranking` com `avatar_url`); **Meu Perfil** no sidebar (logado); nome linkado em `/usuarios` (admin); busca pública no topo do perfil (`GET /jogadores/buscar?q=` → só `id`, `display_name`, `avatar_url`).
+**Home** (`/`): atalhos densos — Calendário · Torneios · Ranking; staff + Novo torneio / Premiação / Sorteador; admin + Importar externo / Usuários / TCGs; CTA Entrar ou Meu Perfil; mini top ranking.
+
+**Acesso:** Ranking Fourse Points (pódio top 3 + lista; `GET /ranking` com `avatar_url`); **Meu Perfil** no sidebar e na Home (logado); nome linkado em `/usuarios` (admin); busca pública no topo do perfil (`GET /jogadores/buscar?q=` → só `id`, `display_name`, `avatar_url`).
 
 **FP:** total e breakdown (`fp_by_*`, `fp_earned`, gráficos, posição no ranking) visíveis só para o **próprio jogador** e **admin**. Ranking público (`GET /ranking`) continua listando totais agregados.
 

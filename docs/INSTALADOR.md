@@ -18,7 +18,7 @@ Cada **usuário Windows** na máquina tem dados próprios em `%APPDATA%\TCGTools
 - Conta bootstrap: e-mail `admin@local` (mínimo 6 caracteres na senha). O login ainda aceita o legado `admin`.
 - Definida no instalador (install limpo). Em upgrade, pode manter ou marcar **Definir/alterar senha**.
 - Modo **Apenas alterar senha** no wizard: não atualiza arquivos, só grava a senha no SQLite.
-- Também dá para alterar em **Alterar senha** dentro do app (após login).
+- Também dá para alterar em **Meu Perfil → Alterar senha** (após login).
 
 ## Atualizar
 

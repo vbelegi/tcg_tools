@@ -38,9 +38,7 @@ export function CalendarPage() {
     year: today.getFullYear(),
     month: today.getMonth() + 1,
   });
-  const [selectedDay, setSelectedDay] = useState<number | null>(
-    today.getFullYear() === today.getFullYear() ? today.getDate() : null,
-  );
+  const [selectedDay, setSelectedDay] = useState<number | null>(today.getDate());
 
   const { data: me } = useQuery({
     queryKey: ["auth-me"],
@@ -77,8 +75,11 @@ export function CalendarPage() {
 
   const shiftMonth = (delta: number) => {
     const d = new Date(cursor.year, cursor.month - 1 + delta, 1);
-    setCursor({ year: d.getFullYear(), month: d.getMonth() + 1 });
-    setSelectedDay(null);
+    const next = { year: d.getFullYear(), month: d.getMonth() + 1 };
+    setCursor(next);
+    const isCurrentMonth =
+      next.year === today.getFullYear() && next.month === today.getMonth() + 1;
+    setSelectedDay(isCurrentMonth ? today.getDate() : null);
   };
 
   const ctaFor = (t: Torneio): { label: string; to: string } | null => {

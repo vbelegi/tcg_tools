@@ -128,7 +128,24 @@ export function PlayerProfilePage() {
     historyFilter,
     historyLimit,
   );
-  const mainGame = data.fp_by_game[0]?.tcg_name ?? "—";
+  const mainGame = (() => {
+    if (data.fp_by_game[0]?.tcg_name) return data.fp_by_game[0].tcg_name;
+    const counts = new Map<string, number>();
+    for (const h of data.history) {
+      const name = h.tcg_game?.name;
+      if (!name) continue;
+      counts.set(name, (counts.get(name) ?? 0) + 1);
+    }
+    let bestName: string | null = null;
+    let bestCount = 0;
+    for (const [name, n] of counts) {
+      if (n > bestCount) {
+        bestName = name;
+        bestCount = n;
+      }
+    }
+    return bestName ?? data.badge_games[0]?.name ?? "—";
+  })();
 
   const onSaveName = (e: FormEvent) => {
     e.preventDefault();
