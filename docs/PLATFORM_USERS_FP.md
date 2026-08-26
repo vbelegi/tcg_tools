@@ -68,6 +68,8 @@ Público: stats (torneios, títulos, top 8, melhor colocação), **Insights** he
 
 **Avatar:** upload próprio (`POST /auth/me/avatar`, máx. 512 KB; redimensiona para 256×256 WebP em `data/media/avatars/`). Placeholder: `/avatars/default.png`. Edição de nome: `PATCH /auth/me`. **Alterar senha** só no próprio perfil (modal); removido do sidebar.
 
+**Inscrição (draft / staff):** um campo de busca (conta existente). Se não achar → criar **incomplete** (nome + e-mail + celular) e inscrever. Sem walk-in sem conta; um jogador por vez; seed em “opções avançadas”.
+
 Staff/admin: todos os status e operação completa.
 
 **Nunca** expor email, celular, nascimento ou responsável em endpoints públicos.

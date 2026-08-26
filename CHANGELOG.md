@@ -10,6 +10,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Torneio draft UX:** inscrição unificada (busca → conta existente ou incomplete); header com Iniciar; Excluir no menu ⋯
 - **Perfil — navegação:** Meu Perfil no sidebar; nome linkado em Usuários; busca pública `GET /jogadores/buscar`
 - **Perfil — senha:** modal Alterar senha no próprio perfil (removido do sidebar)
 - **Perfil do jogador:** dashboard com stats, Insights, badges TCG, Recharts (FP por jogo/mês), histórico filtrável; avatar + editar nome
@@ -28,6 +29,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- **Torneio draft:** sem walk-in puro; inscrição 1 a 1 via busca; incomplete exige e-mail+celular; seed em opções avançadas
 - **Perfil:** admin bootstrap tem perfil nativo (sem precisar ter jogado torneio)
 - **Perfil:** seção renomeada para **Insights**; `/conta/senha` redireciona à home
 - **Nav/Home:** “Ranking Fourse Points” (FP só como abreviação em colunas/espaços curtos)

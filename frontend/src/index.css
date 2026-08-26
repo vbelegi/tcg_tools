@@ -470,11 +470,11 @@ th {
 
 .player-draft-list {
   list-style: none;
-  margin: 0 0 1rem;
+  margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.45rem;
 }
 
 .player-row {
@@ -482,9 +482,37 @@ th {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0.45rem 0.65rem;
-  border-radius: 8px;
-  border: 1px solid transparent;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.player-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.player-row-name {
+  font-weight: 600;
+}
+
+.player-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.player-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  flex-shrink: 0;
 }
 
 .player-row-seed-missing {
@@ -635,21 +663,223 @@ th {
 
 .stepper {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
 }
 
 .stepper span {
-  padding: 0.25rem 0.75rem;
+  padding: 0.35rem 0.9rem;
   border-radius: 999px;
   background: var(--surface);
   border: 1px solid var(--border);
   font-size: 0.875rem;
+  color: var(--muted);
 }
 
 .stepper span.active {
   border-color: var(--primary);
-  color: var(--primary);
+  color: var(--text);
+  background: var(--primary-soft);
+  font-weight: 600;
+}
+
+.torneio-manage-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.torneio-back {
+  display: inline-block;
+  margin-bottom: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.torneio-manage-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.torneio-manage-title-row h1 {
+  margin: 0;
+}
+
+.torneio-manage-meta {
+  margin: 0.45rem 0 0;
+  color: var(--muted);
+}
+
+.torneio-reg-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.torneio-manage-primary {
+  min-width: 11rem;
+}
+
+.torneio-manage-primary .field-hint {
+  margin-top: 0.35rem;
+  max-width: 14rem;
+}
+
+.torneio-overflow {
+  position: relative;
+}
+
+.torneio-overflow-btn {
+  min-width: 2.5rem;
+  padding: 0.35rem 0.65rem;
+}
+
+.torneio-overflow-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.25rem);
+  z-index: 10;
+  min-width: 11rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.35rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.torneio-overflow-menu button {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  color: var(--text);
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.torneio-overflow-menu button:hover {
+  background: var(--primary-soft);
+}
+
+.danger-text {
+  color: var(--danger) !important;
+}
+
+.torneio-draft-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.9fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .torneio-draft-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.torneio-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem 1.15rem;
+}
+
+.torneio-panel-head {
+  margin-bottom: 0.85rem;
+}
+
+.torneio-panel-head h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.torneio-count {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.torneio-empty-roster {
+  margin: 0.5rem 0 0;
+}
+
+.torneio-self-enroll {
+  margin-bottom: 1rem;
+}
+
+.torneio-search-hits {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.torneio-create-prompt {
+  margin-top: 0.85rem;
+  padding: 0.85rem;
+  border-radius: 10px;
+  border: 1px dashed var(--border);
+  background: var(--bg);
+}
+
+.torneio-create-prompt p {
+  margin: 0 0 0.65rem;
+}
+
+.torneio-create-form {
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+}
+
+.torneio-create-form h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.torneio-create-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.torneio-advanced {
+  margin-top: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.55rem 0.75rem;
+  background: var(--bg);
+}
+
+.torneio-advanced summary {
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.badge-warn {
+  background: rgba(251, 191, 36, 0.15);
+  border-color: rgba(251, 191, 36, 0.45);
+  color: #fbbf24;
+}
+
+.badge-ok {
+  background: rgba(0, 186, 124, 0.12);
+  border-color: rgba(0, 186, 124, 0.4);
+  color: var(--success);
 }
 
 .login-page {

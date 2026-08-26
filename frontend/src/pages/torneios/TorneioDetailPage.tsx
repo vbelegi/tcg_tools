@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 
 import { ConfirmModal } from "../../components/ConfirmModal";
@@ -8,7 +8,6 @@ import { PlayerPickerModal } from "../../components/PlayerPickerModal";
 import { RoundMatchesTable } from "../../components/RoundMatchesTable";
 import { SeFormatOptions, type SeBoConfig } from "../../components/SeFormatOptions";
 import { api } from "../../api/client";
-import { parsePastedNames } from "../../utils/pasteNames";
 import { playersMissingSeed, seedRequirementMessage } from "../../utils/seeds";
 
 const PHONE_HINT = "DDD + número (10 a 13 dígitos), ex.: 11987654321";
@@ -20,6 +19,11 @@ function phoneDigitCount(value: string): number {
 function isValidPhoneInput(value: string): boolean {
   const n = phoneDigitCount(value);
   return n >= 10 && n <= 13;
+}
+
+function inviteAbsoluteUrl(claimPath: string): string {
+  const path = claimPath.startsWith("/") ? claimPath : `/${claimPath}`;
+  return `${window.location.origin}${path}`;
 }
 
 export function TorneioDetailPage() {
@@ -38,14 +42,18 @@ export function TorneioDetailPage() {
   const [playerSeed, setPlayerSeed] = useState("");
   const [playerEmail, setPlayerEmail] = useState("");
   const [playerPhone, setPlayerPhone] = useState("");
-  const [createAccount, setCreateAccount] = useState(false);
+  const [showCreateIncomplete, setShowCreateIncomplete] = useState(false);
   const [userSearch, setUserSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [userHits, setUserHits] = useState<
     Array<{ id: number; display_name: string; email?: string; phone?: string | null }>
   >([]);
+  const [searchDone, setSearchDone] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteNameInput, setDeleteNameInput] = useState("");
+  const [adminMenuOpen, setAdminMenuOpen] = useState(false);
   const [error, setError] = useState("");
+  const [inviteMsg, setInviteMsg] = useState("");
   const [removeTarget, setRemoveTarget] = useState<{ id: number; name: string } | null>(null);
   const [dropModalOpen, setDropModalOpen] = useState(false);
   const [finalizarModalOpen, setFinalizarModalOpen] = useState(false);
@@ -55,6 +63,7 @@ export function TorneioDetailPage() {
   const [seOptionsDirty, setSeOptionsDirty] = useState(false);
   const [playerAddedFlash, setPlayerAddedFlash] = useState(false);
   const playerNameRef = useRef<HTMLInputElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
   const playerSeedRef = useRef<HTMLInputElement>(null);
   const formErrorRef = useRef<HTMLParagraphElement>(null);
   const nextRoundBtnRef = useRef<HTMLButtonElement>(null);
@@ -96,7 +105,7 @@ export function TorneioDetailPage() {
 
   useEffect(() => {
     if (torneio?.status === "draft" && isStaff) {
-      playerNameRef.current?.focus();
+      searchRef.current?.focus();
     }
   }, [torneio?.status, eventId, isStaff]);
 
@@ -106,42 +115,92 @@ export function TorneioDetailPage() {
     return () => window.clearTimeout(t);
   }, [playerAddedFlash]);
 
-  const focusNameField = () => {
-    requestAnimationFrame(() => playerNameRef.current?.focus());
+  useEffect(() => {
+    const t = window.setTimeout(() => setDebouncedSearch(userSearch.trim()), 280);
+    return () => window.clearTimeout(t);
+  }, [userSearch]);
+
+  useEffect(() => {
+    if (debouncedSearch.length < 2) {
+      setUserHits([]);
+      setSearchDone(false);
+      return;
+    }
+    let cancelled = false;
+    setSearchDone(false);
+    api
+      .searchUsers(debouncedSearch)
+      .then((rows) => {
+        if (cancelled) return;
+        setUserHits(rows);
+        setSearchDone(true);
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        setError((e as Error).message);
+        setUserHits([]);
+        setSearchDone(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedSearch]);
+
+  const focusSearchField = () => {
+    requestAnimationFrame(() => searchRef.current?.focus());
   };
 
   const addPlayer = useMutation({
     mutationFn: async (payload: {
-      names: string[];
+      name: string;
       seed?: number;
       email?: string;
       phone?: string;
       create_account?: boolean;
       user_id?: number;
-    }) => {
-      for (const name of payload.names) {
-        await api.addJogador(eventId, name, payload.seed, {
-          email: payload.email,
-          phone: payload.phone,
-          create_account: payload.create_account,
-          user_id: payload.user_id,
-        });
-      }
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["torneio", eventId] });
+    }) =>
+      api.addJogador(eventId, payload.name, payload.seed, {
+        email: payload.email,
+        phone: payload.phone,
+        create_account: payload.create_account,
+        user_id: payload.user_id,
+      }),
+    onSuccess: async (player, vars) => {
+      await qc.invalidateQueries({ queryKey: ["torneio", eventId] });
       setPlayerName("");
       setPlayerSeed("");
       setPlayerEmail("");
       setPlayerPhone("");
-      setCreateAccount(false);
+      setShowCreateIncomplete(false);
+      setUserSearch("");
+      setDebouncedSearch("");
+      setUserHits([]);
+      setSearchDone(false);
       setError("");
       setPlayerAddedFlash(true);
-      focusNameField();
+      if (vars.create_account && player.user_id && isAdmin) {
+        try {
+          const invite = await api.inviteUser(player.user_id);
+          const url = inviteAbsoluteUrl(invite.claim_path);
+          try {
+            await navigator.clipboard.writeText(url);
+            setInviteMsg(`Convite copiado (válido até ${invite.expires_at}): ${url}`);
+          } catch {
+            setInviteMsg(`Copie o convite (válido até ${invite.expires_at}): ${url}`);
+          }
+        } catch {
+          setInviteMsg("Conta criada e inscrita. Gere o convite em Usuários se necessário.");
+        }
+      } else if (vars.create_account) {
+        setInviteMsg("Conta incompleta criada e inscrita. Admin pode gerar o link de convite em Usuários.");
+      } else {
+        setInviteMsg("");
+      }
+      focusSearchField();
     },
     onError: (e) => {
       setError((e as Error).message);
-      focusNameField();
+      focusSearchField();
       requestAnimationFrame(() =>
         formErrorRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }),
       );
@@ -181,12 +240,6 @@ export function TorneioDetailPage() {
       qc.invalidateQueries({ queryKey: ["torneio", eventId] });
       qc.invalidateQueries({ queryKey: ["torneios"] });
     },
-    onError: (e) => setError((e as Error).message),
-  });
-
-  const searchUsers = useMutation({
-    mutationFn: (q: string) => api.searchUsers(q),
-    onSuccess: (rows) => setUserHits(rows),
     onError: (e) => setError((e as Error).message),
   });
 
@@ -307,15 +360,33 @@ export function TorneioDetailPage() {
   const seedsIncomplete = missingSeedPlayers.length > 0;
   const seedRequired = draftPlayers.some((p) => p.seed != null);
   const seedErrorMessage = seedRequirementMessage(missingSeedPlayers.map((p) => p.name));
-  const canSubmitPlayer =
-    Boolean(playerName.trim()) &&
-    !addPlayer.isPending &&
-    !(seedRequired && !playerSeed.trim()) &&
-    (!createAccount || (Boolean(playerEmail.trim()) && Boolean(playerPhone.trim())));
+  const pendingCount = torneio.pending_checkins ?? 0;
+  const playerCount = torneio.players?.length ?? 0;
+  const canStart =
+    isDraft &&
+    isStaff &&
+    playerCount >= 4 &&
+    !seedsIncomplete &&
+    pendingCount === 0 &&
+    !iniciar.isPending;
+  const startBlockReason = seedsIncomplete
+    ? "Corrija o seeding parcial antes de iniciar"
+    : pendingCount > 0
+      ? "Faça check-in de todas as inscrições pendentes"
+      : playerCount < 4
+        ? "Mínimo de 4 jogadores para iniciar"
+        : undefined;
 
-  const submitPlayer = () => {
-    if (!canSubmitPlayer) return;
-    if (createAccount && !isValidPhoneInput(playerPhone)) {
+  const canCreateIncomplete =
+    Boolean(playerName.trim()) &&
+    Boolean(playerEmail.trim()) &&
+    Boolean(playerPhone.trim()) &&
+    !addPlayer.isPending &&
+    !(seedRequired && !playerSeed.trim());
+
+  const submitIncomplete = () => {
+    if (!canCreateIncomplete) return;
+    if (!isValidPhoneInput(playerPhone)) {
       setError(`Celular inválido. ${PHONE_HINT}`);
       requestAnimationFrame(() =>
         formErrorRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }),
@@ -323,62 +394,40 @@ export function TorneioDetailPage() {
       return;
     }
     addPlayer.mutate({
-      names: [playerName.trim()],
+      name: playerName.trim(),
       seed: playerSeed.trim() ? parseInt(playerSeed, 10) : undefined,
-      email: createAccount ? playerEmail.trim() : undefined,
-      phone: createAccount ? playerPhone.trim() : undefined,
-      create_account: createAccount || undefined,
+      email: playerEmail.trim(),
+      phone: playerPhone.trim(),
+      create_account: true,
     });
   };
 
-  const clearPlayerForm = () => {
+  const clearCreateForm = () => {
     setPlayerName("");
     setPlayerSeed("");
     setPlayerEmail("");
     setPlayerPhone("");
-    setCreateAccount(false);
+    setShowCreateIncomplete(false);
     setError("");
-    focusNameField();
   };
 
-  const handleNameKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+  const openCreateIncomplete = () => {
+    setShowCreateIncomplete(true);
+    setPlayerName(userSearch.trim() || playerName);
+    setInviteMsg("");
+    requestAnimationFrame(() => playerNameRef.current?.focus());
+  };
+
+  const handleCreateKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Escape") {
       e.preventDefault();
-      clearPlayerForm();
+      clearCreateForm();
+      focusSearchField();
       return;
     }
     if (e.key !== "Enter") return;
     e.preventDefault();
-    if (!playerName.trim() || addPlayer.isPending) return;
-    if (seedRequired) {
-      playerSeedRef.current?.focus();
-      return;
-    }
-    submitPlayer();
-  };
-
-  const handleSeedKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      clearPlayerForm();
-      return;
-    }
-    if (e.key !== "Enter") return;
-    e.preventDefault();
-    submitPlayer();
-  };
-
-  const handleNamePaste = (e: ClipboardEvent<HTMLInputElement>) => {
-    const names = parsePastedNames(e.clipboardData.getData("text"));
-    if (names.length <= 1) return;
-    e.preventDefault();
-    if (seedRequired) {
-      setError(
-        "Com seeding ativo, cole um nome por vez e informe o seed — ou remova os seeds existentes.",
-      );
-      return;
-    }
-    addPlayer.mutate({ names });
+    submitIncomplete();
   };
 
   const reabrirMessage = hasActiveRound
@@ -435,27 +484,81 @@ export function TorneioDetailPage() {
   }
 
   return (
-    <div>
-      <h1>{torneio.name}</h1>
-      <p>
-        {torneio.event_date} · {torneio.format === "swiss" ? "Suíço" : "Eliminatória"} ·{" "}
-        <span className="badge">{torneio.status}</span>
-        {torneio.source === "external" && <span className="badge"> externo</span>}
-      </p>
-      {isAdmin && (
-        <div style={{ marginBottom: "1rem" }}>
-          <button
-            className="secondary"
-            type="button"
-            onClick={() => {
-              setDeleteNameInput("");
-              setDeleteConfirmOpen(true);
-            }}
-          >
-            Excluir torneio…
-          </button>
+    <div className="torneio-manage">
+      <header className="torneio-manage-header">
+        <div className="torneio-manage-header-main">
+          <Link to="/torneios" className="torneio-back">
+            ← Torneios
+          </Link>
+          <div className="torneio-manage-title-row">
+            <h1>{torneio.name}</h1>
+            {isAdmin && (
+              <div className="torneio-overflow">
+                <button
+                  type="button"
+                  className="secondary torneio-overflow-btn"
+                  aria-expanded={adminMenuOpen}
+                  aria-haspopup="menu"
+                  onClick={() => setAdminMenuOpen((v) => !v)}
+                >
+                  ⋯
+                </button>
+                {adminMenuOpen && (
+                  <div className="torneio-overflow-menu" role="menu">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="danger-text"
+                      onClick={() => {
+                        setAdminMenuOpen(false);
+                        setDeleteNameInput("");
+                        setDeleteConfirmOpen(true);
+                      }}
+                    >
+                      Excluir torneio…
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          <p className="torneio-manage-meta">
+            {torneio.event_date}
+            {torneio.start_time ? ` · ${torneio.start_time}` : ""} ·{" "}
+            {torneio.format === "swiss" ? "Suíço" : "Eliminatória"}
+            {torneio.tcg_game ? ` · ${torneio.tcg_game.name}` : ""} ·{" "}
+            <span className="badge">{torneio.status}</span>
+            {torneio.source === "external" && <span className="badge">externo</span>}
+          </p>
+          {isDraft && isStaff && (
+            <label className="torneio-reg-toggle">
+              <input
+                type="checkbox"
+                checked={Boolean(torneio.registration_open)}
+                onChange={(e) => toggleRegistration.mutate(e.target.checked)}
+                disabled={toggleRegistration.isPending}
+              />
+              <span>Inscrições abertas para jogadores</span>
+            </label>
+          )}
         </div>
-      )}
+        {isDraft && isStaff && (
+          <div className="torneio-manage-primary">
+            <button
+              className="primary"
+              type="button"
+              onClick={handleIniciar}
+              disabled={!canStart}
+              title={startBlockReason}
+            >
+              {iniciar.isPending ? "Iniciando…" : "Iniciar torneio"}
+            </button>
+            {!canStart && startBlockReason && (
+              <p className="field-hint">{startBlockReason}</p>
+            )}
+          </div>
+        )}
+      </header>
 
       <div className="stepper">
         <span className={isDraft ? "active" : ""}>Jogadores</span>
@@ -463,246 +566,240 @@ export function TorneioDetailPage() {
         <span className={isFinished ? "active" : ""}>Resultado</span>
       </div>
 
-      {error && <p className="error">{error}</p>}
+      {error && (
+        <p ref={formErrorRef} className="error" role="alert">
+          {error}
+        </p>
+      )}
+      {inviteMsg && <p className="success">{inviteMsg}</p>}
       {torneio.config_warnings?.map((w) => (
         <p key={w} className="warning" role="status">
           {w}
         </p>
       ))}
 
-      {isDraft && (torneio.pending_checkins ?? 0) > 0 && (
+      {isDraft && pendingCount > 0 && (
         <p className="warning" role="status">
-          {torneio.pending_checkins} inscrição(ões) pendente(s) de check-in — o torneio não inicia
-          até confirmar presença.
+          {pendingCount} inscrição(ões) pendente(s) de check-in — o torneio não inicia até confirmar
+          presença.
         </p>
       )}
 
       {isDraft && me && torneio.registration_open && !isEnrolled && isStaff && (
-        <div style={{ marginBottom: "1rem" }}>
+        <div className="torneio-self-enroll">
           <button
-            className="primary"
+            className="secondary"
             type="button"
             onClick={() => selfRegister.mutate()}
             disabled={selfRegister.isPending}
           >
-            Inscrever-me neste torneio
+            {selfRegister.isPending ? "Inscrevendo…" : "Inscrever-me neste torneio"}
           </button>
         </div>
       )}
 
-      {isDraft && isStaff && (
-        <div className="form-row" style={{ marginBottom: "1rem" }}>
-          <label>
-            <input
-              type="checkbox"
-              checked={Boolean(torneio.registration_open)}
-              onChange={(e) => toggleRegistration.mutate(e.target.checked)}
-              disabled={toggleRegistration.isPending}
-            />{" "}
-            Inscrições abertas (jogadores logados podem se inscrever)
-          </label>
-        </div>
-      )}
-
       {isDraft && (
-        <>
-          <h2>Jogadores ({torneio.players?.length ?? 0})</h2>
-          {isStaff && torneio.format === "single_elimination" && (
-            <>
-              <SeFormatOptions
-                thirdPlaceMatch={thirdPlaceMatch}
-                onThirdPlaceMatchChange={(v) => {
-                  setThirdPlaceMatch(v);
-                  setSeOptionsDirty(true);
-                }}
-                seBoConfig={seBoConfig}
-                onSeBoConfigChange={(v) => {
-                  setSeBoConfig(v);
-                  setSeOptionsDirty(true);
-                }}
-                defaultBestOf={torneio.best_of}
-                maxRounds={
-                  torneio.recommended_rounds ??
-                  Math.ceil(Math.log2(Math.max(torneio.players?.length ?? 8, 2)))
-                }
-              />
-              {seOptionsDirty && (
-                <p className="warning" style={{ marginBottom: "0.5rem" }}>
-                  Opções SE alteradas — salve antes de iniciar. Bo global atual: {torneio.best_of}.
-                </p>
-              )}
-              {seOptionsDirty && (
-                <button
-                  className="secondary"
-                  style={{ marginBottom: "1rem" }}
-                  onClick={() => saveSeOptions.mutate()}
-                  disabled={saveSeOptions.isPending}
-                >
-                  Salvar opções SE
-                </button>
-              )}
-            </>
-          )}
-          {torneio.max_rounds != null && torneio.players && torneio.players.length >= 4 && (
-            <p className="warning">
-              Recomendado: {torneio.recommended_rounds ?? "—"} rodadas para {torneio.players.length}{" "}
-              jogadores
-              {torneio.max_rounds < (torneio.recommended_rounds ?? 0) &&
-                ` (configurado: ${torneio.max_rounds})`}
-            </p>
-          )}
-          {seedsIncomplete && (
-            <p className="error" role="alert">
-              {seedErrorMessage} Remova e cadastre de novo com seed, ou remova os seeds
-              existentes.
-            </p>
-          )}
-          <ul className="player-draft-list">
-            {torneio.players?.map((p) => {
-              const needsSeed = missingSeedIds.has(p.id);
-              return (
-                <li
-                  key={p.id}
-                  className={needsSeed ? "player-row player-row-seed-missing" : "player-row"}
-                >
-                  <span>
-                    {p.name}
-                    {p.seed != null ? ` (seed ${p.seed})` : needsSeed ? " — falta seed" : ""}
-                    {p.attendance === "pending" ? " · pendente" : ""}
-                  </span>{" "}
-                  {isStaff && p.attendance === "pending" && (
-                    <button
-                      className="secondary"
-                      type="button"
-                      onClick={() => checkIn.mutate(p.id)}
-                      disabled={checkIn.isPending}
-                    >
-                      Check-in
-                    </button>
-                  )}{" "}
-                  {isStaff && (
-                    <button
-                      className="secondary"
-                      onClick={() => setRemoveTarget({ id: p.id, name: p.name })}
-                    >
-                      Remover
-                    </button>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-          {isStaff && (
-            <>
-              <div className="card" style={{ marginBottom: "1rem" }}>
-                <h3>Inscrever conta existente</h3>
-                <div className="form-row">
-                  <label htmlFor="user-search">Buscar (nome, e-mail ou celular)</label>
-                  <input
-                    id="user-search"
-                    value={userSearch}
-                    onChange={(e) => setUserSearch(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        if (userSearch.trim().length >= 1) searchUsers.mutate(userSearch.trim());
-                      }
-                    }}
-                  />
-                </div>
-                <button
-                  className="secondary"
-                  type="button"
-                  disabled={userSearch.trim().length < 1 || searchUsers.isPending}
-                  onClick={() => searchUsers.mutate(userSearch.trim())}
-                >
-                  Buscar
-                </button>
-                {userHits.length > 0 && (
-                  <ul style={{ marginTop: "0.75rem" }}>
-                    {userHits.map((u) => (
-                      <li key={u.id} className="player-row">
-                        <span>
-                          {u.display_name}
-                          {u.email ? ` · ${u.email}` : ""}
-                          {u.phone ? ` · ${u.phone}` : ""}
-                        </span>{" "}
-                        <button
-                          className="secondary"
-                          type="button"
-                          disabled={addPlayer.isPending}
-                          onClick={() =>
-                            addPlayer.mutate({
-                              names: [u.display_name],
-                              user_id: u.id,
-                            })
-                          }
-                        >
-                          Inscrever
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-              <div className="form-row">
-                <label htmlFor="player-name">Nome (walk-in / nova incomplete)</label>
-                <input
-                  id="player-name"
-                  ref={playerNameRef}
-                  value={playerName}
-                  onChange={(e) => setPlayerName(e.target.value)}
-                  onKeyDown={handleNameKeyDown}
-                  onPaste={handleNamePaste}
-                  placeholder={
-                    seedRequired
-                      ? "Nome · Enter vai para o seed"
-                      : "Nome · Enter adiciona · cole lista"
+        <div className="torneio-draft-layout">
+          <section className="torneio-panel">
+            <div className="torneio-panel-head">
+              <h2>
+                Inscritos{" "}
+                <span className="torneio-count">
+                  {playerCount}
+                  {pendingCount > 0 ? ` · ${pendingCount} pendente` : ""}
+                </span>
+              </h2>
+            </div>
+            {isStaff && torneio.format === "single_elimination" && (
+              <div className="torneio-se-block">
+                <SeFormatOptions
+                  thirdPlaceMatch={thirdPlaceMatch}
+                  onThirdPlaceMatchChange={(v) => {
+                    setThirdPlaceMatch(v);
+                    setSeOptionsDirty(true);
+                  }}
+                  seBoConfig={seBoConfig}
+                  onSeBoConfigChange={(v) => {
+                    setSeBoConfig(v);
+                    setSeOptionsDirty(true);
+                  }}
+                  defaultBestOf={torneio.best_of}
+                  maxRounds={
+                    torneio.recommended_rounds ??
+                    Math.ceil(Math.log2(Math.max(torneio.players?.length ?? 8, 2)))
                   }
-                  aria-describedby="player-name-hint"
-                  disabled={addPlayer.isPending}
                 />
-                <p id="player-name-hint" className="field-hint">
-                  Enter adiciona
-                  {seedRequired ? " (após o seed)" : ""}. Esc limpa. Cole vários nomes (linhas/vírgulas)
-                  sem seeding.
+                {seOptionsDirty && (
+                  <>
+                    <p className="warning" style={{ marginBottom: "0.5rem" }}>
+                      Opções SE alteradas — salve antes de iniciar. Bo global atual:{" "}
+                      {torneio.best_of}.
+                    </p>
+                    <button
+                      className="secondary"
+                      style={{ marginBottom: "1rem" }}
+                      onClick={() => saveSeOptions.mutate()}
+                      disabled={saveSeOptions.isPending}
+                    >
+                      Salvar opções SE
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+            {torneio.max_rounds != null && playerCount >= 4 && (
+              <p className="warning">
+                Recomendado: {torneio.recommended_rounds ?? "—"} rodadas para {playerCount} jogadores
+                {torneio.max_rounds < (torneio.recommended_rounds ?? 0) &&
+                  ` (configurado: ${torneio.max_rounds})`}
+              </p>
+            )}
+            {seedsIncomplete && (
+              <p className="error" role="alert">
+                {seedErrorMessage} Remova e cadastre de novo com seed, ou remova os seeds existentes.
+              </p>
+            )}
+            {playerCount === 0 ? (
+              <p className="muted torneio-empty-roster">Nenhum inscrito ainda.</p>
+            ) : (
+              <ul className="player-draft-list">
+                {torneio.players?.map((p) => {
+                  const needsSeed = missingSeedIds.has(p.id);
+                  return (
+                    <li
+                      key={p.id}
+                      className={
+                        needsSeed ? "player-row player-row-seed-missing" : "player-row"
+                      }
+                    >
+                      <div className="player-row-main">
+                        <span className="player-row-name">{p.name}</span>
+                        <span className="player-row-meta">
+                          {p.seed != null
+                            ? `Seed ${p.seed}`
+                            : needsSeed
+                              ? "Falta seed"
+                              : null}
+                          {p.attendance === "pending" && (
+                            <span className="badge badge-warn">pendente</span>
+                          )}
+                          {p.attendance === "checked_in" && (
+                            <span className="badge badge-ok">check-in</span>
+                          )}
+                        </span>
+                      </div>
+                      <div className="player-row-actions">
+                        {isStaff && p.attendance === "pending" && (
+                          <button
+                            className="secondary"
+                            type="button"
+                            onClick={() => checkIn.mutate(p.id)}
+                            disabled={checkIn.isPending}
+                          >
+                            Check-in
+                          </button>
+                        )}
+                        {isStaff && (
+                          <button
+                            className="secondary"
+                            type="button"
+                            onClick={() => setRemoveTarget({ id: p.id, name: p.name })}
+                          >
+                            Remover
+                          </button>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+
+          {isStaff && (
+            <section className="torneio-panel torneio-add-panel">
+              <div className="torneio-panel-head">
+                <h2>Adicionar inscrito</h2>
+                <p className="field-hint">
+                  Busque uma conta. Se não existir, crie incomplete (e-mail + celular).
                 </p>
               </div>
               <div className="form-row">
-                <label htmlFor="player-seed">
-                  Seed {seedRequired ? "(obrigatório — seeding já iniciado)" : "(opcional)"}
-                </label>
+                <label htmlFor="user-search">Buscar jogador</label>
                 <input
-                  id="player-seed"
-                  ref={playerSeedRef}
-                  type="number"
-                  value={playerSeed}
-                  onChange={(e) => setPlayerSeed(e.target.value)}
-                  onKeyDown={handleSeedKeyDown}
-                  className={seedRequired && !playerSeed.trim() ? "input-invalid" : undefined}
-                  aria-invalid={seedRequired && !playerSeed.trim()}
-                  aria-describedby={seedRequired ? "player-seed-hint" : undefined}
-                  disabled={addPlayer.isPending}
+                  id="user-search"
+                  ref={searchRef}
+                  value={userSearch}
+                  onChange={(e) => {
+                    setUserSearch(e.target.value);
+                    setShowCreateIncomplete(false);
+                    setInviteMsg("");
+                  }}
+                  placeholder="Nome, e-mail ou celular"
+                  autoComplete="off"
                 />
-                {seedRequired && !playerSeed.trim() && (
-                  <p id="player-seed-hint" className="error-text" style={{ fontSize: "0.85rem", margin: "0.25rem 0 0" }}>
-                    Informe um seed para este jogador, ou remova os seeds dos demais.
-                  </p>
-                )}
               </div>
-              <div className="form-row">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={createAccount}
-                    onChange={(e) => setCreateAccount(e.target.checked)}
-                    disabled={addPlayer.isPending}
-                  />{" "}
-                  Criar conta incompleta (e-mail + celular → convite depois)
-                </label>
-              </div>
-              {createAccount && (
-                <>
+
+              {debouncedSearch.length >= 2 && userHits.length > 0 && (
+                <ul className="torneio-search-hits">
+                  {userHits.map((u) => (
+                    <li key={u.id} className="player-row">
+                      <div className="player-row-main">
+                        <span className="player-row-name">{u.display_name}</span>
+                        <span className="player-row-meta muted">
+                          {[u.email, u.phone].filter(Boolean).join(" · ")}
+                        </span>
+                      </div>
+                      <button
+                        className="primary"
+                        type="button"
+                        disabled={addPlayer.isPending}
+                        onClick={() =>
+                          addPlayer.mutate({
+                            name: u.display_name,
+                            user_id: u.id,
+                            seed: playerSeed.trim()
+                              ? parseInt(playerSeed, 10)
+                              : undefined,
+                          })
+                        }
+                      >
+                        Inscrever
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {debouncedSearch.length >= 2 && searchDone && userHits.length === 0 && (
+                <div className="torneio-create-prompt">
+                  <p>Nenhuma conta encontrada para “{debouncedSearch}”.</p>
+                  {!showCreateIncomplete ? (
+                    <button
+                      type="button"
+                      className="secondary"
+                      onClick={openCreateIncomplete}
+                    >
+                      Criar conta incompleta
+                    </button>
+                  ) : null}
+                </div>
+              )}
+
+              {showCreateIncomplete && (
+                <div className="torneio-create-form">
+                  <h3>Nova conta incompleta</h3>
+                  <div className="form-row">
+                    <label htmlFor="player-name">Nome</label>
+                    <input
+                      id="player-name"
+                      ref={playerNameRef}
+                      value={playerName}
+                      onChange={(e) => setPlayerName(e.target.value)}
+                      onKeyDown={handleCreateKeyDown}
+                      disabled={addPlayer.isPending}
+                    />
+                  </div>
                   <div className="form-row">
                     <label htmlFor="player-email">E-mail</label>
                     <input
@@ -710,6 +807,7 @@ export function TorneioDetailPage() {
                       type="email"
                       value={playerEmail}
                       onChange={(e) => setPlayerEmail(e.target.value)}
+                      onKeyDown={handleCreateKeyDown}
                       required
                       disabled={addPlayer.isPending}
                     />
@@ -727,63 +825,79 @@ export function TorneioDetailPage() {
                         setPlayerPhone(e.target.value);
                         if (error) setError("");
                       }}
+                      onKeyDown={handleCreateKeyDown}
                       required
                       disabled={addPlayer.isPending}
                       aria-describedby="player-phone-hint"
                     />
-                    <p id="player-phone-hint" style={{ fontSize: "0.8rem", opacity: 0.8, margin: "0.25rem 0 0" }}>
+                    <p id="player-phone-hint" className="field-hint">
                       {PHONE_HINT}
                     </p>
                   </div>
-                </>
-              )}
-              {error && (
-                <p ref={formErrorRef} className="error" role="alert" style={{ marginTop: "0.75rem" }}>
-                  {error}
-                </p>
-              )}
-              <button
-                className="secondary"
-                type="button"
-                onClick={submitPlayer}
-                disabled={!canSubmitPlayer}
-              >
-                {addPlayer.isPending ? "Adicionando…" : "Adicionar jogador"}
-              </button>
-              {playerAddedFlash && (
-                <div className="save-feedback success" role="status" aria-live="polite">
-                  Jogador(es) adicionado(s)
+                  <details className="torneio-advanced" open={seedRequired || undefined}>
+                    <summary>Opções avançadas</summary>
+                    <div className="form-row">
+                      <label htmlFor="player-seed">
+                        Seed {seedRequired ? "(obrigatório)" : "(opcional)"}
+                      </label>
+                      <input
+                        id="player-seed"
+                        ref={playerSeedRef}
+                        type="number"
+                        value={playerSeed}
+                        onChange={(e) => setPlayerSeed(e.target.value)}
+                        onKeyDown={handleCreateKeyDown}
+                        className={
+                          seedRequired && !playerSeed.trim() ? "input-invalid" : undefined
+                        }
+                        disabled={addPlayer.isPending}
+                      />
+                    </div>
+                  </details>
+                  <div className="torneio-create-actions">
+                    <button
+                      className="primary"
+                      type="button"
+                      onClick={submitIncomplete}
+                      disabled={!canCreateIncomplete}
+                    >
+                      {addPlayer.isPending ? "Criando…" : "Criar e inscrever"}
+                    </button>
+                    <button
+                      className="secondary"
+                      type="button"
+                      onClick={clearCreateForm}
+                      disabled={addPlayer.isPending}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
                 </div>
               )}
-              <div style={{ marginTop: "1.5rem" }}>
-                <button
-                  className="primary"
-                  onClick={handleIniciar}
-                  disabled={
-                    (torneio.players?.length ?? 0) < 4 ||
-                    seedsIncomplete ||
-                    (torneio.pending_checkins ?? 0) > 0 ||
-                    iniciar.isPending
-                  }
-                  title={
-                    seedsIncomplete
-                      ? "Corrija o seeding parcial antes de iniciar"
-                      : (torneio.pending_checkins ?? 0) > 0
-                        ? "Faça check-in de todas as inscrições pendentes"
-                        : undefined
-                  }
-                >
-                  Iniciar torneio
-                </button>
-                {seedsIncomplete && (
-                  <p className="error-text" style={{ fontSize: "0.85rem", marginTop: "0.5rem" }}>
-                    Não é possível iniciar com apenas alguns jogadores com seed.
-                  </p>
-                )}
-              </div>
-            </>
+
+              {seedRequired && !showCreateIncomplete && (
+                <details className="torneio-advanced" open>
+                  <summary>Seed (obrigatório — seeding já iniciado)</summary>
+                  <div className="form-row">
+                    <label htmlFor="enroll-seed">Seed ao inscrever conta existente</label>
+                    <input
+                      id="enroll-seed"
+                      type="number"
+                      value={playerSeed}
+                      onChange={(e) => setPlayerSeed(e.target.value)}
+                    />
+                  </div>
+                </details>
+              )}
+
+              {playerAddedFlash && (
+                <div className="save-feedback success" role="status" aria-live="polite">
+                  Inscrito adicionado
+                </div>
+              )}
+            </section>
           )}
-        </>
+        </div>
       )}
 
       {isRunning && hasActiveRound && isStaff && (
