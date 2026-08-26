@@ -207,9 +207,15 @@ export const api = {
     }),
 
   ranking: () =>
-    request<Array<{ rank: number; user_id: number; display_name: string; points: number }>>(
-      "/ranking",
-    ),
+    request<
+      Array<{
+        rank: number;
+        user_id: number;
+        display_name: string;
+        points: number;
+        avatar_url: string | null;
+      }>
+    >("/ranking"),
 
   publicProfile: (userId: number) => request<PlayerProfile>(`/jogadores/${userId}/perfil`),
 

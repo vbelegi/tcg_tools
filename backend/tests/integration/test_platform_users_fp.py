@@ -114,6 +114,12 @@ def test_finalize_awards_fp(api_client: TestClient, db_session: Session):
     assert db_session.query(FoursePointsLedger).filter_by(event_id=eid).count() >= 1
     assert user_fp_total(db_session, user.id) > 0
 
+    ranking = api_client.get("/api/v1/ranking")
+    assert ranking.status_code == 200
+    rows = ranking.json()
+    assert isinstance(rows, list) and len(rows) >= 1
+    assert {"rank", "user_id", "display_name", "points", "avatar_url"} <= set(rows[0].keys())
+
 
 def test_external_torneio_creates_fp(api_client: TestClient, db_session: Session):
     r = api_client.post(
