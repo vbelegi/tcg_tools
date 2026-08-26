@@ -175,21 +175,38 @@ def test_delete_torneio_admin(api_client: TestClient):
     assert api_client.get(f"/api/v1/torneios/{eid}").status_code == 404
 
 
-def test_guest_sees_only_finished_torneios(api_client: TestClient):
-    draft = api_client.post(
+def test_guest_sees_finished_and_open_registration(api_client: TestClient):
+    closed = api_client.post(
         "/api/v1/torneios",
         json={
-            "name": "Draft Guest Hide",
+            "name": "Draft Closed",
             "event_date": date.today().isoformat(),
             "format": "swiss",
             "max_rounds": 2,
             "entry_fee": 10,
             "best_of": 3,
             "premiacao_preset_id": "standard",
+            "registration_open": False,
         },
     )
-    assert draft.status_code == 200
-    draft_id = draft.json()["id"]
+    assert closed.status_code == 200
+    closed_id = closed.json()["id"]
+
+    open_reg = api_client.post(
+        "/api/v1/torneios",
+        json={
+            "name": "Draft Open",
+            "event_date": date.today().isoformat(),
+            "format": "swiss",
+            "max_rounds": 2,
+            "entry_fee": 15,
+            "best_of": 3,
+            "premiacao_preset_id": "standard",
+            "registration_open": True,
+        },
+    )
+    assert open_reg.status_code == 200
+    open_id = open_reg.json()["id"]
 
     external = api_client.post(
         "/api/v1/torneios/externos",
@@ -216,16 +233,19 @@ def test_guest_sees_only_finished_torneios(api_client: TestClient):
     assert listed.status_code == 200
     ids = {e["id"] for e in listed.json()}
     assert finished_id in ids
-    assert draft_id not in ids
-    assert all(e["status"] == "finished" for e in listed.json())
+    assert open_id in ids
+    assert closed_id not in ids
 
-    assert api_client.get(f"/api/v1/torneios/{draft_id}").status_code == 404
+    assert api_client.get(f"/api/v1/torneios/{closed_id}").status_code == 404
+    assert api_client.get(f"/api/v1/torneios/{open_id}").status_code == 200
     assert api_client.get(f"/api/v1/torneios/{finished_id}").status_code == 200
     assert api_client.get(f"/api/v1/torneios/{finished_id}/classificacao").status_code == 200
-    assert api_client.get(f"/api/v1/torneios/{draft_id}/classificacao").status_code == 404
+    assert api_client.get(f"/api/v1/torneios/{closed_id}/classificacao").status_code == 404
 
 
-def test_player_sees_finished_or_enrolled_only(api_client: TestClient, db_session: Session):
+def test_player_sees_finished_enrolled_or_open_registration(
+    api_client: TestClient, db_session: Session
+):
     from app.core.auth import register_player
 
     player = register_player(
@@ -247,10 +267,27 @@ def test_player_sees_finished_or_enrolled_only(api_client: TestClient, db_sessio
             "entry_fee": 10,
             "best_of": 3,
             "premiacao_preset_id": "standard",
+            "registration_open": False,
         },
     )
     assert other.status_code == 200
     other_id = other.json()["id"]
+
+    open_reg = api_client.post(
+        "/api/v1/torneios",
+        json={
+            "name": "Open For Signup",
+            "event_date": date.today().isoformat(),
+            "format": "swiss",
+            "max_rounds": 2,
+            "entry_fee": 10,
+            "best_of": 3,
+            "premiacao_preset_id": "standard",
+            "registration_open": True,
+        },
+    )
+    assert open_reg.status_code == 200
+    open_id = open_reg.json()["id"]
 
     mine = api_client.post(
         "/api/v1/torneios",
@@ -305,8 +342,13 @@ def test_player_sees_finished_or_enrolled_only(api_client: TestClient, db_sessio
     ids = {e["id"] for e in listed.json()}
     assert mine_id in ids
     assert finished_id in ids
+    assert open_id in ids
     assert other_id not in ids
 
     assert api_client.get(f"/api/v1/torneios/{mine_id}").status_code == 200
+    assert api_client.get(f"/api/v1/torneios/{open_id}").status_code == 200
     assert api_client.get(f"/api/v1/torneios/{other_id}").status_code == 404
     assert api_client.get(f"/api/v1/torneios/{finished_id}").status_code == 200
+
+    ins = api_client.post(f"/api/v1/torneios/{open_id}/inscrever")
+    assert ins.status_code == 200, ins.text

@@ -45,14 +45,16 @@ def _can_view_event(
     *,
     event_id: int,
     status: str,
+    registration_open: bool = False,
     registered_ids: set[int] | None = None,
     db: Session | None = None,
 ) -> bool:
+    open_draft = status == "draft" and registration_open
     if viewer is None:
-        return status == "finished"
+        return status == "finished" or open_draft
     if _is_staff_user(viewer):
         return True
-    if status == "finished":
+    if status == "finished" or open_draft:
         return True
     if registered_ids is not None:
         return event_id in registered_ids
@@ -72,9 +74,23 @@ def _ensure_can_view_event(
     event_id: int,
     status: str,
     db: Session,
+    registration_open: bool = False,
 ) -> None:
-    if not _can_view_event(viewer, event_id=event_id, status=status, db=db):
+    if not _can_view_event(
+        viewer,
+        event_id=event_id,
+        status=status,
+        registration_open=registration_open,
+        db=db,
+    ):
         raise HTTPException(status_code=404, detail="Torneio não encontrado.")
+
+
+def _is_public_list_event(event: dict) -> bool:
+    status = event.get("status")
+    if status == "finished":
+        return True
+    return status == "draft" and bool(event.get("registration_open"))
 
 
 def _player_payload(player) -> dict:
@@ -149,14 +165,14 @@ def list_torneios(
 ):
     events = svc.list_events()
     if viewer is None:
-        return [e for e in events if e.get("status") == "finished"]
+        return [e for e in events if _is_public_list_event(e)]
     if _is_staff_user(viewer):
         return events
     registered = _registered_event_ids(db, viewer.id)
     return [
         e
         for e in events
-        if e.get("status") == "finished" or int(e["id"]) in registered
+        if _is_public_list_event(e) or int(e["id"]) in registered
     ]
 
 
@@ -170,7 +186,11 @@ def get_torneio(
     try:
         data = svc.get_event(event_id)
         _ensure_can_view_event(
-            viewer, event_id=event_id, status=data.get("status", ""), db=db
+            viewer,
+            event_id=event_id,
+            status=data.get("status", ""),
+            registration_open=bool(data.get("registration_open")),
+            db=db,
         )
         return data
     except TorneioError as exc:
@@ -290,7 +310,11 @@ def list_rodadas(
     try:
         event = svc.get_event(event_id)
         _ensure_can_view_event(
-            viewer, event_id=event_id, status=event.get("status", ""), db=db
+            viewer,
+            event_id=event_id,
+            status=event.get("status", ""),
+            registration_open=bool(event.get("registration_open")),
+            db=db,
         )
         return svc.get_rounds(event_id)
     except TorneioError as exc:
@@ -308,7 +332,11 @@ def get_rodada(
     try:
         event = svc.get_event(event_id)
         _ensure_can_view_event(
-            viewer, event_id=event_id, status=event.get("status", ""), db=db
+            viewer,
+            event_id=event_id,
+            status=event.get("status", ""),
+            registration_open=bool(event.get("registration_open")),
+            db=db,
         )
         return svc.get_round(event_id, round_number)
     except TorneioError as exc:
@@ -406,7 +434,11 @@ def classificacao(
     try:
         event = svc.get_event(event_id)
         _ensure_can_view_event(
-            viewer, event_id=event_id, status=event.get("status", ""), db=db
+            viewer,
+            event_id=event_id,
+            status=event.get("status", ""),
+            registration_open=bool(event.get("registration_open")),
+            db=db,
         )
         return svc.get_classificacao(event_id)
     except TorneioError as exc:
@@ -437,7 +469,11 @@ def premiacao_torneio(
     try:
         event = svc.get_event(event_id)
         _ensure_can_view_event(
-            viewer, event_id=event_id, status=event.get("status", ""), db=db
+            viewer,
+            event_id=event_id,
+            status=event.get("status", ""),
+            registration_open=bool(event.get("registration_open")),
+            db=db,
         )
         return svc.get_premiacao(event_id)
     except TorneioError as exc:

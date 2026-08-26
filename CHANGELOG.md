@@ -16,6 +16,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- **Inscrição aberta:** guest/player veem drafts com `registration_open` (vitrine + CTA); draft fechado continua oculto
+- **Walk-in:** validação de celular com erro junto ao formulário (hint DDD + número)
 - **Player:** lista só `finished` ou inscritos; detalhe sem “Gerenciar rodada” (pairings/classificação só leitura); GET rodada liberado para quem pode ver o evento
 - **Visitante:** lista só torneios `finished`; clique abre resultado (classificação + decklists leitura); API oculta draft/running
 - **Auth modal:** padding na scrollbar do formulário

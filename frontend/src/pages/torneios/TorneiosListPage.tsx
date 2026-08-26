@@ -44,23 +44,29 @@ export function TorneiosListPage() {
       </div>
       {isLoading && <p>Carregando...</p>}
       {data && data.length === 0 && (
-        <p>{isGuest ? "Nenhum torneio finalizado ainda." : "Nenhum torneio cadastrado."}</p>
+        <p>
+          {isGuest
+            ? "Nenhum torneio aberto ou finalizado no momento."
+            : "Nenhum torneio cadastrado."}
+        </p>
       )}
       <div className="card-grid" style={{ marginTop: "1rem" }}>
         {data?.map((t) => {
           const to =
-            isGuest || t.status === "finished"
-              ? `/torneios/${t.id}/resultado`
-              : `/torneios/${t.id}`;
+            t.status === "finished" ? `/torneios/${t.id}/resultado` : `/torneios/${t.id}`;
           return (
             <Link key={t.id} to={to} className="card">
               <h2>{t.name}</h2>
               <p>
                 {t.event_date} — <span className="badge">{t.status}</span>
                 {t.source === "external" && <span className="badge"> externo</span>}
+                {t.status === "draft" && t.registration_open && (
+                  <span className="badge"> inscrição aberta</span>
+                )}
               </p>
               <p>
                 {t.format === "swiss" ? "Suíço" : "Eliminatória"} · {t.player_count} jogadores
+                {t.entry_fee != null && ` · R$ ${t.entry_fee}`}
               </p>
             </Link>
           );

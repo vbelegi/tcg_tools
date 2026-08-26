@@ -11,6 +11,17 @@ import { api } from "../../api/client";
 import { parsePastedNames } from "../../utils/pasteNames";
 import { playersMissingSeed, seedRequirementMessage } from "../../utils/seeds";
 
+const PHONE_HINT = "DDD + número (10 a 13 dígitos), ex.: 11987654321";
+
+function phoneDigitCount(value: string): number {
+  return (value.match(/\d/g) ?? []).length;
+}
+
+function isValidPhoneInput(value: string): boolean {
+  const n = phoneDigitCount(value);
+  return n >= 10 && n <= 13;
+}
+
 export function TorneioDetailPage() {
   const { id } = useParams<{ id: string }>();
   const eventId = Number(id);
@@ -45,6 +56,7 @@ export function TorneioDetailPage() {
   const [playerAddedFlash, setPlayerAddedFlash] = useState(false);
   const playerNameRef = useRef<HTMLInputElement>(null);
   const playerSeedRef = useRef<HTMLInputElement>(null);
+  const formErrorRef = useRef<HTMLParagraphElement>(null);
   const nextRoundBtnRef = useRef<HTMLButtonElement>(null);
   const finalizeBtnRef = useRef<HTMLButtonElement>(null);
 
@@ -83,10 +95,10 @@ export function TorneioDetailPage() {
   });
 
   useEffect(() => {
-    if (torneio?.status === "draft") {
+    if (torneio?.status === "draft" && isStaff) {
       playerNameRef.current?.focus();
     }
-  }, [torneio?.status, eventId]);
+  }, [torneio?.status, eventId, isStaff]);
 
   useEffect(() => {
     if (!playerAddedFlash) return;
@@ -130,6 +142,9 @@ export function TorneioDetailPage() {
     onError: (e) => {
       setError((e as Error).message);
       focusNameField();
+      requestAnimationFrame(() =>
+        formErrorRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }),
+      );
     },
   });
 
@@ -162,7 +177,10 @@ export function TorneioDetailPage() {
 
   const selfRegister = useMutation({
     mutationFn: () => api.selfRegister(eventId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["torneio", eventId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["torneio", eventId] });
+      qc.invalidateQueries({ queryKey: ["torneios"] });
+    },
     onError: (e) => setError((e as Error).message),
   });
 
@@ -277,6 +295,9 @@ export function TorneioDetailPage() {
   const isRunning = torneio.status === "running";
   const isFinished = torneio.status === "finished";
   const hasActiveRound = isRunning && !torneio.between_rounds && torneio.current_round > 0;
+  const isEnrolled = Boolean(me && torneio.players?.some((p) => p.user_id === me.id));
+  const isSignupVitrine =
+    isDraft && Boolean(torneio.registration_open) && !isStaff && !isEnrolled;
   const activePlayers =
     torneio.players?.filter((p) => !p.dropped_at).map((p) => ({ id: p.id, name: p.name })) ?? [];
 
@@ -294,6 +315,13 @@ export function TorneioDetailPage() {
 
   const submitPlayer = () => {
     if (!canSubmitPlayer) return;
+    if (createAccount && !isValidPhoneInput(playerPhone)) {
+      setError(`Celular inválido. ${PHONE_HINT}`);
+      requestAnimationFrame(() =>
+        formErrorRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }),
+      );
+      return;
+    }
     addPlayer.mutate({
       names: [playerName.trim()],
       seed: playerSeed.trim() ? parseInt(playerSeed, 10) : undefined,
@@ -357,6 +385,55 @@ export function TorneioDetailPage() {
     ? `Reabrir rodada ${torneio.current_round - 1}? A rodada ${torneio.current_round} será removida e o pairing refeito ao avançar.`
     : `Reabrir rodada ${torneio.completed_rounds} para corrigir resultados?`;
 
+  if (isSignupVitrine) {
+    const next = encodeURIComponent(`/torneios/${eventId}`);
+    return (
+      <div>
+        <Link to="/torneios">← Torneios</Link>
+        <h1>{torneio.name}</h1>
+        <p>
+          {torneio.event_date} · {torneio.format === "swiss" ? "Suíço" : "Eliminatória"} ·{" "}
+          <span className="badge">inscrição aberta</span>
+        </p>
+        <ul style={{ margin: "1rem 0", paddingLeft: "1.25rem", lineHeight: 1.7 }}>
+          <li>
+            Formato: {torneio.format === "swiss" ? "Suíço" : "Eliminatória simples"}
+            {torneio.max_rounds != null ? ` · até ${torneio.max_rounds} rodadas` : ""}
+          </li>
+          <li>Best of: {torneio.best_of}</li>
+          <li>Inscrição: R$ {torneio.entry_fee}</li>
+          <li>Inscritos: {torneio.player_count}</li>
+        </ul>
+        {isGuest ? (
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+            <Link className="primary" to={`/?auth=login&next=${next}`}>
+              Entrar para se inscrever
+            </Link>
+            <Link className="secondary" to={`/?auth=register&next=${next}`}>
+              Criar conta
+            </Link>
+          </div>
+        ) : (
+          <>
+            {error && (
+              <p className="error" role="alert">
+                {error}
+              </p>
+            )}
+            <button
+              className="primary"
+              type="button"
+              onClick={() => selfRegister.mutate()}
+              disabled={selfRegister.isPending}
+            >
+              {selfRegister.isPending ? "Inscrevendo…" : "Inscrever-me neste torneio"}
+            </button>
+          </>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div>
       <h1>{torneio.name}</h1>
@@ -400,7 +477,7 @@ export function TorneioDetailPage() {
         </p>
       )}
 
-      {isDraft && me && torneio.registration_open && !torneio.players?.some((p) => p.user_id === me.id) && (
+      {isDraft && me && torneio.registration_open && !isEnrolled && isStaff && (
         <div style={{ marginBottom: "1rem" }}>
           <button
             className="primary"
@@ -641,13 +718,29 @@ export function TorneioDetailPage() {
                     <label htmlFor="player-phone">Celular</label>
                     <input
                       id="player-phone"
+                      type="tel"
+                      inputMode="numeric"
+                      autoComplete="tel"
+                      placeholder="11987654321"
                       value={playerPhone}
-                      onChange={(e) => setPlayerPhone(e.target.value)}
+                      onChange={(e) => {
+                        setPlayerPhone(e.target.value);
+                        if (error) setError("");
+                      }}
                       required
                       disabled={addPlayer.isPending}
+                      aria-describedby="player-phone-hint"
                     />
+                    <p id="player-phone-hint" style={{ fontSize: "0.8rem", opacity: 0.8, margin: "0.25rem 0 0" }}>
+                      {PHONE_HINT}
+                    </p>
                   </div>
                 </>
+              )}
+              {error && (
+                <p ref={formErrorRef} className="error" role="alert" style={{ marginTop: "0.75rem" }}>
+                  {error}
+                </p>
               )}
               <button
                 className="secondary"
