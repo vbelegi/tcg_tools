@@ -11,7 +11,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 ### Added
 
 - **Torneio draft UX:** inscrição unificada (busca → conta existente ou incomplete); header com Iniciar; Excluir no menu ⋯
-- **Hardening:** FP breakdown/gráficos só dono/admin; create torneio valida TCG antes do commit; API bloqueia walk-in sem conta; `RequireStaff`/`RequireAdmin` nas rotas admin; WO com type-to-confirm; perfil incomplete não é público por id
+- **Home UX:** atalhos densos por papel (público / operação / admin), CTA Entrar ou Meu Perfil, mini top ranking
 - **Perfil — navegação:** Meu Perfil no sidebar; nome linkado em Usuários; busca pública `GET /jogadores/buscar`
 - **Perfil — senha:** modal Alterar senha no próprio perfil (removido do sidebar)
 - **Perfil do jogador:** dashboard com stats, Insights, badges TCG, Recharts (FP por jogo/mês), histórico filtrável; avatar + editar nome
@@ -45,7 +45,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 - **Lista de torneios:** “Novo torneio” / “Importar externo” só para staff/admin (externo só admin); links `.secondary` no estilo pill
 - **Auth modal:** layout mais estreito, inputs full-width, body scrollável e ações no footer
 - **Data de nascimento:** obrigatória no register/claim; responsável só se menor de 18
-- **Home:** atalhos Premiação/Sorteador só para staff/admin
+- **Home:** atalhos Premiação/Sorteador só para staff/admin; layout denso (listas + mini ranking) em vez de cards
+- **Perfil:** “Jogo principal” usa histórico/badges quando FP está oculto para o visitante
 - **`/usuarios`:** gated por `RequireAdmin` no frontend
 - **Guardian:** obrigatório no register/claim quando birth_date indica menor de 18
 - **Auth:** login deixa de usar username `admin` e passa a usar e-mail (`admin@local`; legado `admin` ainda aceito no login); UI sem dicas de bootstrap
