@@ -21,11 +21,6 @@ function isValidPhoneInput(value: string): boolean {
   return n >= 10 && n <= 13;
 }
 
-function inviteAbsoluteUrl(claimPath: string): string {
-  const path = claimPath.startsWith("/") ? claimPath : `/${claimPath}`;
-  return `${window.location.origin}${path}`;
-}
-
 export function TorneioDetailPage() {
   const { id } = useParams<{ id: string }>();
   const eventId = Number(id);
@@ -53,7 +48,6 @@ export function TorneioDetailPage() {
   const [deleteNameInput, setDeleteNameInput] = useState("");
   const [adminMenuOpen, setAdminMenuOpen] = useState(false);
   const [error, setError] = useState("");
-  const [inviteMsg, setInviteMsg] = useState("");
   const [removeTarget, setRemoveTarget] = useState<{ id: number; name: string } | null>(null);
   const [dropModalOpen, setDropModalOpen] = useState(false);
   const [finalizarModalOpen, setFinalizarModalOpen] = useState(false);
@@ -165,7 +159,7 @@ export function TorneioDetailPage() {
         create_account: payload.create_account,
         user_id: payload.user_id,
       }),
-    onSuccess: async (player, vars) => {
+    onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["torneio", eventId] });
       setPlayerName("");
       setPlayerSeed("");
@@ -178,24 +172,6 @@ export function TorneioDetailPage() {
       setSearchDone(false);
       setError("");
       setPlayerAddedFlash(true);
-      if (vars.create_account && player.user_id && isAdmin) {
-        try {
-          const invite = await api.inviteUser(player.user_id);
-          const url = inviteAbsoluteUrl(invite.claim_path);
-          try {
-            await navigator.clipboard.writeText(url);
-            setInviteMsg(`Convite copiado (válido até ${invite.expires_at}): ${url}`);
-          } catch {
-            setInviteMsg(`Copie o convite (válido até ${invite.expires_at}): ${url}`);
-          }
-        } catch {
-          setInviteMsg("Conta criada e inscrita. Gere o convite em Usuários se necessário.");
-        }
-      } else if (vars.create_account) {
-        setInviteMsg("Conta incompleta criada e inscrita. Admin pode gerar o link de convite em Usuários.");
-      } else {
-        setInviteMsg("");
-      }
       focusSearchField();
     },
     onError: (e) => {
@@ -218,7 +194,10 @@ export function TorneioDetailPage() {
 
   const iniciar = useMutation({
     mutationFn: () => api.iniciarTorneio(eventId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["torneio", eventId] }),
+    onSuccess: (t) => {
+      qc.invalidateQueries({ queryKey: ["torneio", eventId] });
+      window.location.href = `/torneios/${eventId}/rodadas/${t.current_round}`;
+    },
     onError: (e) => setError((e as Error).message),
   });
 
@@ -414,7 +393,6 @@ export function TorneioDetailPage() {
   const openCreateIncomplete = () => {
     setShowCreateIncomplete(true);
     setPlayerName(userSearch.trim() || playerName);
-    setInviteMsg("");
     requestAnimationFrame(() => playerNameRef.current?.focus());
   };
 
@@ -433,6 +411,11 @@ export function TorneioDetailPage() {
   const reabrirMessage = hasActiveRound
     ? `Reabrir rodada ${torneio.current_round - 1}? A rodada ${torneio.current_round} será removida e o pairing refeito ao avançar.`
     : `Reabrir rodada ${torneio.completed_rounds} para corrigir resultados?`;
+
+  // Staff with an active round go straight to pairings (no intermediate hub).
+  if (isStaff && hasActiveRound) {
+    return <Navigate to={`/torneios/${eventId}/rodadas/${torneio.current_round}`} replace />;
+  }
 
   if (isSignupVitrine) {
     const next = encodeURIComponent(`/torneios/${eventId}`);
@@ -571,7 +554,6 @@ export function TorneioDetailPage() {
           {error}
         </p>
       )}
-      {inviteMsg && <p className="success">{inviteMsg}</p>}
       {torneio.config_warnings?.map((w) => (
         <p key={w} className="warning" role="status">
           {w}
@@ -733,7 +715,6 @@ export function TorneioDetailPage() {
                   onChange={(e) => {
                     setUserSearch(e.target.value);
                     setShowCreateIncomplete(false);
-                    setInviteMsg("");
                   }}
                   placeholder="Nome, e-mail ou celular"
                   autoComplete="off"
@@ -900,37 +881,6 @@ export function TorneioDetailPage() {
         </div>
       )}
 
-      {isRunning && hasActiveRound && isStaff && (
-        <>
-          <p>
-            Rodada ativa: {torneio.current_round} / {torneio.max_rounds}
-          </p>
-          <Link
-            to={`/torneios/${eventId}/rodadas/${torneio.current_round}`}
-            className="primary"
-            style={{
-              display: "inline-block",
-              marginTop: "1rem",
-              padding: "0.6rem 1.25rem",
-              borderRadius: 999,
-            }}
-          >
-            Gerenciar rodada {torneio.current_round}
-          </Link>
-          {torneio.can_reopen_round && torneio.current_round > 1 && (
-            <div style={{ marginTop: "1rem" }}>
-              <button
-                className="secondary"
-                onClick={() => setReabrirModalOpen(true)}
-                disabled={reabrirRodada.isPending}
-              >
-                Reabrir rodada anterior
-              </button>
-            </div>
-          )}
-        </>
-      )}
-
       {isRunning && !isStaff && (
         <div style={{ marginTop: "1rem" }}>
           <p>
@@ -991,22 +941,24 @@ export function TorneioDetailPage() {
       )}
 
       {isRunning && torneio.between_rounds && isStaff && (
-        <div className="card" style={{ marginTop: "1.5rem" }}>
-          <h2>Entre rodadas</h2>
-          <p>
-            Rodada {torneio.completed_rounds} concluída.
-            {torneio.can_start_next_round
-              ? ` Próxima: rodada ${(torneio.completed_rounds ?? 0) + 1}.`
-              : torneio.can_finalize
-                ? " Todas as rodadas foram concluídas."
-                : ""}
-          </p>
+        <section className="torneio-panel" style={{ marginTop: "1rem" }}>
+          <div className="torneio-panel-head">
+            <h2>Entre rodadas</h2>
+            <p className="field-hint">
+              Rodada {torneio.completed_rounds} concluída.
+              {torneio.can_start_next_round
+                ? ` Próxima: rodada ${(torneio.completed_rounds ?? 0) + 1}.`
+                : torneio.can_finalize
+                  ? " Todas as rodadas foram concluídas."
+                  : ""}
+            </p>
+          </div>
           <p className="warning">Janela para drop entre rodadas (sem WO).</p>
           {lastCompletedRound && (
             <>
-              <p style={{ fontSize: "0.9rem", opacity: 0.85, marginTop: "1rem" }}>
-                Confira os resultados da rodada {lastCompletedRound.number} antes de iniciar a
-                próxima. Se algo estiver errado, use <strong>Reabrir rodada</strong>.
+              <p className="field-hint" style={{ marginTop: "0.75rem" }}>
+                Confira os resultados antes de avançar. Se algo estiver errado, use{" "}
+                <strong>Reabrir rodada</strong>.
               </p>
               <RoundMatchesTable
                 title={`Resumo — rodada ${lastCompletedRound.number}`}
@@ -1021,7 +973,7 @@ export function TorneioDetailPage() {
               </button>
             </div>
           )}
-          <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          <div style={{ marginTop: "1.25rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
             {torneio.can_reopen_round && (
               <button
                 className="secondary"
@@ -1052,7 +1004,7 @@ export function TorneioDetailPage() {
               </button>
             )}
           </div>
-        </div>
+        </section>
       )}
 
       {isFinished && (

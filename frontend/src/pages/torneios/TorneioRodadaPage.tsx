@@ -56,7 +56,7 @@ function ScoreSelect({
 
   return (
     <select
-      className="score-select"
+      className="score-select score-select-lg"
       aria-label={label}
       title={label}
       value={value}
@@ -103,6 +103,7 @@ export function TorneioRodadaPage() {
   const [woModalOpen, setWoModalOpen] = useState(false);
   const [completarModalOpen, setCompletarModalOpen] = useState(false);
   const [highlightIncomplete, setHighlightIncomplete] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const { data: me, isFetched: meFetched } = useQuery({
     queryKey: ["auth-me"],
@@ -263,6 +264,9 @@ export function TorneioRodadaPage() {
   };
 
   const pending = incompleteMatches(rodada.matches);
+  const scoredCount = rodada.matches.filter((m) => !isMatchIncomplete(m)).length;
+  const totalPlayable = rodada.matches.filter((m) => !m.is_bye).length;
+  const canConclude = isActive && pending.length === 0;
 
   const tryCompleteRound = () => {
     const missing = incompleteMatches(rodada.matches);
@@ -284,21 +288,81 @@ export function TorneioRodadaPage() {
   };
 
   return (
-    <div>
-      <Link to={`/torneios/${eventId}`}>← Voltar</Link>
-      <h1>Rodada {roundNum}</h1>
-      <p>
-        {boHeaderLabel} · Status: {rodada.status}
-      </p>
-      <p style={{ fontSize: "0.9rem", opacity: 0.85 }}>
-        Placar ao lado de cada jogador. Ao lado do nome: <strong>W/L/D</strong> (vitórias / derrotas /
-        empates) antes desta rodada.
-        {allowDraw
-          ? " 1 = vitória por tempo (Bo3/Bo5). 0-0 = empate intencional (Suíço)."
-          : " Eliminatória: informe vitórias até fechar o melhor de da partida (sem empate)."}
-        {" "}— = não informado. Após salvar, o foco vai para a próxima partida.{" "}
-        <kbd>Ctrl</kbd>+<kbd>Enter</kbd> abre concluir rodada.
-      </p>
+    <div className="rodada-page">
+      <header className="rodada-header">
+        <div className="rodada-header-main">
+          <Link to={`/torneios/${eventId}`} className="torneio-back">
+            ← {torneio.name}
+          </Link>
+          <div className="torneio-manage-title-row">
+            <h1>Rodada {roundNum}</h1>
+            {isActive && activePlayers.length > 0 && (
+              <div className="torneio-overflow">
+                <button
+                  type="button"
+                  className="secondary torneio-overflow-btn"
+                  aria-expanded={menuOpen}
+                  onClick={() => setMenuOpen((v) => !v)}
+                >
+                  ⋯
+                </button>
+                {menuOpen && (
+                  <div className="torneio-overflow-menu" role="menu">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setWoModalOpen(true);
+                      }}
+                    >
+                      Registrar WO…
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          <p className="torneio-manage-meta">
+            {boHeaderLabel} ·{" "}
+            <span className="badge">{rodada.status === "active" ? "em andamento" : rodada.status}</span>
+            {" · "}
+            {scoredCount}/{rodada.matches.length} partidas com placar
+            {totalPlayable > 0 && pending.length > 0 ? ` · ${pending.length} pendente(s)` : ""}
+          </p>
+          <details className="torneio-advanced rodada-help">
+            <summary>Ajuda rápida</summary>
+            <p className="field-hint">
+              W/L/D ao lado do nome = record antes desta rodada. Salve cada placar; o foco vai para a
+              próxima partida. {allowDraw ? "0-0 = empate intencional (Suíço). " : ""}
+              <kbd>Ctrl</kbd>+<kbd>Enter</kbd> abre concluir rodada.
+            </p>
+          </details>
+        </div>
+        {isActive && (
+          <div className="torneio-manage-primary">
+            <button
+              className="primary"
+              type="button"
+              onClick={() => setCompletarModalOpen(true)}
+              disabled={completar.isPending}
+              title={
+                canConclude
+                  ? undefined
+                  : `Ainda faltam ${pending.length} placar(es)`
+              }
+            >
+              {completar.isPending ? "Concluindo…" : "Concluir rodada"}
+            </button>
+            {!canConclude && (
+              <p className="field-hint">
+                {pending.length} partida(s) sem placar salvo
+              </p>
+            )}
+          </div>
+        )}
+      </header>
+
       {error && <p className="error">{error}</p>}
       {highlightIncomplete && pending.length > 0 && (
         <p className="warning" role="status">
@@ -306,53 +370,73 @@ export function TorneioRodadaPage() {
         </p>
       )}
 
-      <table style={{ marginTop: "1rem" }}>
-        <thead>
-          <tr>
-            <th>Jogador 1</th>
-            <th aria-hidden="true" />
-            <th>Jogador 2</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rodada.matches.map((m) => {
-            const bestOf = matchBestOf(m);
-            const s = getMatchScores(m.id, m, scores);
-            const p1Options = validScoresForPlayer(
-              bestOf,
-              allowDraw,
-              1,
-              s.p2 === "" ? undefined : Number(s.p2),
-            );
-            const p2Options = validScoresForPlayer(
-              bestOf,
-              allowDraw,
-              2,
-              s.p1 === "" ? undefined : Number(s.p1),
-            );
-            const isSaving = saveMatch.isPending && saveMatch.variables === m.id;
-            const justSaved = savedMatchId === m.id;
-            const incomplete = isMatchIncomplete(m);
-            const showIncomplete = highlightIncomplete && incomplete;
+      <div className="match-card-list">
+        {rodada.matches.map((m, idx) => {
+          const bestOf = matchBestOf(m);
+          const s = getMatchScores(m.id, m, scores);
+          const p1Options = validScoresForPlayer(
+            bestOf,
+            allowDraw,
+            1,
+            s.p2 === "" ? undefined : Number(s.p2),
+          );
+          const p2Options = validScoresForPlayer(
+            bestOf,
+            allowDraw,
+            2,
+            s.p1 === "" ? undefined : Number(s.p1),
+          );
+          const isSaving = saveMatch.isPending && saveMatch.variables === m.id;
+          const justSaved = savedMatchId === m.id;
+          const incomplete = isMatchIncomplete(m);
+          const showIncomplete = highlightIncomplete && incomplete;
+          const saved = m.scores_submitted && !incomplete;
 
-            return (
-              <tr key={m.id} className={showIncomplete ? "match-row-incomplete" : undefined}>
-                <td>
-                  {m.is_bye ? (
-                    <span className="badge">
-                      BYE —{" "}
-                      <PlayerNameWithRecord name={m.player1_name} record={recordFor(m.player1_id)} />
+          return (
+            <article
+              key={m.id}
+              className={`match-card${showIncomplete ? " match-card-incomplete" : ""}${saved ? " match-card-saved" : ""}`}
+            >
+              <div className="match-card-top">
+                <span className="match-card-num">Mesa {idx + 1}</span>
+                {m.had_rematch && (
+                  <span className="badge badge-rematch" title="Já se enfrentaram antes">
+                    Rematch
+                  </span>
+                )}
+                {m.is_third_place && <span className="badge">3º–4º</span>}
+                {saved && <span className="badge badge-ok">salvo</span>}
+                {showIncomplete && <span className="badge badge-warn">pendente</span>}
+              </div>
+
+              {m.is_bye ? (
+                <div className="match-card-bye">
+                  <span className="badge">
+                    BYE —{" "}
+                    <PlayerNameWithRecord name={m.player1_name} record={recordFor(m.player1_id)} />
+                  </span>
+                </div>
+              ) : m.is_walkover ? (
+                <div className="match-card-players">
+                  <div className="match-card-side">
+                    <PlayerNameWithRecord name={m.player1_name} record={recordFor(m.player1_id)} />
+                    <span>
+                      {m.score_p1} <span className="badge">WO</span>
                     </span>
-                  ) : m.is_walkover ? (
-                    <div className="match-cell">
-                      <PlayerNameWithRecord name={m.player1_name} record={recordFor(m.player1_id)} />
-                      <span>
-                        {m.score_p1} <span className="badge">WO</span>
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="match-cell">
+                  </div>
+                  <span className="match-card-vs">×</span>
+                  <div className="match-card-side">
+                    <PlayerNameWithRecord
+                      name={m.player2_name ?? "—"}
+                      record={recordFor(m.player2_id)}
+                    />
+                    <span>{m.score_p2}</span>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="match-card-players">
+                    <div className="match-card-side">
                       <PlayerNameWithRecord name={m.player1_name} record={recordFor(m.player1_id)} />
                       <MatchBadges match={m} bestOf={bestOf} />
                       <ScoreSelect
@@ -367,24 +451,8 @@ export function TorneioRodadaPage() {
                         side="p1"
                       />
                     </div>
-                  )}
-                </td>
-                <td className="match-vs">
-                  {!m.is_bye && "×"}
-                </td>
-                <td>
-                  {m.is_bye ? (
-                    "—"
-                  ) : m.is_walkover ? (
-                    <div className="match-cell">
-                      <PlayerNameWithRecord
-                        name={m.player2_name ?? "—"}
-                        record={recordFor(m.player2_id)}
-                      />
-                      <span>{m.score_p2}</span>
-                    </div>
-                  ) : (
-                    <div className="match-cell">
+                    <span className="match-card-vs">×</span>
+                    <div className="match-card-side">
                       <PlayerNameWithRecord
                         name={m.player2_name ?? "—"}
                         record={recordFor(m.player2_id)}
@@ -402,58 +470,30 @@ export function TorneioRodadaPage() {
                         side="p2"
                       />
                     </div>
-                  )}
-                  {m.had_rematch && (
-                    <span className="badge badge-rematch" title="Estes jogadores já se enfrentaram antes">
-                      Rematch
-                    </span>
-                  )}
-                </td>
-                <td>
-                  {!m.is_bye && !m.is_walkover && isActive && (
-                    <>
+                  </div>
+                  {isActive && (
+                    <div className="match-card-actions">
                       <button
                         className="secondary"
+                        type="button"
                         onClick={() => saveMatch.mutate(m.id)}
                         disabled={isSaving}
                       >
-                        {isSaving ? "Salvando…" : "Salvar"}
+                        {isSaving ? "Salvando…" : "Salvar placar"}
                       </button>
                       {justSaved && (
-                        <div className="save-feedback success" role="status">
-                          Salvo com sucesso
-                        </div>
+                        <span className="save-feedback success" role="status">
+                          Salvo
+                        </span>
                       )}
-                      {showIncomplete && (
-                        <div className="save-feedback error-text" role="alert">
-                          Placar não salvo
-                        </div>
-                      )}
-                    </>
+                    </div>
                   )}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-
-      {isActive && (
-        <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-          <button
-            className="primary"
-            onClick={() => setCompletarModalOpen(true)}
-            disabled={completar.isPending}
-          >
-            Concluir rodada
-          </button>
-          {activePlayers.length > 0 && (
-            <button className="secondary" onClick={() => setWoModalOpen(true)}>
-              Registrar WO…
-            </button>
-          )}
-        </div>
-      )}
+                </>
+              )}
+            </article>
+          );
+        })}
+      </div>
 
       <PlayerPickerModal
         open={woModalOpen}
