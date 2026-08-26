@@ -224,8 +224,8 @@ export function TorneioResultadoPage() {
                   const top = !s.is_drop && s.rank <= 3;
                   return (
                     <tr key={s.player_id} className={top ? `resultado-row-top-${s.rank}` : undefined}>
-                      <td>
-                        <span className={top ? "resultado-rank-badge" : undefined}>
+                      <td className="resultado-rank-cell">
+                        <span className="resultado-rank-badge">
                           {s.rank_label ?? s.rank}
                         </span>
                       </td>
