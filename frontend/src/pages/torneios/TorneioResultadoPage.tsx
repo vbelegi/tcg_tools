@@ -38,6 +38,7 @@ export function TorneioResultadoPage() {
   const [decklistsSaved, setDecklistsSaved] = useState(false);
   const [exportError, setExportError] = useState("");
   const [raffleExcludedIds, setRaffleExcludedIds] = useState<number[]>([]);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!decklistsSaved) return;
@@ -79,6 +80,7 @@ export function TorneioResultadoPage() {
 
   const handleExport = async () => {
     setExportError("");
+    setMenuOpen(false);
     try {
       await api.exportLog(eventId);
     } catch (e) {
@@ -147,172 +149,221 @@ export function TorneioResultadoPage() {
     return <p className="error">{(error as Error)?.message || "Torneio não encontrado."}</p>;
   }
 
+  const playerCount = classificacao?.standings.length ?? torneio.player_count;
+  const backTo = isGuest ? "/torneios" : `/torneios/${eventId}`;
+
   return (
-    <div>
-      <Link to={isGuest ? "/torneios" : `/torneios/${eventId}`}>← Voltar</Link>
-      <h1>Resultado final</h1>
-      {torneio.name && (
-        <p style={{ marginTop: "-0.5rem", opacity: 0.85 }}>
-          {torneio.name} · {torneio.event_date}
-        </p>
-      )}
-
-      <h2 className="standings-heading">
-        Classificação
-        <span className="help-tip" tabIndex={0}>
-          <span className="help-tip-icon" aria-hidden="true">
-            ?
-          </span>
-          <span className="sr-only">Critérios de desempate</span>
-          <span className="help-tip-content" role="tooltip">
-            {TIEBREAKER_TOOLTIP}
-          </span>
-        </span>
-      </h2>
-
-      {classificacao && (
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Jogador</th>
-              <th title="Pontos de partida">Pts</th>
-              <th title="Opponent Match Win % — % de vitórias em partidas dos oponentes">OMW%</th>
-              <th title="Game Win % — % de vitórias em games do jogador">GW%</th>
-              <th title="Opponent Game Win % — % de vitórias em games dos oponentes">OGW%</th>
-              <th>Decklist</th>
-            </tr>
-          </thead>
-          <tbody>
-            {classificacao.standings.map((s) => (
-              <tr key={s.player_id}>
-                <td>{s.rank_label ?? s.rank}</td>
-                <td>{s.name}</td>
-                <td>{s.is_drop ? "—" : s.points}</td>
-                <td>{s.is_drop ? "—" : formatPct(s.omw)}</td>
-                <td>{s.is_drop ? "—" : formatPct(s.gw)}</td>
-                <td>{s.is_drop ? "—" : formatPct(s.ogw)}</td>
-                <td>
-                  {s.is_drop ? (
-                    "—"
-                  ) : isStaff ? (
-                    <input
-                      placeholder="Nome ou URL"
-                      defaultValue={s.decklist ?? ""}
-                      onChange={(e) =>
-                        setDecklists({ ...decklists, [s.player_id]: e.target.value })
-                      }
-                    />
-                  ) : s.decklist ? (
-                    s.decklist.startsWith("http") ? (
-                      <a href={s.decklist} target="_blank" rel="noreferrer">
-                        {s.decklist}
-                      </a>
-                    ) : (
-                      s.decklist
-                    )
-                  ) : (
-                    "—"
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      {isStaff && (
-        <div style={{ marginTop: "1rem" }}>
-          <button
-            className="secondary"
-            onClick={() => saveDecklists.mutate()}
-            disabled={saveDecklists.isPending}
-          >
-            {saveDecklists.isPending ? "Salvando…" : "Salvar decklists"}
-          </button>
-          {decklistsSaved && (
-            <div className="save-feedback success" role="status">
-              Salvo com sucesso
-            </div>
-          )}
-        </div>
-      )}
-
-      <h2 style={{ marginTop: "2rem" }}>Premiação</h2>
-
-      {torneio.entry_fee === 0 && (
-        <p className="warning">
-          Inscrição R$ 0 — sem pot a distribuir.
-          {isStaff && " Use a aba Premiação para calcular split isolado."}
-        </p>
-      )}
-
-      {prem && useBands && (
-        <>
-          <PremiacaoBandsTable
-            bands={prem.bands!}
-            playerPayouts={prem.player_payouts}
-            entryFee={prem.entry_fee}
-          />
-          {showCreditos && totalCreditos != null && (
-            <p style={{ marginTop: "0.75rem" }}>
-              Total em créditos na loja: <strong>R$ {totalCreditos.toFixed(2)}</strong>
-              {creditosSumFromRows != null && (
-                <span style={{ opacity: 0.85 }}>
-                  {" "}
-                  (soma linhas: R$ {creditosSumFromRows.toFixed(2)})
-                </span>
-              )}
-            </p>
-          )}
-          {creditosMismatch && (
-            <p className="warning" role="alert">
-              Atenção: total de créditos difere da soma por jogador — verifique premiação.
-            </p>
-          )}
-        </>
-      )}
-
-      {prem && !useBands && (
-        <table>
-          <thead>
-            <tr>
-              <th>Colocação</th>
-              <th>Inscrições</th>
-              {showCreditos && <th>Créditos na Loja</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {prem.premios.map((p, i) => (
-              <tr key={i}>
-                <td>{i + 1}º</td>
-                <td>{p}</td>
-                {showCreditos && (
-                  <td>R$ {(prem.creditos?.[i] ?? p * (prem.entry_fee ?? 0)).toFixed(2)}</td>
+    <div className="resultado-page">
+      <header className="torneio-manage-header">
+        <div>
+          <Link to={backTo} className="torneio-back">
+            ← {isGuest ? "Torneios" : torneio.name}
+          </Link>
+          <div className="torneio-manage-title-row">
+            <h1>Resultado final</h1>
+            {isStaff && torneio.status === "finished" && (
+              <div className="torneio-overflow">
+                <button
+                  type="button"
+                  className="secondary torneio-overflow-btn"
+                  aria-expanded={menuOpen}
+                  onClick={() => setMenuOpen((v) => !v)}
+                >
+                  ⋯
+                </button>
+                {menuOpen && (
+                  <div className="torneio-overflow-menu" role="menu">
+                    <button type="button" role="menuitem" onClick={handleExport}>
+                      Exportar log JSON
+                    </button>
+                  </div>
                 )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+              </div>
+            )}
+          </div>
+          <p className="torneio-manage-meta">
+            {torneio.name} · {torneio.event_date}
+            {playerCount != null ? ` · ${playerCount} jogador(es)` : ""}
+          </p>
+          {exportError && <p className="error">{exportError}</p>}
+        </div>
+      </header>
 
-      {prem && !useBands && showCreditos && totalCreditos != null && (
-        <p style={{ marginTop: "0.75rem" }}>
-          Total em créditos na loja: <strong>R$ {totalCreditos.toFixed(2)}</strong>
-        </p>
-      )}
+      <section className="resultado-section">
+        <div className="resultado-section-head">
+          <h2 className="standings-heading">
+            Classificação
+            <span className="help-tip" tabIndex={0}>
+              <span className="help-tip-icon" aria-hidden="true">
+                ?
+              </span>
+              <span className="sr-only">Critérios de desempate</span>
+              <span className="help-tip-content" role="tooltip">
+                {TIEBREAKER_TOOLTIP}
+              </span>
+            </span>
+          </h2>
+        </div>
+
+        {classificacao && (
+          <div className="resultado-table-wrap">
+            <table className="resultado-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Jogador</th>
+                  <th title="Pontos de partida">Pts</th>
+                  <th title="Opponent Match Win %">OMW%</th>
+                  <th title="Game Win %">GW%</th>
+                  <th title="Opponent Game Win %">OGW%</th>
+                  <th>Decklist</th>
+                </tr>
+              </thead>
+              <tbody>
+                {classificacao.standings.map((s) => {
+                  const top = !s.is_drop && s.rank <= 3;
+                  return (
+                    <tr key={s.player_id} className={top ? `resultado-row-top-${s.rank}` : undefined}>
+                      <td>
+                        <span className={top ? "resultado-rank-badge" : undefined}>
+                          {s.rank_label ?? s.rank}
+                        </span>
+                      </td>
+                      <td className="resultado-player-cell">{s.name}</td>
+                      <td>{s.is_drop ? "—" : s.points}</td>
+                      <td>{s.is_drop ? "—" : formatPct(s.omw)}</td>
+                      <td>{s.is_drop ? "—" : formatPct(s.gw)}</td>
+                      <td>{s.is_drop ? "—" : formatPct(s.ogw)}</td>
+                      <td className="resultado-deck-cell">
+                        {s.is_drop ? (
+                          "—"
+                        ) : isStaff ? (
+                          <input
+                            className="resultado-deck-input"
+                            placeholder="Nome ou URL"
+                            defaultValue={s.decklist ?? ""}
+                            onChange={(e) =>
+                              setDecklists({ ...decklists, [s.player_id]: e.target.value })
+                            }
+                          />
+                        ) : s.decklist ? (
+                          s.decklist.startsWith("http") ? (
+                            <a href={s.decklist} target="_blank" rel="noreferrer">
+                              Link
+                            </a>
+                          ) : (
+                            s.decklist
+                          )
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {isStaff && (
+          <div className="resultado-section-actions">
+            <button
+              className="secondary"
+              type="button"
+              onClick={() => saveDecklists.mutate()}
+              disabled={saveDecklists.isPending}
+            >
+              {saveDecklists.isPending ? "Salvando…" : "Salvar decklists"}
+            </button>
+            {decklistsSaved && (
+              <span className="save-feedback success" role="status">
+                Salvo
+              </span>
+            )}
+          </div>
+        )}
+      </section>
+
+      <section className="resultado-section">
+        <h2>Premiação</h2>
+
+        {torneio.entry_fee === 0 && (
+          <p className="warning">
+            Inscrição R$ 0 — sem pot a distribuir.
+            {isStaff && " Use a aba Premiação para calcular split isolado."}
+          </p>
+        )}
+
+        {prem && useBands && (
+          <>
+            <div className="resultado-table-wrap resultado-table-wrap-narrow">
+              <PremiacaoBandsTable
+                bands={prem.bands!}
+                playerPayouts={prem.player_payouts}
+                entryFee={prem.entry_fee}
+              />
+            </div>
+            {showCreditos && totalCreditos != null && (
+              <p className="resultado-total">
+                Total em créditos na loja: <strong>R$ {totalCreditos.toFixed(2)}</strong>
+                {creditosSumFromRows != null && (
+                  <span className="muted"> (soma linhas: R$ {creditosSumFromRows.toFixed(2)})</span>
+                )}
+              </p>
+            )}
+            {creditosMismatch && (
+              <p className="warning" role="alert">
+                Atenção: total de créditos difere da soma por jogador — verifique premiação.
+              </p>
+            )}
+          </>
+        )}
+
+        {prem && !useBands && (
+          <div className="resultado-table-wrap resultado-table-wrap-narrow">
+            <table className="resultado-table">
+              <thead>
+                <tr>
+                  <th>Colocação</th>
+                  <th>Inscrições</th>
+                  {showCreditos && <th>Créditos na Loja</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {prem.premios.map((p, i) => (
+                  <tr key={i}>
+                    <td>{i + 1}º</td>
+                    <td>{p}</td>
+                    {showCreditos && (
+                      <td>R$ {(prem.creditos?.[i] ?? p * (prem.entry_fee ?? 0)).toFixed(2)}</td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {prem && !useBands && showCreditos && totalCreditos != null && (
+          <p className="resultado-total">
+            Total em créditos na loja: <strong>R$ {totalCreditos.toFixed(2)}</strong>
+          </p>
+        )}
+      </section>
 
       {isStaff && (
-        <>
-          <h2 style={{ marginTop: "2rem" }}>Sorteio</h2>
-          <p style={{ fontSize: "0.9rem", opacity: 0.85 }}>
-            Base: jogadores sem drop ({baseRaffleCandidates.length}). Marque quem entra na pool do
-            sorteio (ex.: desmarque o campeão).
-          </p>
-
-          {baseRaffleCandidates.length > 0 && (
-            <div className="raffle-pool">
-              <div className="raffle-pool-actions">
+        <section className="resultado-section">
+          <div className="resultado-section-head">
+            <div>
+              <h2>Sorteio</h2>
+              <p className="field-hint">
+                Base: jogadores sem drop ({baseRaffleCandidates.length}). Toque nos chips para
+                incluir/excluir da pool (ex.: tire o campeão).
+              </p>
+            </div>
+            {baseRaffleCandidates.length > 0 && (
+              <div className="resultado-section-actions">
                 <button className="secondary" type="button" onClick={excludeFirstPlace}>
                   Excluir 1º lugar
                 </button>
@@ -325,45 +376,38 @@ export function TorneioResultadoPage() {
                   Incluir todos
                 </button>
               </div>
-              <ul className="raffle-pool-list">
-                {baseRaffleCandidates.map((s) => {
-                  const included = !raffleExcludedIds.includes(s.player_id);
-                  return (
-                    <li key={s.player_id}>
-                      <label className="checkbox-label">
-                        <input
-                          type="checkbox"
-                          checked={included}
-                          onChange={(e) => toggleRaffleExclusion(s.player_id, e.target.checked)}
-                        />
-                        <span>
-                          {s.rank}º — {s.name}
-                        </span>
-                      </label>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
+            )}
+          </div>
+
+          {baseRaffleCandidates.length > 0 && (
+            <ul className="entre-rodadas-chips raffle-chips">
+              {baseRaffleCandidates.map((s) => {
+                const included = !raffleExcludedIds.includes(s.player_id);
+                return (
+                  <li key={s.player_id}>
+                    <button
+                      type="button"
+                      className={`entre-rodadas-chip raffle-chip${included ? " raffle-chip-on" : ""}`}
+                      aria-pressed={included}
+                      onClick={() => toggleRaffleExclusion(s.player_id, !included)}
+                    >
+                      {s.rank}º {s.name}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           )}
 
           <RaffleControls
             participants={raffleNames}
-            description={`Pool do sorteio: ${raffleNames.length} jogador(es)${
-              raffleExcludedIds.length > 0 ? ` (${raffleExcludedIds.length} excluído(s))` : ""
-            }.`}
-            primaryButtonLabel="Sortear entre jogadores do torneio"
+            description={`Pool: ${raffleNames.length} jogador(es)${
+              raffleExcludedIds.length > 0 ? ` · ${raffleExcludedIds.length} excluído(s)` : ""
+            }`}
+            primaryButtonLabel="Sortear"
+            compact
           />
-
-          {torneio.status === "finished" && (
-            <>
-              <button className="primary" style={{ marginTop: "1.5rem" }} onClick={handleExport}>
-                Exportar log JSON
-              </button>
-              {exportError && <p className="error">{exportError}</p>}
-            </>
-          )}
-        </>
+        </section>
       )}
     </div>
   );

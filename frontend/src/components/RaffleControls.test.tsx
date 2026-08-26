@@ -6,7 +6,7 @@ import { RaffleControls } from "./RaffleControls";
 describe("RaffleControls", () => {
   it("runs batch draw", () => {
     render(<RaffleControls participants={["Alice", "Bob", "Carol"]} />);
-    fireEvent.change(screen.getByLabelText("Número de sorteados"), { target: { value: "2" } });
+    fireEvent.change(screen.getByLabelText("Sorteados"), { target: { value: "2" } });
     fireEvent.click(screen.getByRole("button", { name: "Sortear" }));
     expect(screen.getByText("Resultado do sorteio")).toBeInTheDocument();
     expect(screen.getAllByText(/Sorteado \d/).length).toBe(2);

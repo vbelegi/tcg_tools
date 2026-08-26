@@ -72,6 +72,8 @@ Público: stats (torneios, títulos, top 8, melhor colocação), **Insights** he
 
 **Rodadas (staff):** com rodada ativa, a ficha redireciona para `/torneios/{id}/rodadas/{n}` (pairings compactos: `Nome · [0][1][2] · × · [0][1][2] · Nome`; best-of só no header; botões de placar com opções inválidas desabilitadas). Entre rodadas: primary **Iniciar próxima** / **Finalizar** no header; resumo compacto em scoreline; ativos em chips; drop e reabrir secundários; drop exige digitar o nome no 2º passo do modal.
 
+**Resultado:** classificação/premiação compactas; sorteio com chips na pool; export de log no menu ⋯; **Sortear** como ação primary do bloco.
+
 Staff/admin: todos os status e operação completa.
 
 **Nunca** expor email, celular, nascimento ou responsável em endpoints públicos.
