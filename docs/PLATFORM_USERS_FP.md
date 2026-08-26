@@ -70,7 +70,7 @@ Público: stats (torneios, títulos, top 8, melhor colocação), **Insights** he
 
 **Inscrição (draft / staff):** um campo de busca (conta existente). Se não achar → criar **incomplete** (nome + e-mail + celular) e inscrever. Sem walk-in sem conta; um jogador por vez; seed em “opções avançadas”. Link de convite **não** é gerado nessa hora — admin gera depois em `/usuarios` (futuro: rotina automática).
 
-**Rodadas (staff):** com rodada ativa, a ficha redireciona para `/torneios/{id}/rodadas/{n}` (pairings). A ficha em `running` só permanece no hub **entre rodadas** (próxima / finalizar / drop / reabrir).
+**Rodadas (staff):** com rodada ativa, a ficha redireciona para `/torneios/{id}/rodadas/{n}` (pairings). Entre rodadas: primary **Iniciar próxima** / **Finalizar** no header; resumo da rodada em cards; drop e reabrir como ações secundárias.
 
 Staff/admin: todos os status e operação completa.
 

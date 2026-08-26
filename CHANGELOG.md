@@ -31,7 +31,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 ### Changed
 
 - **Torneio draft:** sem walk-in puro; inscrição 1 a 1 via busca; incomplete exige e-mail+celular; seed em opções avançadas; convite só em Usuários (não no cadastro rápido)
-- **Rodadas:** hub intermediário removido com rodada ativa (redirect); pairings em cards; painel “Entre rodadas” para avançar/finalizar
+- **Rodadas:** hub intermediário removido com rodada ativa (redirect); pairings em cards; painel “Entre rodadas” com primary no header, resumo em cards e drop/roster
 - **Perfil:** admin bootstrap tem perfil nativo (sem precisar ter jogado torneio)
 - **Perfil:** seção renomeada para **Insights**; `/conta/senha` redireciona à home
 - **Nav/Home:** “Ranking Fourse Points” (FP só como abreviação em colunas/espaços curtos)

@@ -8,6 +8,7 @@ import { PlayerPickerModal } from "../../components/PlayerPickerModal";
 import { RoundMatchesTable } from "../../components/RoundMatchesTable";
 import { SeFormatOptions, type SeBoConfig } from "../../components/SeFormatOptions";
 import { api } from "../../api/client";
+import { formatMatchResult } from "../../utils/matches";
 import { playersMissingSeed, seedRequirementMessage } from "../../utils/seeds";
 
 const PHONE_HINT = "DDD + número (10 a 13 dígitos), ex.: 11987654321";
@@ -541,6 +542,34 @@ export function TorneioDetailPage() {
             )}
           </div>
         )}
+        {isRunning && torneio.between_rounds && isStaff && (
+          <div className="torneio-manage-primary">
+            {torneio.can_start_next_round && (
+              <button
+                ref={nextRoundBtnRef}
+                className="primary"
+                type="button"
+                onClick={() => iniciarProxima.mutate()}
+                disabled={iniciarProxima.isPending}
+              >
+                {iniciarProxima.isPending
+                  ? "Iniciando…"
+                  : `Iniciar rodada ${(torneio.completed_rounds ?? 0) + 1}`}
+              </button>
+            )}
+            {torneio.can_finalize && !torneio.can_start_next_round && (
+              <button
+                ref={finalizeBtnRef}
+                className="primary"
+                type="button"
+                onClick={() => setFinalizarModalOpen(true)}
+                disabled={finalizar.isPending}
+              >
+                {finalizar.isPending ? "Finalizando…" : "Finalizar torneio"}
+              </button>
+            )}
+          </div>
+        )}
       </header>
 
       <div className="stepper">
@@ -941,69 +970,111 @@ export function TorneioDetailPage() {
       )}
 
       {isRunning && torneio.between_rounds && isStaff && (
-        <section className="torneio-panel" style={{ marginTop: "1rem" }}>
-          <div className="torneio-panel-head">
-            <h2>Entre rodadas</h2>
-            <p className="field-hint">
-              Rodada {torneio.completed_rounds} concluída.
-              {torneio.can_start_next_round
-                ? ` Próxima: rodada ${(torneio.completed_rounds ?? 0) + 1}.`
-                : torneio.can_finalize
-                  ? " Todas as rodadas foram concluídas."
-                  : ""}
-            </p>
-          </div>
-          <p className="warning">Janela para drop entre rodadas (sem WO).</p>
-          {lastCompletedRound && (
-            <>
-              <p className="field-hint" style={{ marginTop: "0.75rem" }}>
-                Confira os resultados antes de avançar. Se algo estiver errado, use{" "}
-                <strong>Reabrir rodada</strong>.
+        <section className="entre-rodadas">
+          <div className="entre-rodadas-head">
+            <div>
+              <h2>Entre rodadas</h2>
+              <p className="field-hint">
+                Rodada {torneio.completed_rounds} concluída
+                {torneio.can_start_next_round
+                  ? ` · próxima: ${(torneio.completed_rounds ?? 0) + 1}`
+                  : torneio.can_finalize
+                    ? " · todas as rodadas concluídas"
+                    : ""}
               </p>
-              <RoundMatchesTable
-                title={`Resumo — rodada ${lastCompletedRound.number}`}
-                matches={lastCompletedRound.matches}
-              />
-            </>
-          )}
-          {activePlayers.length > 0 && (
-            <div style={{ marginTop: "1rem" }}>
-              <button className="secondary" onClick={() => setDropModalOpen(true)}>
-                Registrar drop…
-              </button>
+            </div>
+            <div className="entre-rodadas-secondary">
+              {torneio.can_reopen_round && (
+                <button
+                  className="secondary"
+                  type="button"
+                  onClick={() => setReabrirModalOpen(true)}
+                  disabled={reabrirRodada.isPending}
+                >
+                  Reabrir rodada {torneio.completed_rounds}
+                </button>
+              )}
+              {torneio.can_finalize && torneio.can_start_next_round && (
+                <button
+                  ref={finalizeBtnRef}
+                  className="secondary"
+                  type="button"
+                  onClick={() => setFinalizarModalOpen(true)}
+                  disabled={finalizar.isPending}
+                >
+                  Finalizar torneio
+                </button>
+              )}
+            </div>
+          </div>
+
+          {lastCompletedRound && (
+            <div className="entre-rodadas-summary">
+              <h3>Resumo — rodada {lastCompletedRound.number}</h3>
+              <p className="field-hint">
+                Confira os resultados antes de avançar. Corrija com Reabrir se necessário.
+              </p>
+              <div className="match-card-list match-card-list-compact">
+                {lastCompletedRound.matches.map((m, idx) => (
+                  <article key={m.id} className="match-card match-card-readonly">
+                    <div className="match-card-top">
+                      <span className="match-card-num">Mesa {idx + 1}</span>
+                      {m.is_bye && <span className="badge">BYE</span>}
+                      {m.is_walkover && <span className="badge">WO</span>}
+                      {m.had_rematch && <span className="badge badge-rematch">Rematch</span>}
+                      {m.is_third_place && <span className="badge">3º–4º</span>}
+                    </div>
+                    <div className="match-card-players">
+                      <div className="match-card-side">
+                        <span className="match-cell-name">
+                          {m.is_bye ? `BYE — ${m.player1_name}` : m.player1_name}
+                        </span>
+                      </div>
+                      {!m.is_bye && <span className="match-card-vs">×</span>}
+                      {!m.is_bye && (
+                        <div className="match-card-side">
+                          <span className="match-cell-name">{m.player2_name ?? "—"}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="match-card-result">
+                      <strong>{formatMatchResult(m)}</strong>
+                      {m.best_of != null && m.best_of > 1 && (
+                        <span className="muted"> Bo{m.best_of}</span>
+                      )}
+                    </div>
+                  </article>
+                ))}
+              </div>
             </div>
           )}
-          <div style={{ marginTop: "1.25rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            {torneio.can_reopen_round && (
-              <button
-                className="secondary"
-                onClick={() => setReabrirModalOpen(true)}
-                disabled={reabrirRodada.isPending}
-              >
-                Reabrir rodada {torneio.completed_rounds}
-              </button>
-            )}
-            {torneio.can_start_next_round && (
-              <button
-                ref={nextRoundBtnRef}
-                className="primary"
-                onClick={() => iniciarProxima.mutate()}
-                disabled={iniciarProxima.isPending}
-              >
-                Iniciar rodada {(torneio.completed_rounds ?? 0) + 1}
-              </button>
-            )}
-            {torneio.can_finalize && (
-              <button
-                ref={finalizeBtnRef}
-                className="secondary"
-                onClick={() => setFinalizarModalOpen(true)}
-                disabled={finalizar.isPending}
-              >
-                Finalizar torneio
-              </button>
-            )}
-          </div>
+
+          {activePlayers.length > 0 && (
+            <div className="entre-rodadas-roster">
+              <div className="entre-rodadas-roster-head">
+                <h3>
+                  Ainda no torneio <span className="torneio-count">{activePlayers.length}</span>
+                </h3>
+                <button
+                  className="secondary"
+                  type="button"
+                  onClick={() => setDropModalOpen(true)}
+                >
+                  Registrar drop…
+                </button>
+              </div>
+              <p className="field-hint">
+                Drop entre rodadas remove o jogador sem WO na partida atual.
+              </p>
+              <ul className="player-draft-list">
+                {activePlayers.map((p) => (
+                  <li key={p.id} className="player-row">
+                    <span className="player-row-name">{p.name}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </section>
       )}
 

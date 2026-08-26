@@ -1681,3 +1681,61 @@ th {
 .match-card-bye {
   padding: 0.35rem 0;
 }
+
+.entre-rodadas {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 0.5rem;
+}
+
+.entre-rodadas-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.entre-rodadas-head h2 {
+  margin: 0;
+}
+
+.entre-rodadas-secondary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.entre-rodadas-summary h3,
+.entre-rodadas-roster-head h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+}
+
+.entre-rodadas-roster {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem 1.15rem;
+}
+
+.entre-rodadas-roster-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+
+.match-card-list-compact {
+  margin-top: 0.75rem;
+}
+
+.match-card-readonly .match-card-result {
+  margin-top: 0.55rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.95rem;
+}
