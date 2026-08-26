@@ -273,7 +273,7 @@ function PresetsTab() {
               <div className="form-row" key={key}>
                 <label>{key}</label>
                 <input
-                  value={String(form[key])}
+                  value={String(form[key] ?? "")}
                   onChange={(e) =>
                     setForm({
                       ...form,
@@ -284,6 +284,21 @@ function PresetsTab() {
               </div>
             ),
           )}
+          <div className="form-row">
+            <label>fp_k (Fourse Points; vazio = 10)</label>
+            <input
+              type="number"
+              min={1}
+              value={form.fp_k ?? ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                setForm({
+                  ...form,
+                  fp_k: v === "" ? undefined : Number(v),
+                } as Preset);
+              }}
+            />
+          </div>
           <button className="primary" onClick={save}>Salvar</button>
         </div>
       )}

@@ -60,7 +60,7 @@ def update_preset(
     x_presets_mtime: float | None = Header(default=None, alias="X-Presets-Mtime"),
 ) -> PresetBody:
     try:
-        updated = svc.update_preset(preset_id, body.model_dump(), x_presets_mtime)
+        updated = svc.update_preset(preset_id, body.model_dump(exclude_none=True), x_presets_mtime)
         return PresetBody(**updated)
     except ConfigError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
