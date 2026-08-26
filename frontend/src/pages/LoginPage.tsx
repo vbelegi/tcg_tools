@@ -8,7 +8,7 @@ export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const qc = useQueryClient();
-  const [username, setUsername] = useState("admin");
+  const [email, setEmail] = useState("admin@local");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
@@ -19,7 +19,7 @@ export function LoginPage() {
   });
 
   const login = useMutation({
-    mutationFn: () => api.login(username, password),
+    mutationFn: () => api.login(email, password),
     onSuccess: async () => {
       setError("");
       await qc.invalidateQueries({ queryKey: ["auth-me"] });
@@ -40,17 +40,18 @@ export function LoginPage() {
   return (
     <div className="login-page">
       <h1>TCG Tools</h1>
-      <p style={{ opacity: 0.85 }}>Entre com o usuário admin para continuar.</p>
+      <p style={{ opacity: 0.85 }}>Entre com e-mail e senha para continuar.</p>
       {error && <p className="error">{error}</p>}
       <form onSubmit={onSubmit} className="login-form">
         <div className="form-row">
-          <label htmlFor="login-user">Usuário</label>
+          <label htmlFor="login-email">E-mail</label>
           <input
-            id="login-user"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            id="login-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             autoComplete="username"
-            disabled
+            required
           />
         </div>
         <div className="form-row">
@@ -71,7 +72,8 @@ export function LoginPage() {
         </button>
       </form>
       <p className="field-hint" style={{ marginTop: "1rem" }}>
-        A senha é definida no instalador. Para resetar, execute o setup novamente e altere a senha.
+        Admin padrão: admin@local (senha definida no instalador). Contas incompletas usam o link de
+        convite.
       </p>
       <div className="login-powered">
         <a

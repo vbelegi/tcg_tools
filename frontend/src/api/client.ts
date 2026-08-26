@@ -84,17 +84,83 @@ export const api = {
   health: () => request<{ status: string }>("/health"),
 
   authStatus: () =>
-    request<{ configured: boolean; username: string; min_password_length: number }>("/auth/status"),
+    request<{ configured: boolean; login_hint: string; min_password_length: number }>("/auth/status"),
 
-  authMe: () => request<{ username: string }>("/auth/me"),
+  authMe: () =>
+    request<{
+      id: number;
+      email: string;
+      display_name: string;
+      role: string;
+      status: string;
+    }>("/auth/me"),
 
-  login: (username: string, password: string) =>
-    request<{ username: string }>("/auth/login", {
+  login: (email: string, password: string) =>
+    request<{
+      id: number;
+      email: string;
+      display_name: string;
+      role: string;
+    }>("/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ email, password }),
     }),
 
   logout: () => request<{ ok: boolean }>("/auth/logout", { method: "POST" }),
+
+  claimInvite: (body: {
+    token: string;
+    password: string;
+    birth_date?: string;
+    guardian_name?: string;
+    guardian_phone?: string;
+    guardian_relation?: string;
+  }) =>
+    request<{ id: number; email: string; display_name: string }>("/auth/claim-invite", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  listUsers: (q?: string) =>
+    request<
+      Array<{
+        id: number;
+        email: string;
+        display_name: string;
+        phone: string | null;
+        role: string;
+        status: string;
+      }>
+    >(`/users${q ? `?q=${encodeURIComponent(q)}` : ""}`),
+
+  createUser: (body: {
+    display_name: string;
+    email: string;
+    phone: string;
+    role?: string;
+  }) =>
+    request("/users", { method: "POST", body: JSON.stringify(body) }),
+
+  inviteUser: (userId: number) =>
+    request<{ token: string; claim_path: string; expires_at: string }>(`/users/${userId}/invite`, {
+      method: "POST",
+    }),
+
+  ranking: () =>
+    request<Array<{ rank: number; user_id: number; display_name: string; points: number }>>(
+      "/ranking",
+    ),
+
+  publicProfile: (userId: number) => request(`/jogadores/${userId}/perfil`),
+
+  checkInPlayer: (eventId: number, playerId: number) =>
+    request(`/torneios/${eventId}/jogadores/${playerId}/check-in`, { method: "POST" }),
+
+  selfRegister: (eventId: number) =>
+    request(`/torneios/${eventId}/inscrever`, { method: "POST" }),
+
+  createExternalTorneio: (body: unknown) =>
+    request("/torneios/externos", { method: "POST", body: JSON.stringify(body) }),
 
   changePassword: (current_password: string, new_password: string) =>
     request<{ ok: boolean; message: string }>("/auth/change-password", {

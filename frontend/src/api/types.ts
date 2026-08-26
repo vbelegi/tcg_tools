@@ -27,65 +27,42 @@ export type TabelaLinha = Schemas["TabelaLinha"];
 
 
 export interface Torneio {
-
   id: number;
-
   name: string;
-
   event_date: string;
-
   format: "swiss" | "single_elimination";
-
   max_rounds: number | null;
-
   entry_fee: number;
-
   best_of: number;
-
   status: "draft" | "running" | "finished";
-
   player_count: number;
-
   current_round: number;
-
   between_rounds?: boolean;
-
   can_start_next_round?: boolean;
-
   can_finalize?: boolean;
-
   can_reopen_round?: boolean;
-
   recommended_rounds?: number;
-
   completed_rounds?: number;
-
   third_place_match?: boolean;
-
   se_bo_config?: Record<string, number> | null;
-
   config_warnings?: string[];
-
   players?: Player[];
-
+  source?: "internal" | "external";
+  registration_open?: boolean;
+  fp_n_at_start?: number | null;
+  pending_checkins?: number;
 }
 
-
-
 export interface Player {
-
   id: number;
-
   name: string;
-
   seed: number | null;
-
   dropped_at: string | null;
-
   registration_order: number;
-
   decklist: string | null;
-
+  user_id?: number | null;
+  attendance?: "pending" | "checked_in";
+  registration_source?: string;
 }
 
 

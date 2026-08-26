@@ -17,6 +17,7 @@ export function TorneioNovoPage() {
   const [thirdPlaceMatch, setThirdPlaceMatch] = useState(false);
   const [seBoConfig, setSeBoConfig] = useState<SeBoConfig>({});
   const [expectedPlayers, setExpectedPlayers] = useState("8");
+  const [registrationOpen, setRegistrationOpen] = useState(false);
   const [error, setError] = useState("");
 
   const sePhaseRounds = useMemo(() => {
@@ -47,6 +48,7 @@ export function TorneioNovoPage() {
           format === "single_elimination" && Object.keys(seBoConfig).length > 0
             ? seBoConfig
             : undefined,
+        registration_open: registrationOpen,
       });
     },
     onSuccess: (t) => navigate(`/torneios/${t.id}`),
@@ -121,6 +123,16 @@ export function TorneioNovoPage() {
             <option key={id} value={id}>{presets?.presets[id]?.label ?? id}</option>
           ))}
         </select>
+      </div>
+      <div className="form-row">
+        <label>
+          <input
+            type="checkbox"
+            checked={registrationOpen}
+            onChange={(e) => setRegistrationOpen(e.target.checked)}
+          />{" "}
+          Abrir inscrições para jogadores logados
+        </label>
       </div>
       {error && <p className="error">{error}</p>}
       <button className="primary" onClick={() => mutation.mutate()} disabled={!name || mutation.isPending}>

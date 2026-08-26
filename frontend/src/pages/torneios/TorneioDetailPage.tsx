@@ -14,6 +14,12 @@ export function TorneioDetailPage() {
   const { id } = useParams<{ id: string }>();
   const eventId = Number(id);
   const qc = useQueryClient();
+  const { data: me } = useQuery({
+    queryKey: ["auth-me"],
+    queryFn: () => api.authMe(),
+    retry: false,
+  });
+  const isStaff = me && (me.role === "admin" || me.role === "staff");
   const [playerName, setPlayerName] = useState("");
   const [playerSeed, setPlayerSeed] = useState("");
   const [error, setError] = useState("");
@@ -89,6 +95,24 @@ export function TorneioDetailPage() {
 
   const iniciar = useMutation({
     mutationFn: () => api.iniciarTorneio(eventId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["torneio", eventId] }),
+    onError: (e) => setError((e as Error).message),
+  });
+
+  const checkIn = useMutation({
+    mutationFn: (pid: number) => api.checkInPlayer(eventId, pid),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["torneio", eventId] }),
+    onError: (e) => setError((e as Error).message),
+  });
+
+  const toggleRegistration = useMutation({
+    mutationFn: (open: boolean) => api.updateTorneio(eventId, { registration_open: open }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["torneio", eventId] }),
+    onError: (e) => setError((e as Error).message),
+  });
+
+  const selfRegister = useMutation({
+    mutationFn: () => api.selfRegister(eventId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["torneio", eventId] }),
     onError: (e) => setError((e as Error).message),
   });
@@ -258,6 +282,7 @@ export function TorneioDetailPage() {
       <p>
         {torneio.event_date} · {torneio.format === "swiss" ? "Suíço" : "Eliminatória"} ·{" "}
         <span className="badge">{torneio.status}</span>
+        {torneio.source === "external" && <span className="badge"> externo</span>}
       </p>
 
       <div className="stepper">
@@ -272,6 +297,40 @@ export function TorneioDetailPage() {
           {w}
         </p>
       ))}
+
+      {isDraft && (torneio.pending_checkins ?? 0) > 0 && (
+        <p className="warning" role="status">
+          {torneio.pending_checkins} inscrição(ões) pendente(s) de check-in — o torneio não inicia
+          até confirmar presença.
+        </p>
+      )}
+
+      {isDraft && me && torneio.registration_open && !torneio.players?.some((p) => p.user_id === me.id) && (
+        <div style={{ marginBottom: "1rem" }}>
+          <button
+            className="primary"
+            type="button"
+            onClick={() => selfRegister.mutate()}
+            disabled={selfRegister.isPending}
+          >
+            Inscrever-me neste torneio
+          </button>
+        </div>
+      )}
+
+      {isDraft && isStaff && (
+        <div className="form-row" style={{ marginBottom: "1rem" }}>
+          <label>
+            <input
+              type="checkbox"
+              checked={Boolean(torneio.registration_open)}
+              onChange={(e) => toggleRegistration.mutate(e.target.checked)}
+              disabled={toggleRegistration.isPending}
+            />{" "}
+            Inscrições abertas (jogadores logados podem se inscrever)
+          </label>
+        </div>
+      )}
 
       {isDraft && (
         <>
@@ -337,98 +396,118 @@ export function TorneioDetailPage() {
                   <span>
                     {p.name}
                     {p.seed != null ? ` (seed ${p.seed})` : needsSeed ? " — falta seed" : ""}
+                    {p.attendance === "pending" ? " · pendente" : ""}
                   </span>{" "}
-                  <button
-                    className="secondary"
-                    onClick={() => setRemoveTarget({ id: p.id, name: p.name })}
-                  >
-                    Remover
-                  </button>
+                  {isStaff && p.attendance === "pending" && (
+                    <button
+                      className="secondary"
+                      type="button"
+                      onClick={() => checkIn.mutate(p.id)}
+                      disabled={checkIn.isPending}
+                    >
+                      Check-in
+                    </button>
+                  )}{" "}
+                  {isStaff && (
+                    <button
+                      className="secondary"
+                      onClick={() => setRemoveTarget({ id: p.id, name: p.name })}
+                    >
+                      Remover
+                    </button>
+                  )}
                 </li>
               );
             })}
           </ul>
-          <div className="form-row">
-            <label htmlFor="player-name">Nome</label>
-            <input
-              id="player-name"
-              ref={playerNameRef}
-              value={playerName}
-              onChange={(e) => setPlayerName(e.target.value)}
-              onKeyDown={handleNameKeyDown}
-              onPaste={handleNamePaste}
-              placeholder={
-                seedRequired
-                  ? "Nome · Enter vai para o seed"
-                  : "Nome · Enter adiciona · cole lista"
-              }
-              aria-describedby="player-name-hint"
-              disabled={addPlayer.isPending}
-            />
-            <p id="player-name-hint" className="field-hint">
-              Enter adiciona
-              {seedRequired ? " (após o seed)" : ""}. Esc limpa. Cole vários nomes (linhas/vírgulas)
-              sem seeding.
-            </p>
-          </div>
-          <div className="form-row">
-            <label htmlFor="player-seed">
-              Seed {seedRequired ? "(obrigatório — seeding já iniciado)" : "(opcional)"}
-            </label>
-            <input
-              id="player-seed"
-              ref={playerSeedRef}
-              type="number"
-              value={playerSeed}
-              onChange={(e) => setPlayerSeed(e.target.value)}
-              onKeyDown={handleSeedKeyDown}
-              className={seedRequired && !playerSeed.trim() ? "input-invalid" : undefined}
-              aria-invalid={seedRequired && !playerSeed.trim()}
-              aria-describedby={seedRequired ? "player-seed-hint" : undefined}
-              disabled={addPlayer.isPending}
-            />
-            {seedRequired && !playerSeed.trim() && (
-              <p id="player-seed-hint" className="error-text" style={{ fontSize: "0.85rem", margin: "0.25rem 0 0" }}>
-                Informe um seed para este jogador, ou remova os seeds dos demais.
-              </p>
-            )}
-          </div>
-          <button
-            className="secondary"
-            type="button"
-            onClick={submitPlayer}
-            disabled={!canSubmitPlayer}
-          >
-            {addPlayer.isPending ? "Adicionando…" : "Adicionar jogador"}
-          </button>
-          {playerAddedFlash && (
-            <div className="save-feedback success" role="status" aria-live="polite">
-              Jogador(es) adicionado(s)
-            </div>
+          {isStaff && (
+            <>
+              <div className="form-row">
+                <label htmlFor="player-name">Nome</label>
+                <input
+                  id="player-name"
+                  ref={playerNameRef}
+                  value={playerName}
+                  onChange={(e) => setPlayerName(e.target.value)}
+                  onKeyDown={handleNameKeyDown}
+                  onPaste={handleNamePaste}
+                  placeholder={
+                    seedRequired
+                      ? "Nome · Enter vai para o seed"
+                      : "Nome · Enter adiciona · cole lista"
+                  }
+                  aria-describedby="player-name-hint"
+                  disabled={addPlayer.isPending}
+                />
+                <p id="player-name-hint" className="field-hint">
+                  Enter adiciona
+                  {seedRequired ? " (após o seed)" : ""}. Esc limpa. Cole vários nomes (linhas/vírgulas)
+                  sem seeding.
+                </p>
+              </div>
+              <div className="form-row">
+                <label htmlFor="player-seed">
+                  Seed {seedRequired ? "(obrigatório — seeding já iniciado)" : "(opcional)"}
+                </label>
+                <input
+                  id="player-seed"
+                  ref={playerSeedRef}
+                  type="number"
+                  value={playerSeed}
+                  onChange={(e) => setPlayerSeed(e.target.value)}
+                  onKeyDown={handleSeedKeyDown}
+                  className={seedRequired && !playerSeed.trim() ? "input-invalid" : undefined}
+                  aria-invalid={seedRequired && !playerSeed.trim()}
+                  aria-describedby={seedRequired ? "player-seed-hint" : undefined}
+                  disabled={addPlayer.isPending}
+                />
+                {seedRequired && !playerSeed.trim() && (
+                  <p id="player-seed-hint" className="error-text" style={{ fontSize: "0.85rem", margin: "0.25rem 0 0" }}>
+                    Informe um seed para este jogador, ou remova os seeds dos demais.
+                  </p>
+                )}
+              </div>
+              <button
+                className="secondary"
+                type="button"
+                onClick={submitPlayer}
+                disabled={!canSubmitPlayer}
+              >
+                {addPlayer.isPending ? "Adicionando…" : "Adicionar jogador"}
+              </button>
+              {playerAddedFlash && (
+                <div className="save-feedback success" role="status" aria-live="polite">
+                  Jogador(es) adicionado(s)
+                </div>
+              )}
+              <div style={{ marginTop: "1.5rem" }}>
+                <button
+                  className="primary"
+                  onClick={handleIniciar}
+                  disabled={
+                    (torneio.players?.length ?? 0) < 4 ||
+                    seedsIncomplete ||
+                    (torneio.pending_checkins ?? 0) > 0 ||
+                    iniciar.isPending
+                  }
+                  title={
+                    seedsIncomplete
+                      ? "Corrija o seeding parcial antes de iniciar"
+                      : (torneio.pending_checkins ?? 0) > 0
+                        ? "Faça check-in de todas as inscrições pendentes"
+                        : undefined
+                  }
+                >
+                  Iniciar torneio
+                </button>
+                {seedsIncomplete && (
+                  <p className="error-text" style={{ fontSize: "0.85rem", marginTop: "0.5rem" }}>
+                    Não é possível iniciar com apenas alguns jogadores com seed.
+                  </p>
+                )}
+              </div>
+            </>
           )}
-          <div style={{ marginTop: "1.5rem" }}>
-            <button
-              className="primary"
-              onClick={handleIniciar}
-              disabled={
-                (torneio.players?.length ?? 0) < 4 ||
-                seedsIncomplete ||
-                iniciar.isPending
-              }
-              title={
-                seedsIncomplete
-                  ? "Corrija o seeding parcial antes de iniciar"
-                  : undefined
-              }
-            >
-              Iniciar torneio
-            </button>
-            {seedsIncomplete && (
-              <p className="error-text" style={{ fontSize: "0.85rem", marginTop: "0.5rem" }}>
-                Não é possível iniciar com apenas alguns jogadores com seed.
-              </p>
-            )}
-          </div>
         </>
       )}
 
