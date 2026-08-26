@@ -6,7 +6,7 @@
 2. Execute o instalador (admin necessário — instala em `Program Files`)
 3. Aceite SmartScreen se aparecer: **Mais informações → Executar mesmo assim** (instalador não assinado na v1)
 4. Configure porta (padrão 8000) e opcionalmente "Iniciar com Windows"
-5. Use o atalho **TCG Tools** — abre o navegador (login com usuário **admin** e a senha definida no instalador)
+5. Use o atalho **TCG Tools** — abre o navegador (login com e-mail **admin@local** e a senha definida no instalador)
 6. Opcional: marque **Permitir acesso na rede local** para celulares/tablets na mesma Wi‑Fi (`http://IP-DA-LOJA:porta`)
 
 **Não é necessário** Python, Node, Git nem scripts PowerShell na loja.
@@ -15,7 +15,7 @@ Cada **usuário Windows** na máquina tem dados próprios em `%APPDATA%\TCGTools
 
 ## Senha do admin
 
-- Usuário fixo: `admin` (mínimo 6 caracteres na senha).
+- Conta bootstrap: e-mail `admin@local` (mínimo 6 caracteres na senha). O login ainda aceita o legado `admin`.
 - Definida no instalador (install limpo). Em upgrade, pode manter ou marcar **Definir/alterar senha**.
 - Modo **Apenas alterar senha** no wizard: não atualiza arquivos, só grava a senha no SQLite.
 - Também dá para alterar em **Alterar senha** dentro do app (após login).

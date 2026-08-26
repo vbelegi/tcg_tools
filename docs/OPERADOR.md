@@ -96,7 +96,8 @@ Use quando digitou placar errado **depois** de concluir a rodada:
 - **Desempate (Suíço):** Pts → OMW% → GW% → OGW% → seed → ordem de inscrição (tooltip na tela Resultado).
 - **Seeds:** all-or-nothing — se um jogador tem seed, todos precisam; caso contrário o torneio não inicia.
 - **Atalhos:** Enter adiciona jogador (com seed: Nome→Seed→Nome); Esc limpa/fecha modal; colar lista de nomes; na rodada, foco na próxima partida e Ctrl+Enter para concluir; no sorteio encadeado, Enter/Espaço = próximo.
-- **Login:** sempre exige usuário `admin` + senha (definida no instalador). Alterar senha: menu lateral ou reexecução do setup.
+- **Login:** e-mail + senha (bootstrap `admin@local`; o legado `admin` ainda funciona no login). Alterar senha: menu lateral ou reexecução do setup. Papéis: admin, staff, player — ver `docs/PLATFORM_USERS_FP.md`.
+- **Inscrições:** check-in obrigatório antes de iniciar; pendentes bloqueiam o start. Drop/WO = 0 FP.
 - **Marca:** identidade visual Fourse (roxo/laranja); rodapé “Powered by FOURSE”.
 - **LAN:** opcional no instalador; outros devices acessam `http://IP:porta` na mesma rede (com login).
 - **Sorteio:** modo “todos de uma vez” ou **encadeado** (1 a 1 sem repetir). No resultado do torneio, dá para excluir jogadores da pool (ex.: campeão) sem afetar a classificação.
@@ -107,6 +108,7 @@ Use quando digitou placar errado **depois** de concluir a rodada:
 ## Checklist rápido na mesa
 
 - [ ] 4+ jogadores antes de iniciar
+- [ ] Check-in de todas as inscrições pendentes
 - [ ] Todos os placares antes de concluir rodada
 - [ ] Drops entre rodadas (não durante rodada ativa, exceto WO mid-round)
 - [ ] Revisar classificação antes de finalizar

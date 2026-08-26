@@ -65,6 +65,6 @@ New-Item -ItemType Directory -Force -Path (Join-Path $DataDir "logs") | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $DataDir "exports") | Out-Null
 
 Write-Host "Setup concluido."
-Write-Host "Defina a senha do admin (dev):" -ForegroundColor Cyan
+Write-Host "Defina a senha do admin (dev, login admin@local):" -ForegroundColor Cyan
 Write-Host "  `$env:TCGTOOLS_DATA_DIR='$DataDir'; cd backend; py -3.13 -m app.scripts.set_admin_password --password admin123"
 Write-Host "Use 'scripts\Iniciar TCG Tools.bat' para iniciar." -ForegroundColor Green

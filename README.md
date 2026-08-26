@@ -66,7 +66,7 @@ npm run test         # Vitest
 
 Acesse `http://127.0.0.1:5173` (proxy `/api` → backend).
 
-**Login (obrigatório):** após o setup, defina a senha do `admin`:
+**Login (obrigatório):** após o setup, defina a senha do admin (`admin@local`):
 
 ```powershell
 $env:TCGTOOLS_DATA_DIR='.\data'; cd backend; py -3.13 -m app.scripts.set_admin_password --password admin123
@@ -185,7 +185,7 @@ tcg_tools/
 
 - **Sorteador:** sorteio em lote ou encadeado
 
-- **Auth / LAN:** login `admin`; acesso opcional na rede local
+- **Auth / LAN:** login `admin@local`; acesso opcional na rede local
 
 - **Decklists:** opcional após finalizar torneio
 
