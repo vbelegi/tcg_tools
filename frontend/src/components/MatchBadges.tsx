@@ -2,22 +2,10 @@ import type { Match } from "../api/types";
 
 type MatchBadgesProps = {
   match: Match;
-  bestOf: number;
 };
 
-export function MatchBadges({ match, bestOf }: MatchBadgesProps) {
-  return (
-    <>
-      {match.is_third_place && (
-        <span className="badge" style={{ marginLeft: "0.35rem" }}>
-          3º–4º
-        </span>
-      )}
-      {bestOf > 1 && (
-        <span style={{ marginLeft: "0.35rem", fontSize: "0.85rem", opacity: 0.75 }}>
-          Bo{bestOf}
-        </span>
-      )}
-    </>
-  );
+/** Extra match labels (BoN lives on the tournament/round header, not per seat). */
+export function MatchBadges({ match }: MatchBadgesProps) {
+  if (!match.is_third_place) return null;
+  return <span className="badge">3º–4º</span>;
 }

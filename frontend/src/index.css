@@ -1600,6 +1600,60 @@ th {
   padding: 0.35rem 0.45rem;
 }
 
+.score-btn-group {
+  display: inline-flex;
+  gap: 0.25rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.score-btn {
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.35rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.score-btn:hover:not(:disabled) {
+  border-color: var(--primary);
+}
+
+.score-btn-selected {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.score-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.score-btn-selected:disabled {
+  opacity: 0.7;
+}
+
+.match-card-rodada {
+  padding: 0.45rem 0.75rem;
+  border-radius: 10px;
+}
+
+.match-card-actions-compact {
+  margin-top: 0.45rem;
+  padding-top: 0.45rem;
+}
+
+.rodada-page .match-card-list-compact {
+  gap: 0.45rem;
+}
+
 .match-card-list {
   display: flex;
   flex-direction: column;
