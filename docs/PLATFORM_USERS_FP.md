@@ -74,7 +74,7 @@ Público: stats (torneios, títulos, top 8, melhor colocação), **Insights** he
 
 **Resultado:** classificação/premiação compactas; sorteio com chips na pool; export de log no menu ⋯; **Sortear** como ação primary do bloco.
 
-Staff/admin: todos os status e operação completa.
+Staff/admin: todos os status e operação completa. Telas auxiliares (**Premiação**, **Sorteador**, **Usuários**, **TCGs**) seguem o mesmo padrão visual denso (header, chips, tabelas compactas).
 
 **Nunca** expor email, celular, nascimento ou responsável em endpoints públicos.
 

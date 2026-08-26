@@ -11,7 +11,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 ### Added
 
 - **Torneio draft UX:** inscrição unificada (busca → conta existente ou incomplete); header com Iniciar; Excluir no menu ⋯
-- **Ranking UX:** pódio top 3, avatares e lista densa a partir do 4º; `GET /ranking` inclui `avatar_url`
+- **Admin UX:** Premiação, Sorteador, Usuários e TCGs no padrão denso (header manage, chips, tabelas compactas)
 - **Perfil — navegação:** Meu Perfil no sidebar; nome linkado em Usuários; busca pública `GET /jogadores/buscar`
 - **Perfil — senha:** modal Alterar senha no próprio perfil (removido do sidebar)
 - **Perfil do jogador:** dashboard com stats, Insights, badges TCG, Recharts (FP por jogo/mês), histórico filtrável; avatar + editar nome

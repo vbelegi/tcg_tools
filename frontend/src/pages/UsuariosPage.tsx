@@ -58,79 +58,110 @@ export function UsuariosPage() {
   };
 
   return (
-    <div>
-      <h1>Usuários</h1>
-      <p>
-        Contas incompletas: gere o link de convite e encaminhe ao jogador (sem e-mail automático).
-        Admin pode criar staff/admin.
-      </p>
+    <div className="admin-page">
+      <header className="torneio-manage-header">
+        <div>
+          <h1>Usuários</h1>
+          <p className="torneio-manage-meta">
+            Contas incomplete · convite manual · {data.length} listado(s)
+          </p>
+        </div>
+      </header>
+
       {error && <p className="error">{error}</p>}
       {inviteMsg && <p className="success">{inviteMsg}</p>}
 
-      <form onSubmit={onCreate} className="card" style={{ marginBottom: "1.5rem" }}>
-        <h2>Criar conta (rápida / incomplete)</h2>
-        <div className="form-row">
-          <label>Nome de exibição</label>
-          <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} required />
-        </div>
-        <div className="form-row">
-          <label>E-mail</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        </div>
-        <div className="form-row">
-          <label>Celular</label>
-          <input value={phone} onChange={(e) => setPhone(e.target.value)} required />
-        </div>
-        <div className="form-row">
-          <label>Papel</label>
-          <select value={role} onChange={(e) => setRole(e.target.value)}>
-            <option value="player">player</option>
-            <option value="staff">staff</option>
-            <option value="admin">admin</option>
-          </select>
-        </div>
-        <button className="primary" type="submit" disabled={create.isPending}>
-          Criar
-        </button>
-      </form>
+      <details className="torneio-advanced admin-create-panel">
+        <summary>Nova conta (incomplete)</summary>
+        <form onSubmit={onCreate} className="admin-form-dense">
+          <div className="admin-form-grid">
+            <div className="form-row">
+              <label>Nome de exibição</label>
+              <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} required />
+            </div>
+            <div className="form-row">
+              <label>E-mail</label>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            </div>
+            <div className="form-row">
+              <label>Celular</label>
+              <input value={phone} onChange={(e) => setPhone(e.target.value)} required />
+            </div>
+            <div className="form-row">
+              <label>Papel</label>
+              <select value={role} onChange={(e) => setRole(e.target.value)}>
+                <option value="player">player</option>
+                <option value="staff">staff</option>
+                <option value="admin">admin</option>
+              </select>
+            </div>
+          </div>
+          <button className="primary" type="submit" disabled={create.isPending}>
+            {create.isPending ? "Criando…" : "Criar"}
+          </button>
+        </form>
+      </details>
 
-      <div className="form-row">
-        <label>Buscar</label>
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="nome, e-mail ou celular" />
-      </div>
-      {isLoading && <p>Carregando...</p>}
-      <table>
-        <thead>
-          <tr>
-            <th>Nome</th>
-            <th>E-mail</th>
-            <th>Celular</th>
-            <th>Papel</th>
-            <th>Status</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((u) => (
-            <tr key={u.id}>
-              <td>
-                <Link to={`/jogadores/${u.id}`}>{u.display_name}</Link>
-              </td>
-              <td>{u.email}</td>
-              <td>{u.phone}</td>
-              <td>{u.role}</td>
-              <td>{u.status}</td>
-              <td>
-                {u.status === "incomplete" && (
-                  <button className="secondary" type="button" onClick={() => invite.mutate(u.id)}>
-                    {invite.isPending ? "Gerando…" : "Gerar e copiar convite"}
-                  </button>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <section className="resultado-section">
+        <div className="admin-inline-add">
+          <div className="form-row admin-inline-add-field">
+            <label htmlFor="users-search">Buscar</label>
+            <input
+              id="users-search"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="nome, e-mail ou celular"
+            />
+          </div>
+        </div>
+
+        {isLoading && <p>Carregando...</p>}
+
+        <div className="resultado-table-wrap">
+          <table className="resultado-table">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>E-mail</th>
+                <th>Celular</th>
+                <th>Papel</th>
+                <th>Status</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((u) => (
+                <tr key={u.id}>
+                  <td className="resultado-player-cell">
+                    <Link to={`/jogadores/${u.id}`}>{u.display_name}</Link>
+                  </td>
+                  <td>{u.email}</td>
+                  <td>{u.phone}</td>
+                  <td>
+                    <span className="badge">{u.role}</span>
+                  </td>
+                  <td>
+                    <span className={u.status === "incomplete" ? "badge badge-warn" : "badge badge-ok"}>
+                      {u.status}
+                    </span>
+                  </td>
+                  <td>
+                    {u.status === "incomplete" && (
+                      <button
+                        className="secondary"
+                        type="button"
+                        onClick={() => invite.mutate(u.id)}
+                      >
+                        {invite.isPending ? "…" : "Convite"}
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 }

@@ -58,49 +58,76 @@ export function SorteadorPage() {
   const names = participants.map((p) => p.name);
 
   return (
-    <div>
-      <h1>Sorteador</h1>
-      <p style={{ opacity: 0.85, maxWidth: "40rem" }}>
-        Cadastre participantes e sorteie todos de uma vez ou em modo encadeado (1 a 1, sem repetir).
-        Enter adiciona · Esc limpa · cole vários nomes de uma vez.
-      </p>
+    <div className="admin-page">
+      <header className="torneio-manage-header">
+        <div>
+          <h1>Sorteador</h1>
+          <p className="torneio-manage-meta">
+            Enter adiciona · Esc limpa · cole vários nomes · batch ou encadeado
+          </p>
+        </div>
+      </header>
 
-      <h2>Participantes ({participants.length})</h2>
-      {participants.length > 0 && (
-        <ul className="participant-list">
-          {participants.map((p) => (
-            <li key={p.id}>
-              {p.name}{" "}
-              <button className="secondary" type="button" onClick={() => removeParticipant(p.id)}>
-                Remover
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      <section className="resultado-section">
+        <div className="resultado-section-head">
+          <h2>
+            Participantes <span className="torneio-count">{participants.length}</span>
+          </h2>
+        </div>
 
-      <div className="form-row">
-        <label htmlFor="participant-name">Nome</label>
-        <input
-          id="participant-name"
-          ref={nameRef}
-          value={nameInput}
-          onChange={(e) => setNameInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onPaste={handlePaste}
-          placeholder="Nome · Enter adiciona · cole lista"
+        {participants.length > 0 && (
+          <ul className="entre-rodadas-chips">
+            {participants.map((p) => (
+              <li key={p.id}>
+                <span className="entre-rodadas-chip chip-with-remove">
+                  {p.name}
+                  <button
+                    type="button"
+                    className="chip-remove"
+                    aria-label={`Remover ${p.name}`}
+                    onClick={() => removeParticipant(p.id)}
+                  >
+                    ×
+                  </button>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <div className="admin-inline-add">
+          <div className="form-row admin-inline-add-field">
+            <label htmlFor="participant-name">Nome</label>
+            <input
+              id="participant-name"
+              ref={nameRef}
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onPaste={handlePaste}
+              placeholder="Nome · Enter ou cole lista"
+            />
+          </div>
+          <button
+            className="secondary"
+            type="button"
+            onClick={addParticipant}
+            disabled={!nameInput.trim()}
+          >
+            Adicionar
+          </button>
+        </div>
+      </section>
+
+      <section className="resultado-section">
+        <h2>Sorteio</h2>
+        <RaffleControls
+          participants={names}
+          description={`Pool: ${names.length} participante(s)`}
+          primaryButtonLabel="Sortear"
+          compact
         />
-      </div>
-      <button className="secondary" type="button" onClick={addParticipant} disabled={!nameInput.trim()}>
-        Adicionar participante
-      </button>
-
-      <h2 style={{ marginTop: "2rem" }}>Sorteio</h2>
-      <RaffleControls
-        participants={names}
-        description={`Pool atual: ${names.length} participante(s).`}
-        primaryButtonLabel="Sortear"
-      />
+      </section>
     </div>
   );
 }

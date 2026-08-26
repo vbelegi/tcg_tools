@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FormEvent, useState } from "react";
 
 import { api } from "../api/client";
+import { tcgIconUrl } from "../utils/tcgIcons";
 
 export function TcgGamesPage() {
   const qc = useQueryClient();
@@ -51,74 +52,91 @@ export function TcgGamesPage() {
   };
 
   return (
-    <div>
-      <h1>TCGs</h1>
-      <p style={{ opacity: 0.85 }}>Cadastro de jogos para o calendário (cor dos chips).</p>
+    <div className="admin-page">
+      <header className="torneio-manage-header">
+        <div>
+          <h1>TCGs</h1>
+          <p className="torneio-manage-meta">
+            Jogos do calendário e chips · {games.length} cadastrado(s)
+          </p>
+        </div>
+      </header>
 
-      <form onSubmit={onSubmit} className="card" style={{ marginTop: "1rem", maxWidth: 420 }}>
-        <h2>Novo TCG</h2>
-        <div className="form-row">
-          <label htmlFor="tcg-name">Nome</label>
-          <input id="tcg-name" value={name} onChange={(e) => setName(e.target.value)} required />
-        </div>
-        <div className="form-row">
-          <label htmlFor="tcg-color">Cor (hex)</label>
-          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-            <input
-              id="tcg-color"
-              type="color"
-              value={color}
-              onChange={(e) => setColor(e.target.value)}
-              style={{ width: 48, height: 36, padding: 0 }}
-            />
-            <input value={color} onChange={(e) => setColor(e.target.value)} />
+      <details className="torneio-advanced admin-create-panel">
+        <summary>Novo TCG</summary>
+        <form onSubmit={onSubmit} className="admin-form-dense">
+          <div className="admin-form-grid">
+            <div className="form-row">
+              <label htmlFor="tcg-name">Nome</label>
+              <input id="tcg-name" value={name} onChange={(e) => setName(e.target.value)} required />
+            </div>
+            <div className="form-row">
+              <label htmlFor="tcg-color">Cor</label>
+              <div className="admin-color-row">
+                <input
+                  id="tcg-color"
+                  type="color"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                />
+                <input value={color} onChange={(e) => setColor(e.target.value)} />
+              </div>
+            </div>
           </div>
-        </div>
-        {error && <p className="error">{error}</p>}
-        <button className="primary" type="submit" disabled={create.isPending}>
-          Adicionar
-        </button>
-      </form>
+          {error && <p className="error">{error}</p>}
+          <button className="primary" type="submit" disabled={create.isPending}>
+            {create.isPending ? "Adicionando…" : "Adicionar"}
+          </button>
+        </form>
+      </details>
 
       {isLoading && <p>Carregando…</p>}
-      <table style={{ marginTop: "1.5rem" }}>
-        <thead>
-          <tr>
-            <th>Cor</th>
-            <th>Nome</th>
-            <th>Slug</th>
-            <th>Ativo</th>
-          </tr>
-        </thead>
-        <tbody>
-          {games.map((g) => (
-            <tr key={g.id} style={{ opacity: g.active === false ? 0.5 : 1 }}>
-              <td>
-                <input
-                  type="color"
-                  value={g.color_hex}
-                  onChange={(e) => updateColor.mutate({ id: g.id, color_hex: e.target.value })}
-                  title={g.color_hex}
-                  style={{ width: 40, height: 28, padding: 0 }}
-                />
-              </td>
-              <td>{g.name}</td>
-              <td>
-                <code>{g.slug}</code>
-              </td>
-              <td>
-                <button
-                  type="button"
-                  className="secondary"
-                  onClick={() => toggle.mutate({ id: g.id, active: g.active === false })}
-                >
-                  {g.active === false ? "Reativar" : "Desativar"}
-                </button>
-              </td>
+
+      <div className="resultado-table-wrap">
+        <table className="resultado-table">
+          <thead>
+            <tr>
+              <th>Jogo</th>
+              <th>Cor</th>
+              <th>Slug</th>
+              <th>Status</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {games.map((g) => (
+              <tr key={g.id} className={g.active === false ? "admin-row-inactive" : undefined}>
+                <td>
+                  <span className="tcg-row-label">
+                    <img src={tcgIconUrl(g.name)} alt="" width={22} height={22} className="tcg-row-icon" />
+                    <strong>{g.name}</strong>
+                  </span>
+                </td>
+                <td>
+                  <input
+                    type="color"
+                    value={g.color_hex}
+                    onChange={(e) => updateColor.mutate({ id: g.id, color_hex: e.target.value })}
+                    title={g.color_hex}
+                    className="admin-color-swatch"
+                  />
+                </td>
+                <td>
+                  <code>{g.slug}</code>
+                </td>
+                <td>
+                  <button
+                    type="button"
+                    className="secondary"
+                    onClick={() => toggle.mutate({ id: g.id, active: g.active === false })}
+                  >
+                    {g.active === false ? "Reativar" : "Desativar"}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
