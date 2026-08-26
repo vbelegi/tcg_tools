@@ -81,6 +81,6 @@ describe("PlayerProfilePage", () => {
     expect(screen.getByText("Fourse Points")).toBeInTheDocument();
     expect(screen.getByText("120")).toBeInTheDocument();
     expect(screen.getByText("Liga Semanal")).toBeInTheDocument();
-    expect(screen.getByText("Perfil inteligente")).toBeInTheDocument();
+    expect(screen.getByText("Insights")).toBeInTheDocument();
   });
 });

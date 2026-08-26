@@ -141,3 +141,30 @@ def test_create_torneio_requires_tcg(api_client: TestClient):
         },
     )
     assert r.status_code == 422
+
+
+def test_public_player_search(api_client: TestClient, db_session: Session):
+    register_player(
+        db_session,
+        display_name="Busca Alpha",
+        email="busca.alpha@example.com",
+        phone="+5511988880011",
+        password="abcdef",
+        birth_date=date(1994, 2, 2),
+    )
+    register_player(
+        db_session,
+        display_name="Outro Nome",
+        email="outro.nome@example.com",
+        phone="+5511988880012",
+        password="abcdef",
+        birth_date=date(1993, 3, 3),
+    )
+    api_client.post("/api/v1/auth/logout")
+    hit = api_client.get("/api/v1/jogadores/buscar", params={"q": "Alpha"})
+    assert hit.status_code == 200
+    body = hit.json()
+    assert len(body) == 1
+    assert body[0]["display_name"] == "Busca Alpha"
+    assert set(body[0].keys()) == {"id", "display_name", "avatar_url"}
+    assert "email" not in body[0]

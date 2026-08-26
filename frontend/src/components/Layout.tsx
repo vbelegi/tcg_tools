@@ -80,19 +80,23 @@ export function Layout() {
               <NavLink to="/tcgs">TCGs</NavLink>
             </>
           )}
-          {me && <NavLink to="/conta/senha">Alterar senha</NavLink>}
         </nav>
         <div className="sidebar-actions">
           {me ? (
-            <button
-              className="secondary"
-              type="button"
-              style={{ width: "100%" }}
-              onClick={() => logout.mutate()}
-              disabled={logout.isPending}
-            >
-              Sair ({me.display_name})
-            </button>
+            <>
+              <NavLink to={`/jogadores/${me.id}`} className="secondary sidebar-profile-link">
+                Meu Perfil
+              </NavLink>
+              <button
+                className="secondary"
+                type="button"
+                style={{ width: "100%" }}
+                onClick={() => logout.mutate()}
+                disabled={logout.isPending}
+              >
+                Sair ({me.display_name})
+              </button>
+            </>
           ) : (
             <button
               className="primary"

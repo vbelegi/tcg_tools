@@ -1,11 +1,15 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 
 import { api } from "../api/client";
+import { Modal } from "./Modal";
 
-export function AlterarSenhaPage() {
-  const navigate = useNavigate();
+type ChangePasswordModalProps = {
+  open: boolean;
+  onClose: () => void;
+};
+
+export function ChangePasswordModal({ open, onClose }: ChangePasswordModalProps) {
   const qc = useQueryClient();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -13,13 +17,22 @@ export function AlterarSenhaPage() {
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
 
+  useEffect(() => {
+    if (!open) return;
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirm("");
+    setError("");
+    setOk("");
+  }, [open]);
+
   const change = useMutation({
     mutationFn: () => api.changePassword(currentPassword, newPassword),
     onSuccess: async (res) => {
       setOk(res.message);
       setError("");
       await qc.invalidateQueries({ queryKey: ["auth-me"] });
-      window.setTimeout(() => navigate("/login", { replace: true }), 800);
+      window.setTimeout(() => onClose(), 700);
     },
     onError: (e) => {
       setOk("");
@@ -41,12 +54,24 @@ export function AlterarSenhaPage() {
   };
 
   return (
-    <div>
-      <h1>Alterar senha</h1>
-      <p style={{ opacity: 0.85 }}>Altera a senha do admin sem reinstalar o aplicativo.</p>
+    <Modal
+      open={open}
+      title="Alterar senha"
+      onClose={onClose}
+      footer={
+        <button
+          className="primary"
+          type="submit"
+          form="change-password-form"
+          disabled={change.isPending}
+        >
+          {change.isPending ? "Salvando…" : "Salvar nova senha"}
+        </button>
+      }
+    >
       {error && <p className="error">{error}</p>}
       {ok && <p className="success">{ok}</p>}
-      <form onSubmit={onSubmit}>
+      <form id="change-password-form" onSubmit={onSubmit}>
         <div className="form-row">
           <label htmlFor="cur-pass">Senha atual</label>
           <input
@@ -56,6 +81,7 @@ export function AlterarSenhaPage() {
             onChange={(e) => setCurrentPassword(e.target.value)}
             required
             minLength={6}
+            autoComplete="current-password"
           />
         </div>
         <div className="form-row">
@@ -67,6 +93,7 @@ export function AlterarSenhaPage() {
             onChange={(e) => setNewPassword(e.target.value)}
             required
             minLength={6}
+            autoComplete="new-password"
           />
         </div>
         <div className="form-row">
@@ -78,12 +105,10 @@ export function AlterarSenhaPage() {
             onChange={(e) => setConfirm(e.target.value)}
             required
             minLength={6}
+            autoComplete="new-password"
           />
         </div>
-        <button className="primary" type="submit" disabled={change.isPending}>
-          {change.isPending ? "Salvando…" : "Salvar nova senha"}
-        </button>
       </form>
-    </div>
+    </Modal>
   );
 }

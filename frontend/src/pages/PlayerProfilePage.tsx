@@ -1,5 +1,5 @@
-import { FormEvent, useMemo, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Bar,
@@ -15,6 +15,7 @@ import {
 
 import { api } from "../api/client";
 import type { ProfileHistoryRow } from "../api/types";
+import { ChangePasswordModal } from "../components/ChangePasswordModal";
 import { resolveAvatarUrl, tcgIconUrl } from "../utils/tcgIcons";
 
 function formatFinish(rank: number | null | undefined): string {
@@ -32,14 +33,23 @@ function historyVisible(rows: ProfileHistoryRow[], filter: string, limit: number
 
 export function PlayerProfilePage() {
   const { id = "" } = useParams();
+  const navigate = useNavigate();
   const userId = Number(id);
   const qc = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [nameDraft, setNameDraft] = useState("");
   const [editingName, setEditingName] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
   const [historyFilter, setHistoryFilter] = useState("all");
   const [historyLimit, setHistoryLimit] = useState(8);
   const [error, setError] = useState("");
+  const [searchQ, setSearchQ] = useState("");
+  const [debouncedQ, setDebouncedQ] = useState("");
+
+  useEffect(() => {
+    const t = window.setTimeout(() => setDebouncedQ(searchQ.trim()), 250);
+    return () => window.clearTimeout(t);
+  }, [searchQ]);
 
   const { data, isLoading, error: loadError } = useQuery({
     queryKey: ["profile", userId],
@@ -51,6 +61,12 @@ export function PlayerProfilePage() {
     queryKey: ["auth-me"],
     queryFn: () => api.authMe(),
     retry: false,
+  });
+
+  const { data: searchHits = [], isFetching: searching } = useQuery({
+    queryKey: ["player-search", debouncedQ],
+    queryFn: () => api.searchPlayers(debouncedQ),
+    enabled: debouncedQ.length >= 2,
   });
 
   const saveName = useMutation({
@@ -121,6 +137,49 @@ export function PlayerProfilePage() {
 
   return (
     <div className="profile-page">
+      <div className="profile-toolbar">
+        <div className="profile-search">
+          <label htmlFor="profile-player-search" className="sr-only">
+            Buscar jogador
+          </label>
+          <input
+            id="profile-player-search"
+            value={searchQ}
+            onChange={(e) => setSearchQ(e.target.value)}
+            placeholder="Buscar jogador…"
+            autoComplete="off"
+          />
+          {debouncedQ.length >= 2 && (
+            <ul className="profile-search-results">
+              {searching && <li className="muted">Buscando…</li>}
+              {!searching && searchHits.length === 0 && (
+                <li className="muted">Nenhum jogador encontrado.</li>
+              )}
+              {searchHits.map((hit) => (
+                <li key={hit.id}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQ("");
+                      setDebouncedQ("");
+                      navigate(`/jogadores/${hit.id}`);
+                    }}
+                  >
+                    <img
+                      src={resolveAvatarUrl(hit.avatar_url)}
+                      alt=""
+                      width={28}
+                      height={28}
+                    />
+                    <span>{hit.display_name}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
       {error && <p className="error">{error}</p>}
 
       <section className="profile-hero">
@@ -184,16 +243,25 @@ export function PlayerProfilePage() {
               <div className="profile-name-row">
                 <h1>{data.display_name}</h1>
                 {canEdit && (
-                  <button
-                    type="button"
-                    className="secondary"
-                    onClick={() => {
-                      setNameDraft(data.display_name);
-                      setEditingName(true);
-                    }}
-                  >
-                    Editar nome
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      className="secondary"
+                      onClick={() => {
+                        setNameDraft(data.display_name);
+                        setEditingName(true);
+                      }}
+                    >
+                      Editar nome
+                    </button>
+                    <button
+                      type="button"
+                      className="secondary"
+                      onClick={() => setPasswordOpen(true)}
+                    >
+                      Alterar senha
+                    </button>
+                  </>
                 )}
               </div>
             )}
@@ -250,7 +318,7 @@ export function PlayerProfilePage() {
 
       {data.insights.length > 0 && (
         <section className="profile-section">
-          <h2>Perfil inteligente</h2>
+          <h2>Insights</h2>
           <div className="profile-insights">
             {data.insights.map((text) => (
               <article key={text} className="profile-insight">
@@ -424,6 +492,8 @@ export function PlayerProfilePage() {
           </>
         )}
       </section>
+
+      <ChangePasswordModal open={passwordOpen} onClose={() => setPasswordOpen(false)} />
     </div>
   );
 }

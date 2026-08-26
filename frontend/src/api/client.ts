@@ -188,6 +188,11 @@ export const api = {
       }>
     >(`/users/search?q=${encodeURIComponent(q)}`),
 
+  searchPlayers: (q: string) =>
+    request<Array<{ id: number; display_name: string; avatar_url: string | null }>>(
+      `/jogadores/buscar?q=${encodeURIComponent(q)}`,
+    ),
+
   createUser: (body: {
     display_name: string;
     email: string;

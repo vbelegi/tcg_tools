@@ -1,4 +1,5 @@
 import { FormEvent, useState } from "react";
+import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "../api/client";
@@ -112,7 +113,9 @@ export function UsuariosPage() {
         <tbody>
           {data.map((u) => (
             <tr key={u.id}>
-              <td>{u.display_name}</td>
+              <td>
+                <Link to={`/jogadores/${u.id}`}>{u.display_name}</Link>
+              </td>
               <td>{u.email}</td>
               <td>{u.phone}</td>
               <td>{u.role}</td>

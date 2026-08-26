@@ -12,7 +12,7 @@ from app.api.deps import RequireAdmin, RequireStaff, get_optional_user
 from app.core.auth import AuthError, create_incomplete_user, create_invite, private_user_dict, public_user_dict
 from app.core.auth.fourse_points import ranking
 from app.db.session import get_db
-from app.models import Player, User, UserRole
+from app.models import Player, User, UserRole, UserStatus
 from app.services.profile_service import build_public_profile
 
 router = APIRouter(tags=["users"])
@@ -103,6 +103,38 @@ def search_users(
         .all()
     )
     return [public_user_dict(u) | {"email": u.email, "phone": u.phone, "status": u.status} for u in rows]
+
+
+@router.get("/jogadores/buscar")
+def public_player_search(
+    db: Session = Depends(get_db),
+    q: str = Query(min_length=2, max_length=80),
+    limit: int = Query(default=12, ge=1, le=30),
+):
+    """Public search by display name only (no email/phone)."""
+    like = f"%{q.strip()}%"
+    rows = (
+        db.query(User)
+        .filter(User.display_name.ilike(like), User.status == UserStatus.active.value)
+        .order_by(User.display_name.asc())
+        .limit(limit * 2)
+        .all()
+    )
+    out = []
+    for u in rows:
+        if u.role == UserRole.admin.value:
+            if db.query(Player).filter(Player.user_id == u.id).count() == 0:
+                continue
+        out.append(
+            {
+                "id": u.id,
+                "display_name": u.display_name,
+                "avatar_url": public_user_dict(u).get("avatar_url"),
+            }
+        )
+        if len(out) >= limit:
+            break
+    return out
 
 
 @router.get("/ranking")

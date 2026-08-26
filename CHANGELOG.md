@@ -10,7 +10,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
-- **Perfil do jogador:** dashboard com stats, insights, badges TCG, Recharts (FP por jogo/mês), histórico filtrável; avatar + editar nome
+- **Perfil — navegação:** Meu Perfil no sidebar; nome linkado em Usuários; busca pública `GET /jogadores/buscar`
+- **Perfil — senha:** modal Alterar senha no próprio perfil (removido do sidebar)
+- **Perfil do jogador:** dashboard com stats, Insights, badges TCG, Recharts (FP por jogo/mês), histórico filtrável; avatar + editar nome
 - **Avatar:** `POST /auth/me/avatar` (512 KB, WebP 256px) servido em `/media`; placeholder `/avatars/default.png`
 - **PATCH /auth/me:** atualizar `display_name`
 - **Calendário público** (`/calendario`): grade mensal com todos os torneios, painel do dia e CTAs por status/auth
@@ -26,6 +28,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- **Perfil:** seção renomeada para **Insights**; `/conta/senha` redireciona à home
 - **Torneio:** `tcg_game_id` obrigatório na criação (API + UI interno/externo)
 - **Perfil:** FP oculto para visitantes (visível para dono e admin); decklists e histórico públicos
 - **Inscrição aberta:** guest/player veem drafts com `registration_open` (vitrine + CTA); draft fechado continua oculto

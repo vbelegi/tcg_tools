@@ -74,6 +74,7 @@ describe("Layout", () => {
     );
     await waitFor(() => expect(screen.getByText("Premiação")).toBeInTheDocument());
     expect(screen.getByText("Usuários")).toBeInTheDocument();
-    expect(screen.getByText("Alterar senha")).toBeInTheDocument();
+    expect(screen.getByText("Meu Perfil")).toBeInTheDocument();
+    expect(screen.queryByText("Alterar senha")).not.toBeInTheDocument();
   });
 });

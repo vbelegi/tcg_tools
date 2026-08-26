@@ -58,11 +58,13 @@ Sem login / player: vê torneios **`finished`**, drafts com **`registration_open
 
 ## Perfil do jogador (`/jogadores/{id}`)
 
-Público: stats (torneios, títulos, top 8, melhor colocação), insights heurísticos, badges de TCG (torneios **finalizados**), gráficos FP por jogo/mês, histórico + decklists.
+Público: stats (torneios, títulos, top 8, melhor colocação), **Insights** heurísticos, badges de TCG (torneios **finalizados**), gráficos FP por jogo/mês, histórico + decklists.
+
+**Acesso:** Ranking FP; **Meu Perfil** no sidebar (logado); nome linkado em `/usuarios` (admin); busca pública no topo do perfil (`GET /jogadores/buscar?q=` → só `id`, `display_name`, `avatar_url`).
 
 **FP:** visível só para o **próprio jogador** e **admin**.
 
-**Avatar:** upload próprio (`POST /auth/me/avatar`, máx. 512 KB; redimensiona para 256×256 WebP em `data/media/avatars/`). Placeholder: `/avatars/default.png`. Edição de nome: `PATCH /auth/me`.
+**Avatar:** upload próprio (`POST /auth/me/avatar`, máx. 512 KB; redimensiona para 256×256 WebP em `data/media/avatars/`). Placeholder: `/avatars/default.png`. Edição de nome: `PATCH /auth/me`. **Alterar senha** só no próprio perfil (modal); removido do sidebar.
 
 Staff/admin: todos os status e operação completa.
 

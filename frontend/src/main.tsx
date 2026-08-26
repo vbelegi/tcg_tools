@@ -4,7 +4,6 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { RequireAdmin, RequireAuth } from "./components/RequireAuth";
-import { AlterarSenhaPage } from "./pages/AlterarSenhaPage";
 import { CalendarPage } from "./pages/CalendarPage";
 import { ClaimInvitePage } from "./pages/ClaimInvitePage";
 import { Home } from "./pages/Home";
@@ -40,6 +39,7 @@ createRoot(document.getElementById("root")!).render(
             <Route path="torneios" element={<TorneiosListPage />} />
             <Route path="torneios/:id" element={<TorneioDetailPage />} />
             <Route path="torneios/:id/resultado" element={<TorneioResultadoPage />} />
+            <Route path="conta/senha" element={<Navigate to="/" replace />} />
           </Route>
           <Route element={<RequireAuth />}>
             <Route element={<Layout />}>
@@ -48,7 +48,6 @@ createRoot(document.getElementById("root")!).render(
               <Route path="torneios/novo" element={<TorneioNovoPage />} />
               <Route path="torneios/externo" element={<TorneioExternoPage />} />
               <Route path="torneios/:id/rodadas/:n" element={<TorneioRodadaPage />} />
-              <Route path="conta/senha" element={<AlterarSenhaPage />} />
             </Route>
           </Route>
           <Route element={<RequireAdmin />}>
