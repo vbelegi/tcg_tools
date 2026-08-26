@@ -17,15 +17,6 @@ function RankBadge({ rank }: { rank: number }) {
   return <span className={`resultado-rank-badge${top}`}>{rank}</span>;
 }
 
-function FpBar({ points, maxPoints }: { points: number; maxPoints: number }) {
-  const pct = maxPoints > 0 ? Math.max(4, Math.round((points / maxPoints) * 100)) : 0;
-  return (
-    <div className="ranking-fp-bar" aria-hidden>
-      <span className="ranking-fp-bar-fill" style={{ width: `${pct}%` }} />
-    </div>
-  );
-}
-
 function PlayerCell({ row }: { row: RankingRow }) {
   return (
     <Link to={`/jogadores/${row.user_id}`} className="ranking-player-link">
@@ -50,7 +41,6 @@ export function RankingPage() {
   const rows = data as RankingRow[];
   const podium = rows.filter((r) => r.rank <= 3);
   const rest = rows.filter((r) => r.rank > 3);
-  const maxPoints = rows[0]?.points ?? 0;
 
   return (
     <div className="ranking-page">
@@ -92,7 +82,6 @@ export function RankingPage() {
                 <strong>{row.points}</strong>
                 <span className="muted">FP</span>
               </div>
-              <FpBar points={row.points} maxPoints={maxPoints} />
             </article>
           ))}
         </section>
@@ -120,7 +109,6 @@ export function RankingPage() {
                     </td>
                     <td className="ranking-fp-cell">
                       <span className="ranking-fp-value">{row.points}</span>
-                      <FpBar points={row.points} maxPoints={maxPoints} />
                     </td>
                   </tr>
                 ))}
