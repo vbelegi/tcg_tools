@@ -27,6 +27,14 @@ def get_torneio_service(db: Session = Depends(get_db)) -> TorneioService:
     return TorneioService(db)
 
 
+def _ensure_guest_finished(viewer: User | None, status: str) -> None:
+    """Anonymous visitors may only access finished events."""
+    if viewer is not None:
+        return
+    if status != "finished":
+        raise HTTPException(status_code=404, detail="Torneio não encontrado.")
+
+
 def _player_payload(player) -> dict:
     return {
         "id": player.id,
@@ -94,19 +102,24 @@ def create_external(
 @router.get("")
 def list_torneios(
     svc: TorneioService = Depends(get_torneio_service),
-    _viewer: User | None = Depends(get_optional_user),
+    viewer: User | None = Depends(get_optional_user),
 ):
-    return svc.list_events()
+    events = svc.list_events()
+    if viewer is None:
+        return [e for e in events if e.get("status") == "finished"]
+    return events
 
 
 @router.get("/{event_id}")
 def get_torneio(
     event_id: int,
     svc: TorneioService = Depends(get_torneio_service),
-    _viewer: User | None = Depends(get_optional_user),
+    viewer: User | None = Depends(get_optional_user),
 ):
     try:
-        return svc.get_event(event_id)
+        data = svc.get_event(event_id)
+        _ensure_guest_finished(viewer, data.get("status", ""))
+        return data
     except TorneioError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
@@ -324,9 +337,11 @@ def finalizar(
 def classificacao(
     event_id: int,
     svc: TorneioService = Depends(get_torneio_service),
-    _viewer: User | None = Depends(get_optional_user),
+    viewer: User | None = Depends(get_optional_user),
 ):
     try:
+        event = svc.get_event(event_id)
+        _ensure_guest_finished(viewer, event.get("status", ""))
         return svc.get_classificacao(event_id)
     except TorneioError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -350,9 +365,11 @@ def patch_classificacao(
 def premiacao_torneio(
     event_id: int,
     svc: TorneioService = Depends(get_torneio_service),
-    _viewer: User | None = Depends(get_optional_user),
+    viewer: User | None = Depends(get_optional_user),
 ):
     try:
+        event = svc.get_event(event_id)
+        _ensure_guest_finished(viewer, event.get("status", ""))
         return svc.get_premiacao(event_id)
     except TorneioError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc

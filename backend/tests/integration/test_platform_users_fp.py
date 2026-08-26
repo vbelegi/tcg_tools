@@ -173,3 +173,53 @@ def test_delete_torneio_admin(api_client: TestClient):
     eid = r.json()["id"]
     assert api_client.delete(f"/api/v1/torneios/{eid}").status_code == 204
     assert api_client.get(f"/api/v1/torneios/{eid}").status_code == 404
+
+
+def test_guest_sees_only_finished_torneios(api_client: TestClient):
+    draft = api_client.post(
+        "/api/v1/torneios",
+        json={
+            "name": "Draft Guest Hide",
+            "event_date": date.today().isoformat(),
+            "format": "swiss",
+            "max_rounds": 2,
+            "entry_fee": 10,
+            "best_of": 3,
+            "premiacao_preset_id": "standard",
+        },
+    )
+    assert draft.status_code == 200
+    draft_id = draft.json()["id"]
+
+    external = api_client.post(
+        "/api/v1/torneios/externos",
+        json={
+            "name": "Finished Public",
+            "event_date": date.today().isoformat(),
+            "format": "swiss",
+            "premiacao_preset_id": "standard",
+            "entry_fee": 10,
+            "placements": [
+                {"placement": 1, "display_name": "A"},
+                {"placement": 2, "display_name": "B"},
+                {"placement": 3, "display_name": "C"},
+                {"placement": 4, "display_name": "D"},
+            ],
+        },
+    )
+    assert external.status_code == 200, external.text
+    finished_id = external.json()["id"]
+
+    assert api_client.post("/api/v1/auth/logout").status_code == 200
+
+    listed = api_client.get("/api/v1/torneios")
+    assert listed.status_code == 200
+    ids = {e["id"] for e in listed.json()}
+    assert finished_id in ids
+    assert draft_id not in ids
+    assert all(e["status"] == "finished" for e in listed.json())
+
+    assert api_client.get(f"/api/v1/torneios/{draft_id}").status_code == 404
+    assert api_client.get(f"/api/v1/torneios/{finished_id}").status_code == 200
+    assert api_client.get(f"/api/v1/torneios/{finished_id}/classificacao").status_code == 200
+    assert api_client.get(f"/api/v1/torneios/{draft_id}/classificacao").status_code == 404

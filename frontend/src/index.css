@@ -386,6 +386,8 @@ select.score-select {
   overflow-y: auto;
   flex: 1 1 auto;
   min-height: 0;
+  padding-right: 0.75rem;
+  scrollbar-gutter: stable;
 }
 
 .modal-body .form-row {

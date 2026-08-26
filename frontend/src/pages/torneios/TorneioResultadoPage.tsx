@@ -26,6 +26,14 @@ export function TorneioResultadoPage() {
   const eventId = Number(id);
   const qc = useQueryClient();
 
+  const { data: me, isFetched: meFetched } = useQuery({
+    queryKey: ["auth-me"],
+    queryFn: () => api.authMe(),
+    retry: false,
+  });
+  const isStaff = Boolean(me && (me.role === "admin" || me.role === "staff"));
+  const isGuest = meFetched && !me;
+
   const [decklists, setDecklists] = useState<Record<number, string>>({});
   const [decklistsSaved, setDecklistsSaved] = useState(false);
   const [exportError, setExportError] = useState("");
@@ -37,7 +45,7 @@ export function TorneioResultadoPage() {
     return () => window.clearTimeout(t);
   }, [decklistsSaved]);
 
-  const { data: torneio } = useQuery({
+  const { data: torneio, isError, error, isLoading: torneioLoading } = useQuery({
     queryKey: ["torneio", eventId],
     queryFn: () => api.getTorneio(eventId),
   });
@@ -45,11 +53,13 @@ export function TorneioResultadoPage() {
   const { data: classificacao } = useQuery({
     queryKey: ["classificacao", eventId],
     queryFn: () => api.getClassificacao(eventId),
+    enabled: Boolean(torneio),
   });
 
   const { data: premiacao } = useQuery({
     queryKey: ["premiacao-torneio", eventId],
     queryFn: () => api.getPremiacao(eventId),
+    enabled: Boolean(torneio),
   });
 
   const saveDecklists = useMutation({
@@ -132,10 +142,20 @@ export function TorneioResultadoPage() {
     );
   };
 
+  if (torneioLoading || !meFetched) return <p>Carregando...</p>;
+  if (isError || !torneio) {
+    return <p className="error">{(error as Error)?.message || "Torneio não encontrado."}</p>;
+  }
+
   return (
     <div>
-      <Link to={`/torneios/${eventId}`}>← Voltar</Link>
+      <Link to={isGuest ? "/torneios" : `/torneios/${eventId}`}>← Voltar</Link>
       <h1>Resultado final</h1>
+      {torneio.name && (
+        <p style={{ marginTop: "-0.5rem", opacity: 0.85 }}>
+          {torneio.name} · {torneio.event_date}
+        </p>
+      )}
 
       <h2 className="standings-heading">
         Classificação
@@ -160,7 +180,7 @@ export function TorneioResultadoPage() {
               <th title="Opponent Match Win % — % de vitórias em partidas dos oponentes">OMW%</th>
               <th title="Game Win % — % de vitórias em games do jogador">GW%</th>
               <th title="Opponent Game Win % — % de vitórias em games dos oponentes">OGW%</th>
-              <th>Decklist (opcional)</th>
+              <th>Decklist</th>
             </tr>
           </thead>
           <tbody>
@@ -173,7 +193,9 @@ export function TorneioResultadoPage() {
                 <td>{s.is_drop ? "—" : formatPct(s.gw)}</td>
                 <td>{s.is_drop ? "—" : formatPct(s.ogw)}</td>
                 <td>
-                  {!s.is_drop && (
+                  {s.is_drop ? (
+                    "—"
+                  ) : isStaff ? (
                     <input
                       placeholder="Nome ou URL"
                       defaultValue={s.decklist ?? ""}
@@ -181,6 +203,16 @@ export function TorneioResultadoPage() {
                         setDecklists({ ...decklists, [s.player_id]: e.target.value })
                       }
                     />
+                  ) : s.decklist ? (
+                    s.decklist.startsWith("http") ? (
+                      <a href={s.decklist} target="_blank" rel="noreferrer">
+                        {s.decklist}
+                      </a>
+                    ) : (
+                      s.decklist
+                    )
+                  ) : (
+                    "—"
                   )}
                 </td>
               </tr>
@@ -189,26 +221,29 @@ export function TorneioResultadoPage() {
         </table>
       )}
 
-      <div style={{ marginTop: "1rem" }}>
-        <button
-          className="secondary"
-          onClick={() => saveDecklists.mutate()}
-          disabled={saveDecklists.isPending}
-        >
-          {saveDecklists.isPending ? "Salvando…" : "Salvar decklists"}
-        </button>
-        {decklistsSaved && (
-          <div className="save-feedback success" role="status">
-            Salvo com sucesso
-          </div>
-        )}
-      </div>
+      {isStaff && (
+        <div style={{ marginTop: "1rem" }}>
+          <button
+            className="secondary"
+            onClick={() => saveDecklists.mutate()}
+            disabled={saveDecklists.isPending}
+          >
+            {saveDecklists.isPending ? "Salvando…" : "Salvar decklists"}
+          </button>
+          {decklistsSaved && (
+            <div className="save-feedback success" role="status">
+              Salvo com sucesso
+            </div>
+          )}
+        </div>
+      )}
 
       <h2 style={{ marginTop: "2rem" }}>Premiação</h2>
 
-      {torneio && torneio.entry_fee === 0 && (
+      {torneio.entry_fee === 0 && (
         <p className="warning">
-          Inscrição R$ 0 — sem pot a distribuir. Use a aba Premiação para calcular split isolado.
+          Inscrição R$ 0 — sem pot a distribuir.
+          {isStaff && " Use a aba Premiação para calcular split isolado."}
         </p>
       )}
 
@@ -267,63 +302,67 @@ export function TorneioResultadoPage() {
         </p>
       )}
 
-      <h2 style={{ marginTop: "2rem" }}>Sorteio</h2>
-      <p style={{ fontSize: "0.9rem", opacity: 0.85 }}>
-        Base: jogadores sem drop ({baseRaffleCandidates.length}). Marque quem entra na pool do
-        sorteio (ex.: desmarque o campeão).
-      </p>
-
-      {baseRaffleCandidates.length > 0 && (
-        <div className="raffle-pool">
-          <div className="raffle-pool-actions">
-            <button className="secondary" type="button" onClick={excludeFirstPlace}>
-              Excluir 1º lugar
-            </button>
-            <button
-              className="secondary"
-              type="button"
-              onClick={() => setRaffleExcludedIds([])}
-              disabled={raffleExcludedIds.length === 0}
-            >
-              Incluir todos
-            </button>
-          </div>
-          <ul className="raffle-pool-list">
-            {baseRaffleCandidates.map((s) => {
-              const included = !raffleExcludedIds.includes(s.player_id);
-              return (
-                <li key={s.player_id}>
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={included}
-                      onChange={(e) => toggleRaffleExclusion(s.player_id, e.target.checked)}
-                    />
-                    <span>
-                      {s.rank}º — {s.name}
-                    </span>
-                  </label>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      )}
-
-      <RaffleControls
-        participants={raffleNames}
-        description={`Pool do sorteio: ${raffleNames.length} jogador(es)${
-          raffleExcludedIds.length > 0 ? ` (${raffleExcludedIds.length} excluído(s))` : ""
-        }.`}
-        primaryButtonLabel="Sortear entre jogadores do torneio"
-      />
-
-      {torneio?.status === "finished" && (
+      {isStaff && (
         <>
-          <button className="primary" style={{ marginTop: "1.5rem" }} onClick={handleExport}>
-            Exportar log JSON
-          </button>
-          {exportError && <p className="error">{exportError}</p>}
+          <h2 style={{ marginTop: "2rem" }}>Sorteio</h2>
+          <p style={{ fontSize: "0.9rem", opacity: 0.85 }}>
+            Base: jogadores sem drop ({baseRaffleCandidates.length}). Marque quem entra na pool do
+            sorteio (ex.: desmarque o campeão).
+          </p>
+
+          {baseRaffleCandidates.length > 0 && (
+            <div className="raffle-pool">
+              <div className="raffle-pool-actions">
+                <button className="secondary" type="button" onClick={excludeFirstPlace}>
+                  Excluir 1º lugar
+                </button>
+                <button
+                  className="secondary"
+                  type="button"
+                  onClick={() => setRaffleExcludedIds([])}
+                  disabled={raffleExcludedIds.length === 0}
+                >
+                  Incluir todos
+                </button>
+              </div>
+              <ul className="raffle-pool-list">
+                {baseRaffleCandidates.map((s) => {
+                  const included = !raffleExcludedIds.includes(s.player_id);
+                  return (
+                    <li key={s.player_id}>
+                      <label className="checkbox-label">
+                        <input
+                          type="checkbox"
+                          checked={included}
+                          onChange={(e) => toggleRaffleExclusion(s.player_id, e.target.checked)}
+                        />
+                        <span>
+                          {s.rank}º — {s.name}
+                        </span>
+                      </label>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+
+          <RaffleControls
+            participants={raffleNames}
+            description={`Pool do sorteio: ${raffleNames.length} jogador(es)${
+              raffleExcludedIds.length > 0 ? ` (${raffleExcludedIds.length} excluído(s))` : ""
+            }.`}
+            primaryButtonLabel="Sortear entre jogadores do torneio"
+          />
+
+          {torneio.status === "finished" && (
+            <>
+              <button className="primary" style={{ marginTop: "1.5rem" }} onClick={handleExport}>
+                Exportar log JSON
+              </button>
+              {exportError && <p className="error">{exportError}</p>}
+            </>
+          )}
         </>
       )}
     </div>

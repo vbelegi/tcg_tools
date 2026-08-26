@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, Navigate, useParams } from "react-router-dom";
 
 import { ConfirmModal } from "../../components/ConfirmModal";
 import { Modal } from "../../components/Modal";
@@ -15,13 +15,14 @@ export function TorneioDetailPage() {
   const { id } = useParams<{ id: string }>();
   const eventId = Number(id);
   const qc = useQueryClient();
-  const { data: me } = useQuery({
+  const { data: me, isFetched: meFetched } = useQuery({
     queryKey: ["auth-me"],
     queryFn: () => api.authMe(),
     retry: false,
   });
   const isStaff = me && (me.role === "admin" || me.role === "staff");
   const isAdmin = me?.role === "admin";
+  const isGuest = meFetched && !me;
   const [playerName, setPlayerName] = useState("");
   const [playerSeed, setPlayerSeed] = useState("");
   const [playerEmail, setPlayerEmail] = useState("");
@@ -47,7 +48,7 @@ export function TorneioDetailPage() {
   const nextRoundBtnRef = useRef<HTMLButtonElement>(null);
   const finalizeBtnRef = useRef<HTMLButtonElement>(null);
 
-  const { data: torneio } = useQuery({
+  const { data: torneio, isError, error: torneioError, isLoading: torneioLoading } = useQuery({
     queryKey: ["torneio", eventId],
     queryFn: () => api.getTorneio(eventId),
   });
@@ -237,7 +238,18 @@ export function TorneioDetailPage() {
     });
   }, [torneio?.between_rounds, torneio?.can_start_next_round, torneio?.can_finalize, torneio?.completed_rounds]);
 
-  if (!torneio) return <p>Carregando...</p>;
+  if (isGuest && torneio?.status === "finished") {
+    return <Navigate to={`/torneios/${eventId}/resultado`} replace />;
+  }
+
+  if (torneioLoading || !meFetched) return <p>Carregando...</p>;
+  if (isError || !torneio) {
+    return (
+      <p className="error">
+        {(torneioError instanceof Error ? torneioError.message : null) || "Torneio não encontrado."}
+      </p>
+    );
+  }
 
   const isDraft = torneio.status === "draft";
   const isRunning = torneio.status === "running";

@@ -44,11 +44,11 @@ FP_i = \mathrm{round}(\mathrm{premio\_fracao}(i) \times N \times K)
 
 ## Visibilidade pública
 
-Sem login: lista/resultados de torneios, perfis públicos (nome de exibição, histórico, decklists), ranking FP.
+Sem login: **apenas torneios `finished`** (lista → resultado com classificação, premiação e decklists em leitura); perfis públicos (nome de exibição, histórico, decklists); ranking FP. Draft/running ficam ocultos.
 
 **Nunca** expor email, celular, nascimento ou responsável em endpoints públicos.
 
-Logado (player ativo): + inscrição em torneios com `registration_open`.
+Logado (player ativo): + inscrição em torneios com `registration_open`. Staff/admin veem e operam todos os status.
 
 ## Torneios externos
 

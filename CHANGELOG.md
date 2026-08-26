@@ -16,6 +16,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- **Visitante:** lista só torneios `finished`; clique abre resultado (classificação + decklists leitura); API oculta draft/running
+- **Auth modal:** padding na scrollbar do formulário
 - **Lista de torneios:** “Novo torneio” / “Importar externo” só para staff/admin (externo só admin); links `.secondary` no estilo pill
 - **Auth modal:** layout mais estreito, inputs full-width, body scrollável e ações no footer
 - **Data de nascimento:** obrigatória no register/claim; responsável só se menor de 18
