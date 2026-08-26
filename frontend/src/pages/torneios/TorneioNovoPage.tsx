@@ -7,8 +7,15 @@ import { SeFormatOptions, type SeBoConfig } from "../../components/SeFormatOptio
 export function TorneioNovoPage() {
   const navigate = useNavigate();
   const { data: presets } = useQuery({ queryKey: ["presets"], queryFn: api.getPresets });
+  const { data: tcgGames } = useQuery({
+    queryKey: ["tcg-games"],
+    queryFn: () => api.listTcgGames(),
+  });
   const [name, setName] = useState("");
   const [eventDate, setEventDate] = useState(new Date().toISOString().slice(0, 10));
+  const [startTime, setStartTime] = useState("19:00");
+  const [description, setDescription] = useState("");
+  const [tcgGameId, setTcgGameId] = useState("");
   const [format, setFormat] = useState<"swiss" | "single_elimination">("swiss");
   const [maxRounds, setMaxRounds] = useState("");
   const [entryFee, setEntryFee] = useState("35");
@@ -17,7 +24,7 @@ export function TorneioNovoPage() {
   const [thirdPlaceMatch, setThirdPlaceMatch] = useState(false);
   const [seBoConfig, setSeBoConfig] = useState<SeBoConfig>({});
   const [expectedPlayers, setExpectedPlayers] = useState("8");
-  const [registrationOpen, setRegistrationOpen] = useState(false);
+  const [registrationOpen, setRegistrationOpen] = useState(true);
   const [error, setError] = useState("");
 
   const sePhaseRounds = useMemo(() => {
@@ -49,6 +56,9 @@ export function TorneioNovoPage() {
             ? seBoConfig
             : undefined,
         registration_open: registrationOpen,
+        description: description.trim() || null,
+        start_time: startTime || null,
+        tcg_game_id: tcgGameId ? Number(tcgGameId) : null,
       });
     },
     onSuccess: (t) => navigate(`/torneios/${t.id}`),
@@ -63,12 +73,51 @@ export function TorneioNovoPage() {
     <div>
       <h1>Novo torneio</h1>
       <div className="form-row">
-        <label>Nome</label>
-        <input value={name} onChange={(e) => setName(e.target.value)} />
+        <label htmlFor="torneio-name">Nome</label>
+        <input id="torneio-name" value={name} onChange={(e) => setName(e.target.value)} />
       </div>
       <div className="form-row">
-        <label>Data</label>
-        <input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
+        <label htmlFor="torneio-tcg">TCG</label>
+        <select
+          id="torneio-tcg"
+          value={tcgGameId}
+          onChange={(e) => setTcgGameId(e.target.value)}
+        >
+          <option value="">— selecionar —</option>
+          {tcgGames?.map((g) => (
+            <option key={g.id} value={g.id}>
+              {g.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="form-row">
+        <label htmlFor="torneio-date">Data</label>
+        <input
+          id="torneio-date"
+          type="date"
+          value={eventDate}
+          onChange={(e) => setEventDate(e.target.value)}
+        />
+      </div>
+      <div className="form-row">
+        <label htmlFor="torneio-time">Horário (opcional)</label>
+        <input
+          id="torneio-time"
+          type="time"
+          value={startTime}
+          onChange={(e) => setStartTime(e.target.value)}
+        />
+      </div>
+      <div className="form-row">
+        <label htmlFor="torneio-desc">Descrição (calendário)</label>
+        <textarea
+          id="torneio-desc"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={3}
+          placeholder="Breve texto para o calendário público"
+        />
       </div>
       <div className="form-row">
         <label>Formato</label>
@@ -80,12 +129,22 @@ export function TorneioNovoPage() {
       {format === "swiss" && (
         <div className="form-row">
           <label>Rodadas máximas (vazio = automático ceil(log2(N)))</label>
-          <input type="number" min={1} value={maxRounds} onChange={(e) => setMaxRounds(e.target.value)} />
+          <input
+            type="number"
+            min={1}
+            value={maxRounds}
+            onChange={(e) => setMaxRounds(e.target.value)}
+          />
         </div>
       )}
       <div className="form-row">
         <label>Valor inscrição (R$)</label>
-        <input type="number" step="0.01" value={entryFee} onChange={(e) => setEntryFee(e.target.value)} />
+        <input
+          type="number"
+          step="0.01"
+          value={entryFee}
+          onChange={(e) => setEntryFee(e.target.value)}
+        />
       </div>
       <div className="form-row">
         <label>Melhor de (padrão global)</label>
@@ -120,22 +179,28 @@ export function TorneioNovoPage() {
         <label>Preset premiação</label>
         <select value={presetId} onChange={(e) => setPresetId(e.target.value)}>
           {presetIds.map((id) => (
-            <option key={id} value={id}>{presets?.presets[id]?.label ?? id}</option>
+            <option key={id} value={id}>
+              {presets?.presets[id]?.label ?? id}
+            </option>
           ))}
         </select>
       </div>
       <div className="form-row">
-        <label>
+        <label className="checkbox-label">
           <input
             type="checkbox"
             checked={registrationOpen}
             onChange={(e) => setRegistrationOpen(e.target.checked)}
-          />{" "}
-          Abrir inscrições para jogadores logados
+          />
+          Inscrições abertas (self-inscrição)
         </label>
       </div>
       {error && <p className="error">{error}</p>}
-      <button className="primary" onClick={() => mutation.mutate()} disabled={!name || mutation.isPending}>
+      <button
+        className="primary"
+        onClick={() => mutation.mutate()}
+        disabled={!name || mutation.isPending}
+      >
         Criar
       </button>
     </div>

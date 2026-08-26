@@ -65,6 +65,7 @@ export function Layout() {
           <NavLink to="/" end>
             Início
           </NavLink>
+          <NavLink to="/calendario">Calendário</NavLink>
           <NavLink to="/ranking">Ranking FP</NavLink>
           <NavLink to="/torneios">Torneios</NavLink>
           {isStaff && (
@@ -73,7 +74,12 @@ export function Layout() {
               <NavLink to="/sorteador">Sorteador</NavLink>
             </>
           )}
-          {isAdmin && <NavLink to="/usuarios">Usuários</NavLink>}
+          {isAdmin && (
+            <>
+              <NavLink to="/usuarios">Usuários</NavLink>
+              <NavLink to="/tcgs">TCGs</NavLink>
+            </>
+          )}
           {me && <NavLink to="/conta/senha">Alterar senha</NavLink>}
         </nav>
         <div className="sidebar-actions">

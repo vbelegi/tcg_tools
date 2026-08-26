@@ -127,8 +127,16 @@ def create_torneio(
         )
         raw = svc._require_event(event.id)
         raw.created_by_user_id = user.id
-        if body.registration_open:
-            raw.registration_open = True
+        raw.registration_open = bool(body.registration_open)
+        raw.description = (body.description or "").strip() or None
+        raw.start_time = body.start_time
+        if body.tcg_game_id is not None:
+            from app.models import TcgGame
+
+            game = svc._db.query(TcgGame).filter(TcgGame.id == body.tcg_game_id).one_or_none()
+            if game is None or not game.active:
+                raise HTTPException(status_code=422, detail="TCG inválido.")
+            raw.tcg_game_id = body.tcg_game_id
         svc._commit()
         return svc.get_event(event.id)
     except TorneioError as exc:
@@ -174,6 +182,19 @@ def list_torneios(
         for e in events
         if _is_public_list_event(e) or int(e["id"]) in registered
     ]
+
+
+@router.get("/calendar")
+def calendar_torneios(
+    year: int,
+    month: int,
+    svc: TorneioService = Depends(get_torneio_service),
+):
+    if month < 1 or month > 12:
+        raise HTTPException(status_code=422, detail="Mês inválido.")
+    if year < 2000 or year > 2100:
+        raise HTTPException(status_code=422, detail="Ano inválido.")
+    return svc.list_calendar_events(year, month)
 
 
 @router.get("/{event_id}")

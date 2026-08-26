@@ -242,6 +242,9 @@ class TorneioService:
     def list_events(self) -> list[dict[str, Any]]:
         return [self._event_summary(e) for e in self._repo.list_all()]
 
+    def list_calendar_events(self, year: int, month: int) -> list[dict[str, Any]]:
+        return [self._event_summary(e) for e in self._repo.list_by_month(year, month)]
+
     def get_event(self, event_id: int) -> dict[str, Any]:
         event = self._require_event(event_id)
         summary = self._event_summary(event)
@@ -279,6 +282,20 @@ class TorneioService:
         for key in ("event_date", "entry_fee", "best_of"):
             if key in data and data[key] is not None:
                 setattr(event, key, data[key])
+        if "description" in data:
+            raw = data["description"]
+            event.description = (str(raw).strip() if raw is not None else "") or None
+        if "start_time" in data:
+            event.start_time = data["start_time"]
+        if "tcg_game_id" in data:
+            tcg_id = data["tcg_game_id"]
+            if tcg_id is not None:
+                from app.models import TcgGame
+
+                game = self._db.query(TcgGame).filter(TcgGame.id == tcg_id).one_or_none()
+                if game is None or not game.active:
+                    raise TorneioError("TCG inválido.")
+            event.tcg_game_id = tcg_id
         if "max_rounds" in data and data["max_rounds"] is not None:
             event.max_rounds = data["max_rounds"]
         if event.format == "single_elimination":
@@ -949,13 +966,28 @@ class TorneioService:
             "source": getattr(event, "source", "internal"),
             "registration_open": bool(getattr(event, "registration_open", False)),
             "fp_n_at_start": getattr(event, "fp_n_at_start", None),
+            "description": getattr(event, "description", None),
+            "start_time": getattr(event, "start_time", None),
+            "tcg_game_id": getattr(event, "tcg_game_id", None),
+            "tcg_game": None,
             "player_count": len(event.players),
+            "participant_user_ids": [
+                p.user_id for p in event.players if getattr(p, "user_id", None) is not None
+            ],
             "pending_checkins": sum(
                 1 for p in event.players if getattr(p, "attendance", "checked_in") == "pending"
             ),
             "current_round": current,
             **phase,
         }
+        tcg = getattr(event, "tcg_game", None)
+        if tcg is not None:
+            summary["tcg_game"] = {
+                "id": tcg.id,
+                "name": tcg.name,
+                "slug": tcg.slug,
+                "color_hex": tcg.color_hex,
+            }
         if event.status == "draft" and event.format == "single_elimination":
             max_r = event.max_rounds or calcular_rodadas(
                 len([p for p in event.players if not p.dropped_at]) or len(event.players) or 4

@@ -18,7 +18,10 @@ class TorneioCreateRequest(BaseModel):
     premiacao_preset_id: str = "standard"
     third_place_match: bool = False
     se_bo_config: dict[str, int] | None = None
-    registration_open: bool = False
+    registration_open: bool = True
+    description: str | None = None
+    start_time: str | None = None
+    tcg_game_id: int | None = None
 
     @field_validator("se_bo_config")
     @classmethod
@@ -31,6 +34,23 @@ class TorneioCreateRequest(BaseModel):
             if val not in (1, 3, 5):
                 raise ValueError("se_bo_config values must be 1, 3, or 5.")
         return v
+
+    @field_validator("start_time")
+    @classmethod
+    def validate_start_time(cls, v: str | None) -> str | None:
+        if v is None or v == "":
+            return None
+        value = v.strip()
+        parts = value.split(":")
+        if len(parts) != 2:
+            raise ValueError("Horário deve ser HH:MM.")
+        try:
+            h, m = int(parts[0]), int(parts[1])
+        except ValueError as exc:
+            raise ValueError("Horário deve ser HH:MM.") from exc
+        if not (0 <= h <= 23 and 0 <= m <= 59):
+            raise ValueError("Horário inválido.")
+        return f"{h:02d}:{m:02d}"
 
 
 class TorneioUpdate(BaseModel):
@@ -42,6 +62,9 @@ class TorneioUpdate(BaseModel):
     third_place_match: bool | None = None
     se_bo_config: dict[str, int] | None = None
     registration_open: bool | None = None
+    description: str | None = None
+    start_time: str | None = None
+    tcg_game_id: int | None = None
 
     @field_validator("se_bo_config")
     @classmethod
@@ -54,6 +77,23 @@ class TorneioUpdate(BaseModel):
             if val not in (1, 3, 5):
                 raise ValueError("se_bo_config values must be 1, 3, or 5.")
         return v
+
+    @field_validator("start_time")
+    @classmethod
+    def validate_start_time(cls, v: str | None) -> str | None:
+        if v is None or v == "":
+            return None
+        value = v.strip()
+        parts = value.split(":")
+        if len(parts) != 2:
+            raise ValueError("Horário deve ser HH:MM.")
+        try:
+            h, m = int(parts[0]), int(parts[1])
+        except ValueError as exc:
+            raise ValueError("Horário deve ser HH:MM.") from exc
+        if not (0 <= h <= 23 and 0 <= m <= 59):
+            raise ValueError("Horário inválido.")
+        return f"{h:02d}:{m:02d}"
 
 
 class JogadorCreate(BaseModel):

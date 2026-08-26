@@ -44,7 +44,15 @@ FP_i = \mathrm{round}(\mathrm{premio\_fracao}(i) \times N \times K)
 
 ## Visibilidade pública
 
-Sem login / player: vê torneios **`finished`**, drafts com **`registration_open`** (vitrine: formato, taxa, BO + CTA entrar/inscrever) e, se player, também eventos em que está inscrito. Em torneio em andamento (inscrito): pairings/classificação só leitura — sem gerenciar rodada.
+Sem login / player: vê torneios **`finished`**, drafts com **`registration_open`** (vitrine + CTA) e, se player, eventos em que está inscrito. Em andamento (inscrito): pairings/classificação só leitura.
+
+**Calendário** (`/calendario`): público; lista **todos** os torneios do mês (status + TCG + descrição/horário). CTAs:
+- finished → resultado
+- draft com inscrição aberta → self-inscrição / entrar
+- running → só inscrito ou staff
+- draft fechado → só infos (sem CTA)
+
+**TCG:** catálogo admin (`/tcgs`) com nome + cor hex para chips do calendário. Torneio pode ter `tcg_game_id`, `description`, `start_time`. Default de criação: **inscrição aberta**.
 
 Staff/admin: todos os status e operação completa.
 

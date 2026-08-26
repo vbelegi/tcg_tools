@@ -1,23 +1,14 @@
 import type {
-
   CalcularResponse,
-
   Match,
-
   Player,
-
   Preset,
-
   PresetsResponse,
-
   Round,
-
   Standing,
-
   TabelaLinha,
-
+  TcgGame,
   Torneio,
-
 } from "./types";
 
 
@@ -281,6 +272,29 @@ export const api = {
 
 
   listTorneios: () => request<Torneio[]>("/torneios"),
+
+  listCalendarTorneios: (year: number, month: number) =>
+    request<Torneio[]>(`/torneios/calendar?year=${year}&month=${month}`),
+
+  listTcgGames: (includeInactive = false) =>
+    request<TcgGame[]>(`/tcg-games${includeInactive ? "?include_inactive=true" : ""}`),
+
+  createTcgGame: (body: { name: string; color_hex: string; slug?: string; active?: boolean }) =>
+    request<TcgGame>("/tcg-games", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  updateTcgGame: (
+    id: number,
+    body: { name?: string; color_hex?: string; slug?: string; active?: boolean },
+  ) =>
+    request<TcgGame>(`/tcg-games/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
+
+  deleteTcgGame: (id: number) => request<void>(`/tcg-games/${id}`, { method: "DELETE" }),
 
   getTorneio: (id: number) => request<Torneio & { players: Player[] }>(`/torneios/${id}`),
 

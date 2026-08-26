@@ -5,6 +5,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { RequireAdmin, RequireAuth } from "./components/RequireAuth";
 import { AlterarSenhaPage } from "./pages/AlterarSenhaPage";
+import { CalendarPage } from "./pages/CalendarPage";
 import { ClaimInvitePage } from "./pages/ClaimInvitePage";
 import { Home } from "./pages/Home";
 import { LoginPage } from "./pages/LoginPage";
@@ -12,6 +13,7 @@ import { PlayerProfilePage } from "./pages/PlayerProfilePage";
 import { PremiacaoPage } from "./pages/premiacao/PremiacaoPage";
 import { RankingPage } from "./pages/RankingPage";
 import { SorteadorPage } from "./pages/sorteador/SorteadorPage";
+import { TcgGamesPage } from "./pages/TcgGamesPage";
 import { TorneioDetailPage } from "./pages/torneios/TorneioDetailPage";
 import { TorneioExternoPage } from "./pages/torneios/TorneioExternoPage";
 import { TorneioNovoPage } from "./pages/torneios/TorneioNovoPage";
@@ -32,6 +34,7 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/convite/:token" element={<ClaimInvitePage />} />
           <Route element={<Layout />}>
             <Route index element={<Home />} />
+            <Route path="calendario" element={<CalendarPage />} />
             <Route path="ranking" element={<RankingPage />} />
             <Route path="jogadores/:id" element={<PlayerProfilePage />} />
             <Route path="torneios" element={<TorneiosListPage />} />
@@ -51,6 +54,7 @@ createRoot(document.getElementById("root")!).render(
           <Route element={<RequireAdmin />}>
             <Route element={<Layout />}>
               <Route path="usuarios" element={<UsuariosPage />} />
+              <Route path="tcgs" element={<TcgGamesPage />} />
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

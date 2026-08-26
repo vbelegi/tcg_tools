@@ -67,6 +67,19 @@ class RegistrationSource(str, enum.Enum):
     self = "self"
 
 
+class TcgGame(Base):
+    __tablename__ = "tcg_games"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(120), nullable=False, unique=True)
+    slug: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    color_hex: Mapped[str] = mapped_column(String(7), nullable=False)
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    events: Mapped[list[Event]] = relationship(back_populates="tcg_game")
+
+
 class Event(Base):
     __tablename__ = "events"
 
@@ -86,10 +99,16 @@ class Event(Base):
     third_place_match: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     se_bo_config: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     source: Mapped[str] = mapped_column(String(16), nullable=False, default=EventSource.internal.value)
-    registration_open: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    registration_open: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     fp_n_at_start: Mapped[int | None] = mapped_column(Integer, nullable=True)
     external_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    start_time: Mapped[str | None] = mapped_column(String(5), nullable=True)
+    tcg_game_id: Mapped[int | None] = mapped_column(
+        ForeignKey("tcg_games.id", ondelete="SET NULL"), nullable=True
+    )
 
+    tcg_game: Mapped[TcgGame | None] = relationship(back_populates="events")
     players: Mapped[list[Player]] = relationship(back_populates="event", cascade="all, delete-orphan")
     rounds: Mapped[list[Round]] = relationship(back_populates="event", cascade="all, delete-orphan")
     fp_entries: Mapped[list[FoursePointsLedger]] = relationship(

@@ -10,6 +10,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **Calendário público** (`/calendario`): grade mensal com todos os torneios, painel do dia e CTAs por status/auth
+- **TCGs:** catálogo com cor hex (admin `/tcgs`); seed Magic/Pokémon/Yu-Gi-Oh!/One Piece/Digimon/Lorcana/Riftbound
+- **Torneio:** campos `description`, `start_time`, `tcg_game_id`; default inscrição aberta
 - **Auth modal:** login e criar conta (player completo) sem sair da página; `/login` redireciona para `/?auth=login`
 - **Auto-cadastro player:** `POST /auth/register` (nome, e-mail, celular, senha → conta ativa)
 - **Excluir torneio:** `DELETE /torneios/{id}` (admin) com confirmação pelo nome na UI

@@ -26,6 +26,14 @@ export type TabelaLinha = Schemas["TabelaLinha"];
 
 
 
+export interface TcgGame {
+  id: number;
+  name: string;
+  slug: string;
+  color_hex: string;
+  active?: boolean;
+}
+
 export interface Torneio {
   id: number;
   name: string;
@@ -51,6 +59,11 @@ export interface Torneio {
   registration_open?: boolean;
   fp_n_at_start?: number | null;
   pending_checkins?: number;
+  description?: string | null;
+  start_time?: string | null;
+  tcg_game_id?: number | null;
+  tcg_game?: TcgGame | null;
+  participant_user_ids?: number[];
 }
 
 export interface Player {

@@ -52,6 +52,7 @@ class EventRepository(EventRepositoryProtocol):
             self._db.query(Event)
             .options(
                 joinedload(Event.players),
+                joinedload(Event.tcg_game),
                 joinedload(Event.rounds).joinedload(Round.matches),
             )
             .filter(Event.id == event_id)
@@ -59,7 +60,25 @@ class EventRepository(EventRepositoryProtocol):
         )
 
     def list_all(self) -> list[Event]:
-        return self._db.query(Event).order_by(Event.created_at.desc()).all()
+        return (
+            self._db.query(Event)
+            .options(joinedload(Event.tcg_game), joinedload(Event.players))
+            .order_by(Event.created_at.desc())
+            .all()
+        )
+
+    def list_by_month(self, year: int, month: int) -> list[Event]:
+        from calendar import monthrange
+
+        start = date(year, month, 1)
+        end = date(year, month, monthrange(year, month)[1])
+        return (
+            self._db.query(Event)
+            .options(joinedload(Event.tcg_game), joinedload(Event.players))
+            .filter(Event.event_date >= start, Event.event_date <= end)
+            .order_by(Event.event_date.asc(), Event.id.asc())
+            .all()
+        )
 
     def add_player(
         self,
