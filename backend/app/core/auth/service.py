@@ -162,6 +162,24 @@ def ensure_unique_email_phone(
     return email_n, phone_n
 
 
+def age_years(birth: date, today: date | None = None) -> int:
+    today = today or date.today()
+    return today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day))
+
+
+def require_guardian_if_minor(
+    birth_date: date | None,
+    guardian_name: str | None,
+    guardian_phone: str | None,
+) -> None:
+    if birth_date is None:
+        return
+    if age_years(birth_date) >= 18:
+        return
+    if not (guardian_name or "").strip() or not (guardian_phone or "").strip():
+        raise AuthError("Menores de 18 anos precisam dos dados do responsável.")
+
+
 def create_incomplete_user(
     db: DbSession,
     *,
@@ -220,6 +238,7 @@ def register_player(
     email_n, phone_n = ensure_unique_email_phone(db, email=email, phone=phone)
     if not phone_n:
         raise AuthError("Celular é obrigatório.")
+    require_guardian_if_minor(birth_date, guardian_name, guardian_phone)
     now = _now()
     user = User(
         email=email_n,
@@ -229,9 +248,9 @@ def register_player(
         status=UserStatus.active.value,
         password_hash=hash_password(password),
         birth_date=birth_date,
-        guardian_name=guardian_name,
-        guardian_phone=guardian_phone,
-        guardian_relation=guardian_relation,
+        guardian_name=(guardian_name or "").strip() or None,
+        guardian_phone=(guardian_phone or "").strip() or None,
+        guardian_relation=(guardian_relation or "").strip() or None,
         created_at=now,
         updated_at=now,
     )
@@ -284,20 +303,12 @@ def claim_invite(
     if birth_date is not None:
         user.birth_date = birth_date
     if guardian_name is not None:
-        user.guardian_name = guardian_name
+        user.guardian_name = guardian_name.strip() or None
     if guardian_phone is not None:
-        user.guardian_phone = guardian_phone
+        user.guardian_phone = guardian_phone.strip() or None
     if guardian_relation is not None:
-        user.guardian_relation = guardian_relation
-    if user.birth_date is not None:
-        today = date.today()
-        age = (
-            today.year
-            - user.birth_date.year
-            - ((today.month, today.day) < (user.birth_date.month, user.birth_date.day))
-        )
-        if age < 18 and not (user.guardian_name and user.guardian_phone):
-            raise AuthError("Menores de 18 anos precisam dos dados do responsável.")
+        user.guardian_relation = guardian_relation.strip() or None
+    require_guardian_if_minor(user.birth_date, user.guardian_name, user.guardian_phone)
     user.updated_at = _now()
     row.used_at = _now()
     db.commit()

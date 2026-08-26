@@ -72,3 +72,36 @@ def test_register_player_api(db_session: Session):
     assert r.json()["role"] == "player"
     assert client.get("/api/v1/auth/me").status_code == 200
     app.dependency_overrides.clear()
+
+
+def test_register_minor_requires_guardian(db_session: Session):
+    def _override_db():
+        yield db_session
+
+    app.dependency_overrides[get_db] = _override_db
+    client = TestClient(app)
+    r = client.post(
+        "/api/v1/auth/register",
+        json={
+            "display_name": "Menor",
+            "email": "menor@example.com",
+            "phone": "+5511988776611",
+            "password": "abcdef",
+            "birth_date": "2015-01-01",
+        },
+    )
+    assert r.status_code == 400
+    r2 = client.post(
+        "/api/v1/auth/register",
+        json={
+            "display_name": "Menor",
+            "email": "menor@example.com",
+            "phone": "+5511988776611",
+            "password": "abcdef",
+            "birth_date": "2015-01-01",
+            "guardian_name": "Pai",
+            "guardian_phone": "+5511988776622",
+        },
+    )
+    assert r2.status_code == 201, r2.text
+    app.dependency_overrides.clear()

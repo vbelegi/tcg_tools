@@ -23,6 +23,10 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
   const [password2, setPassword2] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [phone, setPhone] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const [guardianName, setGuardianName] = useState("");
+  const [guardianPhone, setGuardianPhone] = useState("");
+  const [guardianRelation, setGuardianRelation] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -52,6 +56,10 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
         email,
         phone,
         password,
+        birth_date: birthDate || undefined,
+        guardian_name: guardianName || undefined,
+        guardian_phone: guardianPhone || undefined,
+        guardian_relation: guardianRelation || undefined,
       }),
     onSuccess: () => afterAuth(),
     onError: (e) => setError((e as Error).message),
@@ -113,6 +121,39 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
                 onChange={(e) => setPhone(e.target.value)}
                 required
                 autoComplete="tel"
+              />
+            </div>
+            <div className="form-row">
+              <label htmlFor="auth-bd">Data de nascimento (obrigatória se menor de 18)</label>
+              <input
+                id="auth-bd"
+                type="date"
+                value={birthDate}
+                onChange={(e) => setBirthDate(e.target.value)}
+              />
+            </div>
+            <div className="form-row">
+              <label htmlFor="auth-gn">Responsável (se menor)</label>
+              <input
+                id="auth-gn"
+                value={guardianName}
+                onChange={(e) => setGuardianName(e.target.value)}
+              />
+            </div>
+            <div className="form-row">
+              <label htmlFor="auth-gp">Celular do responsável</label>
+              <input
+                id="auth-gp"
+                value={guardianPhone}
+                onChange={(e) => setGuardianPhone(e.target.value)}
+              />
+            </div>
+            <div className="form-row">
+              <label htmlFor="auth-gr">Parentesco</label>
+              <input
+                id="auth-gr"
+                value={guardianRelation}
+                onChange={(e) => setGuardianRelation(e.target.value)}
               />
             </div>
           </>

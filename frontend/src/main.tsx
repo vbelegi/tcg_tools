@@ -3,7 +3,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
-import { RequireAuth } from "./components/RequireAuth";
+import { RequireAdmin, RequireAuth } from "./components/RequireAuth";
 import { AlterarSenhaPage } from "./pages/AlterarSenhaPage";
 import { ClaimInvitePage } from "./pages/ClaimInvitePage";
 import { Home } from "./pages/Home";
@@ -45,8 +45,12 @@ createRoot(document.getElementById("root")!).render(
               <Route path="torneios/novo" element={<TorneioNovoPage />} />
               <Route path="torneios/externo" element={<TorneioExternoPage />} />
               <Route path="torneios/:id/rodadas/:n" element={<TorneioRodadaPage />} />
-              <Route path="usuarios" element={<UsuariosPage />} />
               <Route path="conta/senha" element={<AlterarSenhaPage />} />
+            </Route>
+          </Route>
+          <Route element={<RequireAdmin />}>
+            <Route element={<Layout />}>
+              <Route path="usuarios" element={<UsuariosPage />} />
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
