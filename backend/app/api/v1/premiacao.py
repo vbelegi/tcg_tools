@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Query, Header
 from fastapi.responses import Response
 
-from app.api.deps import get_current_user
+from app.api.deps import RequireAdmin, require_staff
 from app.core.premiacao.validation import ConfigError, InputError
 from app.schemas.premiacao import (
     CalcularRequest,
@@ -21,7 +21,7 @@ from app.services.premiacao_service import PremiacaoService
 router = APIRouter(
     prefix="/premiacao",
     tags=["premiacao"],
-    dependencies=[Depends(get_current_user)],
+    dependencies=[Depends(require_staff)],
 )
 
 def get_premiacao_service() -> PremiacaoService:
@@ -55,6 +55,7 @@ def get_preset(
 def update_preset(
     preset_id: str,
     body: PresetBody,
+    _: RequireAdmin,
     svc: PremiacaoService = Depends(get_premiacao_service),
     x_presets_mtime: float | None = Header(default=None, alias="X-Presets-Mtime"),
 ) -> PresetBody:

@@ -36,9 +36,9 @@ def test_validate_start_requires_draft():
         validate_start(_state("running"))
 
 
-def test_validate_start_min_players():
-    with pytest.raises(StateMachineError, match="4"):
-        validate_start(_state(players=3))
+def test_validate_start_rejects_pending_attendance():
+    with pytest.raises(StateMachineError, match="check-in"):
+        validate_start(_state("draft"), pending_attendance=1)
 
 
 def test_validate_start_allows_all_unseeded():

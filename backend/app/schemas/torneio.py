@@ -18,6 +18,7 @@ class TorneioCreateRequest(BaseModel):
     premiacao_preset_id: str = "standard"
     third_place_match: bool = False
     se_bo_config: dict[str, int] | None = None
+    registration_open: bool = False
 
     @field_validator("se_bo_config")
     @classmethod
@@ -40,6 +41,7 @@ class TorneioUpdate(BaseModel):
     max_rounds: int | None = None
     third_place_match: bool | None = None
     se_bo_config: dict[str, int] | None = None
+    registration_open: bool | None = None
 
     @field_validator("se_bo_config")
     @classmethod
@@ -57,6 +59,11 @@ class TorneioUpdate(BaseModel):
 class JogadorCreate(BaseModel):
     name: str
     seed: int | None = None
+    user_id: int | None = None
+    email: str | None = None
+    phone: str | None = None
+    create_account: bool = False
+    attendance: Literal["pending", "checked_in"] = "checked_in"
 
 
 class MatchUpdate(BaseModel):
@@ -75,3 +82,24 @@ class DecklistUpdate(BaseModel):
 
 class ClassificacaoPatch(BaseModel):
     updates: list[DecklistUpdate]
+
+
+class ExternalPlacement(BaseModel):
+    placement: int = Field(ge=1)
+    display_name: str
+    user_id: int | None = None
+    email: str | None = None
+    phone: str | None = None
+    create_account: bool = False
+    decklist: str | None = None
+    is_drop: bool = False
+
+
+class ExternalTorneioCreate(BaseModel):
+    name: str
+    event_date: date
+    format: str = "swiss"
+    premiacao_preset_id: str = "standard"
+    entry_fee: float = 0
+    notes: str | None = None
+    placements: list[ExternalPlacement]

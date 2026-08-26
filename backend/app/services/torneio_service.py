@@ -253,6 +253,9 @@ class TorneioService:
                 "dropped_at": p.dropped_at.isoformat() if p.dropped_at else None,
                 "registration_order": p.registration_order,
                 "decklist": p.decklist,
+                "user_id": p.user_id,
+                "attendance": getattr(p, "attendance", "checked_in"),
+                "registration_source": getattr(p, "registration_source", "staff"),
             }
             for p in sorted(event.players, key=lambda x: x.registration_order)
         ]
@@ -283,10 +286,27 @@ class TorneioService:
                 else:
                     normalized = normalize_se_bo_config(raw)
                     event.se_bo_config = {str(k): v for k, v in normalized.items()} if normalized else None
+        if "registration_open" in data and data["registration_open"] is not None:
+            event.registration_open = bool(data["registration_open"])
         self._commit()
         return event
 
-    def add_player(self, event_id: int, name: str, seed: int | None = None) -> Player:
+    def add_player(
+        self,
+        event_id: int,
+        name: str,
+        seed: int | None = None,
+        *,
+        user_id: int | None = None,
+        attendance: str = "checked_in",
+        registration_source: str = "staff",
+        email: str | None = None,
+        phone: str | None = None,
+        create_account: bool = False,
+    ) -> Player:
+        from app.core.auth import AuthError, create_incomplete_user, get_user_by_email
+        from app.models import Attendance, RegistrationSource, User
+
         event = self._require_event(event_id)
         if event.status != "draft":
             raise TorneioError("Só é possível adicionar jogadores em rascunho.")
@@ -295,10 +315,86 @@ class TorneioService:
             raise TorneioError("Nome do jogador é obrigatório.")
         self._ensure_unique_player_name(event, clean_name)
         self._ensure_unique_seed(event, seed)
+
+        resolved_user_id = user_id
+        if create_account:
+            if not email or not phone:
+                raise TorneioError("Cadastro rápido exige e-mail e celular.")
+            try:
+                user = create_incomplete_user(
+                    self._db,
+                    display_name=clean_name,
+                    email=email,
+                    phone=phone,
+                )
+            except AuthError as exc:
+                raise TorneioError(str(exc)) from exc
+            resolved_user_id = user.id
+        elif user_id is not None:
+            user = self._db.query(User).filter(User.id == user_id).one_or_none()
+            if user is None:
+                raise TorneioError("Conta de usuário não encontrada.")
+            clean_name = user.display_name
+            self._ensure_unique_player_name(event, clean_name)
+        elif email:
+            user = get_user_by_email(self._db, email)
+            if user:
+                resolved_user_id = user.id
+                clean_name = user.display_name
+                self._ensure_unique_player_name(event, clean_name)
+
+        if resolved_user_id is not None:
+            dup = next((p for p in event.players if p.user_id == resolved_user_id), None)
+            if dup:
+                raise TorneioError("Este usuário já está inscrito neste torneio.")
+
+        att = attendance if attendance in {Attendance.pending.value, Attendance.checked_in.value} else Attendance.checked_in.value
+        src = (
+            registration_source
+            if registration_source in {RegistrationSource.staff.value, RegistrationSource.self.value}
+            else RegistrationSource.staff.value
+        )
         order = len(event.players) + 1
-        player = self._repo.add_player(event_id, clean_name, seed, order)
+        player = self._repo.add_player(
+            event_id,
+            clean_name,
+            seed,
+            order,
+            user_id=resolved_user_id,
+            attendance=att,
+            registration_source=src,
+        )
         self._commit()
         return player
+
+    def check_in_player(self, event_id: int, player_id: int) -> Player:
+        from app.models import Attendance
+
+        event = self._require_event(event_id)
+        if event.status != "draft":
+            raise TorneioError("Check-in só é permitido em rascunho.")
+        player = next((p for p in event.players if p.id == player_id), None)
+        if not player:
+            raise TorneioError("Jogador não encontrado.")
+        player.attendance = Attendance.checked_in.value
+        self._commit()
+        return player
+
+    def self_register(self, event_id: int, user) -> Player:
+        from app.models import Attendance, RegistrationSource
+
+        event = self._require_event(event_id)
+        if event.status != "draft":
+            raise TorneioError("Inscrições só em rascunho.")
+        if not event.registration_open:
+            raise TorneioError("Inscrições fechadas para este torneio.")
+        return self.add_player(
+            event_id,
+            user.display_name,
+            user_id=user.id,
+            attendance=Attendance.pending.value,
+            registration_source=RegistrationSource.self.value,
+        )
 
     def remove_player(self, event_id: int, player_id: int) -> None:
         event = self._require_event(event_id)
@@ -311,12 +407,28 @@ class TorneioService:
         self._commit()
 
     def start_event(self, event_id: int) -> Event:
+        from app.models import Attendance
+
         event = self._require_event(event_id)
+        if getattr(event, "source", "internal") == "external":
+            raise TorneioError("Torneios externos não possuem rodadas internas.")
+        pending = sum(
+            1
+            for p in event.players
+            if getattr(p, "attendance", Attendance.checked_in.value) == Attendance.pending.value
+        )
         state = self._repo.to_tournament_state(event)
-        validate_start(state)
+        validate_start(state, pending_attendance=pending)
 
         try:
-            active_count = len([p for p in event.players if not p.dropped_at])
+            checked = [
+                p
+                for p in event.players
+                if getattr(p, "attendance", Attendance.checked_in.value) == Attendance.checked_in.value
+                and not p.dropped_at
+            ]
+            active_count = len(checked)
+            event.fp_n_at_start = active_count
             if event.max_rounds is None:
                 event.max_rounds = calcular_rodadas(active_count)
             if event.format == "single_elimination" and event.se_bo_config:
@@ -325,6 +437,7 @@ class TorneioService:
                 event.se_bo_config = (
                     {str(k): v for k, v in pruned.items()} if pruned else None
                 )
+            event.registration_open = False
             event.status = "running"
             self._create_round(event, 1)
             self._commit()
@@ -644,7 +757,34 @@ class TorneioService:
         )
         event.status = "finished"
         self._commit()
+        self._award_fourse_points(event, standings)
         return event
+
+    def _award_fourse_points(self, event: Event, standings) -> None:
+        from app.core.auth.fourse_points import compute_fp_awards, replace_event_fp_ledger
+
+        n = event.fp_n_at_start or len(
+            [p for p in event.players if getattr(p, "attendance", "checked_in") == "checked_in"]
+        )
+        players_by_id = {p.id: p for p in event.players}
+        # Paid placement index among non-drops only
+        non_drop_rank = 0
+        placements: list[dict] = []
+        for s in standings:
+            player = players_by_id.get(s.player_id)
+            if not player or not player.user_id:
+                continue
+            if s.is_drop:
+                placements.append(
+                    {"user_id": player.user_id, "placement": None, "is_drop": True}
+                )
+                continue
+            non_drop_rank += 1
+            placements.append(
+                {"user_id": player.user_id, "placement": non_drop_rank, "is_drop": False}
+            )
+        awards = compute_fp_awards(n=n, config=event.premiacao_preset or {}, placements=placements)
+        replace_event_fp_ledger(self._db, event.id, awards)
 
     def get_classificacao(self, event_id: int) -> list[dict[str, Any]]:
         event = self._require_event(event_id)
@@ -801,7 +941,13 @@ class TorneioService:
             "third_place_match": event.third_place_match,
             "se_bo_config": event.se_bo_config,
             "status": event.status,
+            "source": getattr(event, "source", "internal"),
+            "registration_open": bool(getattr(event, "registration_open", False)),
+            "fp_n_at_start": getattr(event, "fp_n_at_start", None),
             "player_count": len(event.players),
+            "pending_checkins": sum(
+                1 for p in event.players if getattr(p, "attendance", "checked_in") == "pending"
+            ),
             "current_round": current,
             **phase,
         }
@@ -815,3 +961,132 @@ class TorneioService:
             if warnings:
                 summary["config_warnings"] = warnings
         return summary
+
+    def create_external_event(
+        self,
+        *,
+        name: str,
+        event_date: date,
+        format: str,
+        premiacao_preset_id: str,
+        entry_fee: float,
+        notes: str | None,
+        placements: list[dict[str, Any]],
+        created_by_user_id: int | None = None,
+    ) -> Event:
+        """Admin import of an external tournament for FP + public history."""
+        from app.core.auth import AuthError, create_incomplete_user
+        from app.core.auth.fourse_points import compute_fp_awards, replace_event_fp_ledger
+        from app.models import Attendance, EventSource, RegistrationSource, User
+
+        if format not in ("swiss", "single_elimination"):
+            raise TorneioError("Formato inválido.")
+        if len(placements) < 1:
+            raise TorneioError("Informe ao menos uma colocação.")
+        clean_name = self._normalize_name(name)
+        if not clean_name:
+            raise TorneioError("Nome do torneio é obrigatório.")
+        self._ensure_unique_event_name(clean_name)
+        preset = self._resolve_preset(premiacao_preset_id)
+        event = self._repo.create(
+            name=clean_name,
+            event_date=event_date,
+            format=format,
+            max_rounds=None,
+            entry_fee=entry_fee,
+            best_of=3,
+            premiacao_preset=preset,
+            shuffle_seed=1,
+            third_place_match=False,
+            se_bo_config=None,
+        )
+        event.source = EventSource.external.value
+        event.external_notes = notes
+        event.created_by_user_id = created_by_user_id
+        event.registration_open = False
+        self._db.flush()
+
+        standings_snapshot: list[dict[str, Any]] = []
+        members: list[BandMember] = []
+        fp_placements: list[dict[str, Any]] = []
+        order = 0
+        for row in sorted(placements, key=lambda r: (bool(r.get("is_drop")), int(r["placement"]))):
+            order += 1
+            display = self._normalize_name(row["display_name"])
+            user_id = row.get("user_id")
+            if row.get("create_account"):
+                try:
+                    user = create_incomplete_user(
+                        self._db,
+                        display_name=display,
+                        email=row["email"],
+                        phone=row["phone"],
+                    )
+                except AuthError as exc:
+                    raise TorneioError(str(exc)) from exc
+                user_id = user.id
+            elif user_id:
+                user = self._db.query(User).filter(User.id == user_id).one_or_none()
+                if not user:
+                    raise TorneioError(f"Usuário {user_id} não encontrado.")
+                display = user.display_name
+            player = self._repo.add_player(
+                event.id,
+                display,
+                None,
+                order,
+                user_id=user_id,
+                attendance=Attendance.checked_in.value,
+                registration_source=RegistrationSource.staff.value,
+            )
+            player.decklist = row.get("decklist")
+            is_drop = bool(row.get("is_drop"))
+            standings_snapshot.append(
+                {
+                    "rank": None if is_drop else row["placement"],
+                    "player_id": player.id,
+                    "name": display,
+                    "points": 0,
+                    "omw": 0,
+                    "gw": 0,
+                    "ogw": 0,
+                    "decklist": player.decklist,
+                    "is_drop": is_drop,
+                    "rank_label": "DROP" if is_drop else f"{row['placement']}º",
+                }
+            )
+            if not is_drop:
+                members.append(
+                    BandMember(
+                        player_id=player.id,
+                        band_label=f"{row['placement']}º",
+                        is_drop=False,
+                        name=display,
+                    )
+                )
+            if user_id:
+                fp_placements.append(
+                    {
+                        "user_id": user_id,
+                        "placement": None if is_drop else row["placement"],
+                        "is_drop": is_drop,
+                    }
+                )
+
+        n = sum(1 for r in placements if not r.get("is_drop"))
+        event.fp_n_at_start = n
+        config = {k: v for k, v in preset.items() if k != "label"}
+        event.premiacao_resultado = build_premiacao_resultado(
+            format=format,
+            n=n,
+            config=config,
+            third_place_match=False,
+            members=members,
+            standings_snapshot=standings_snapshot,
+            entry_fee=entry_fee,
+        )
+        event.status = "finished"
+        self._commit()
+        awards = compute_fp_awards(n=n, config=preset, placements=fp_placements)
+        replace_event_fp_ledger(self._db, event.id, awards)
+        return event

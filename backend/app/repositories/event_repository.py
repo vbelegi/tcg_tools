@@ -61,8 +61,26 @@ class EventRepository(EventRepositoryProtocol):
     def list_all(self) -> list[Event]:
         return self._db.query(Event).order_by(Event.created_at.desc()).all()
 
-    def add_player(self, event_id: int, name: str, seed: int | None, order: int) -> Player:
-        player = Player(event_id=event_id, name=name, seed=seed, registration_order=order)
+    def add_player(
+        self,
+        event_id: int,
+        name: str,
+        seed: int | None,
+        order: int,
+        *,
+        user_id: int | None = None,
+        attendance: str = "checked_in",
+        registration_source: str = "staff",
+    ) -> Player:
+        player = Player(
+            event_id=event_id,
+            name=name,
+            seed=seed,
+            registration_order=order,
+            user_id=user_id,
+            attendance=attendance,
+            registration_source=registration_source,
+        )
         self._db.add(player)
         self._db.flush()
         return player
