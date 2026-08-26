@@ -60,7 +60,7 @@ Sem login / player: vê torneios **`finished`**, drafts com **`registration_open
 
 Público: stats (torneios, títulos, top 8, melhor colocação), **Insights** heurísticos, badges de TCG (torneios **finalizados**), histórico + decklists. Gráficos e totais FP só para dono/admin (abaixo).
 
-**Perfil:** todo usuário `active` (inclui **admin** criado no bootstrap) tem perfil em `/jogadores/{id}` — stats/histórico vazios até jogar. Sem exigência de inscrição em torneio.
+**Perfil:** usuários `active` e `incomplete` têm perfil público em `/jogadores/{id}` (stats, histórico, decklists; FP só dono/admin). Contas incomplete aparecem na busca e no ranking quando tiverem FP. Admin bootstrap tem perfil nativo. Sem exigência de inscrição em torneio.
 
 **Home** (`/`): atalhos densos — Calendário · Torneios · Ranking; staff + Novo torneio / Premiação / Sorteador; admin + Importar externo / Usuários / TCGs; CTA Entrar ou Meu Perfil; mini top ranking.
 
@@ -82,7 +82,7 @@ Staff/admin: todos os status e operação completa. Telas auxiliares (**Premiaç
 
 ## Torneios externos
 
-Admin registra evento `source=external` com nome, data, formato opcional, preset, N e colocações (conta ou nome + decklist). Sem rodadas. Finalize grava snapshot + FP.
+Admin registra evento `source=external` com nome, data, formato, TCG, preset, taxa e colocações. UI densa: busca de conta / incomplete / só nome; decklist e drop por linha; resumo de N. Sem rodadas. Finalize grava snapshot + FP.
 
 ## Auth técnico
 

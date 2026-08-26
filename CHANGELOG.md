@@ -6,12 +6,15 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- **Perfil:** caixa de Fourse Points com altura proporcional ao conteúdo (sem stretch no hero)
+- **Perfil incomplete:** contas incomplete passam a ter perfil e busca públicos (decklists/histórico)
 - **Resultado:** `GET/PATCH /classificacao` responde `{ standings: [...] }` — corrige tela em branco ao finalizar
 
 ### Added
 
 - **Torneio draft UX:** inscrição unificada (busca → conta existente ou incomplete); header com Iniciar; Excluir no menu ⋯
 - **Home UX:** atalhos densos por papel (público / operação / admin), CTA Entrar ou Meu Perfil, mini top ranking
+- **Import externo UX:** header denso, grid do evento, tabela de colocações com busca de conta / incomplete / só nome, decklist e resumo; Enter não submete o form (só vincula hit da busca)
 - **Perfil — navegação:** Meu Perfil no sidebar; nome linkado em Usuários; busca pública `GET /jogadores/buscar`
 - **Perfil — senha:** modal Alterar senha no próprio perfil (removido do sidebar)
 - **Perfil do jogador:** dashboard com stats, Insights, badges TCG, Recharts (FP por jogo/mês), histórico filtrável; avatar + editar nome

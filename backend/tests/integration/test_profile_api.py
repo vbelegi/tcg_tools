@@ -194,3 +194,32 @@ def test_public_player_search(api_client: TestClient, db_session: Session):
     assert body[0]["display_name"] == "Busca Alpha"
     assert set(body[0].keys()) == {"id", "display_name", "avatar_url"}
     assert "email" not in body[0]
+
+
+def test_incomplete_profile_is_public(api_client: TestClient, db_session: Session):
+    from app.core.auth import create_incomplete_user
+
+    user = create_incomplete_user(
+        db_session,
+        display_name="Incompleto Público",
+        email="incomp.pub@example.com",
+        phone="+5511988880099",
+    )
+    assert user.status == "incomplete"
+
+    api_client.post("/api/v1/auth/logout")
+    guest = api_client.get(f"/api/v1/jogadores/{user.id}/perfil")
+    assert guest.status_code == 200, guest.text
+    body = guest.json()
+    assert body["id"] == user.id
+    assert body["display_name"] == "Incompleto Público"
+    assert body["status"] == "incomplete"
+    assert body["fourse_points_visible"] is False
+    assert body["can_edit"] is False
+    assert "email" not in body
+    assert "phone" not in body
+
+    search = api_client.get("/api/v1/jogadores/buscar", params={"q": "Incompleto"})
+    assert search.status_code == 200
+    hits = search.json()
+    assert any(h["id"] == user.id for h in hits)

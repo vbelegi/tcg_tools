@@ -1271,11 +1271,13 @@ th {
 }
 
 .profile-fp-card {
-  min-width: 8.5rem;
+  align-self: flex-start;
+  width: max-content;
+  max-width: 100%;
   background: rgba(0, 0, 0, 0.28);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 0.85rem 1rem;
+  padding: 0.55rem 0.85rem;
   text-align: right;
 }
 
@@ -1289,8 +1291,9 @@ th {
 
 .profile-fp-value {
   display: block;
-  margin-top: 0.25rem;
-  font-size: 1.85rem;
+  margin-top: 0.1rem;
+  font-size: 1.65rem;
+  line-height: 1.15;
   color: var(--primary);
 }
 
@@ -2387,5 +2390,132 @@ th {
 
   .home-podium {
     grid-template-columns: 1fr;
+  }
+}
+
+.externo-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.75rem;
+}
+
+.externo-table-wrap {
+  overflow-x: auto;
+}
+
+.externo-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.externo-table th,
+.externo-table td {
+  padding: 0.55rem 0.45rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  text-align: left;
+}
+
+.externo-table th {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.externo-col-place {
+  width: 2.75rem;
+  white-space: nowrap;
+}
+
+.externo-col-flags {
+  width: 8.5rem;
+}
+
+.externo-col-actions {
+  width: 5.5rem;
+  text-align: right;
+}
+
+.externo-player-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  position: relative;
+}
+
+.externo-linked {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.externo-mode {
+  font-size: 0.8rem;
+}
+
+.externo-incomplete {
+  margin-top: 0.15rem;
+}
+
+.externo-search-hits {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  max-height: 12rem;
+  overflow: auto;
+}
+
+.externo-search-hits button {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  padding: 0.5rem 0.65rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.externo-search-hits button:hover {
+  background: var(--primary-soft);
+}
+
+.externo-row-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.externo-flag {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  margin: 0 0 0.35rem;
+  white-space: nowrap;
+}
+
+.externo-decklist {
+  margin-top: 0.35rem;
+}
+
+.externo-decklist textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+@media (max-width: 800px) {
+  .externo-col-flags,
+  .externo-col-actions {
+    width: auto;
   }
 }

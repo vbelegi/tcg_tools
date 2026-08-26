@@ -283,6 +283,9 @@ export function PlayerProfilePage() {
               </div>
             )}
             <div className="profile-badges-row">
+              {data.status === "incomplete" && (
+                <span className="profile-pill muted">Cadastro incompleto</span>
+              )}
               {data.ranking_position != null && (
                 <span className="profile-pill">#{data.ranking_position} no Ranking</span>
               )}
