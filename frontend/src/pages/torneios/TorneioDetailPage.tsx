@@ -8,7 +8,6 @@ import { PlayerPickerModal } from "../../components/PlayerPickerModal";
 import { RoundMatchesTable } from "../../components/RoundMatchesTable";
 import { SeFormatOptions, type SeBoConfig } from "../../components/SeFormatOptions";
 import { api } from "../../api/client";
-import { formatMatchResult } from "../../utils/matches";
 import { playersMissingSeed, seedRequirementMessage } from "../../utils/seeds";
 
 const PHONE_HINT = "DDD + número (10 a 13 dígitos), ex.: 11987654321";
@@ -1024,25 +1023,27 @@ export function TorneioDetailPage() {
                       {m.had_rematch && <span className="badge badge-rematch">Rematch</span>}
                       {m.is_third_place && <span className="badge">3º–4º</span>}
                     </div>
-                    <div className="match-card-players">
-                      <div className="match-card-side">
-                        <span className="match-cell-name">
-                          {m.is_bye ? `BYE — ${m.player1_name}` : m.player1_name}
+                    {m.is_bye ? (
+                      <div className="match-scoreline match-scoreline-bye">
+                        <span className="match-cell-name">{m.player1_name}</span>
+                      </div>
+                    ) : (
+                      <div className="match-scoreline">
+                        <span className="match-cell-name match-scoreline-p1">{m.player1_name}</span>
+                        <span className="match-scoreline-score">
+                          {m.scores_submitted || m.is_walkover ? m.score_p1 : "—"}
+                        </span>
+                        <span className="match-scoreline-vs" aria-hidden>
+                          ×
+                        </span>
+                        <span className="match-scoreline-score">
+                          {m.scores_submitted || m.is_walkover ? m.score_p2 : "—"}
+                        </span>
+                        <span className="match-cell-name match-scoreline-p2">
+                          {m.player2_name ?? "—"}
                         </span>
                       </div>
-                      {!m.is_bye && <span className="match-card-vs">×</span>}
-                      {!m.is_bye && (
-                        <div className="match-card-side">
-                          <span className="match-cell-name">{m.player2_name ?? "—"}</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="match-card-result">
-                      <strong>{formatMatchResult(m)}</strong>
-                      {m.best_of != null && m.best_of > 1 && (
-                        <span className="muted"> Bo{m.best_of}</span>
-                      )}
-                    </div>
+                    )}
                   </article>
                 ))}
               </div>
@@ -1099,6 +1100,7 @@ export function TorneioDetailPage() {
         description="O jogador sai do torneio sem walkover na partida atual. Esta ação não pode ser desfeita."
         players={activePlayers}
         confirmLabel="Confirmar drop"
+        requireNameConfirm
         pending={dropPlayer.isPending}
         onClose={() => setDropModalOpen(false)}
         onConfirm={(pid) => dropPlayer.mutate(pid)}

@@ -1733,9 +1733,46 @@ th {
   margin-top: 0.75rem;
 }
 
-.match-card-readonly .match-card-result {
-  margin-top: 0.55rem;
-  padding-top: 0.55rem;
-  border-top: 1px solid var(--border);
-  font-size: 0.95rem;
+.match-scoreline {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto minmax(0, 1fr);
+  gap: 0.35rem 0.55rem;
+  align-items: center;
+}
+
+.match-scoreline-p1 {
+  text-align: right;
+  justify-self: stretch;
+}
+
+.match-scoreline-p2 {
+  text-align: left;
+  justify-self: stretch;
+}
+
+.match-scoreline-score {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  min-width: 1.1em;
+  text-align: center;
+}
+
+.match-scoreline-vs {
+  color: var(--muted);
+  font-weight: 700;
+  text-align: center;
+}
+
+.match-scoreline-bye {
+  display: flex;
+  justify-content: center;
+  grid-template-columns: none;
+}
+
+@media (max-width: 700px) {
+  .match-scoreline {
+    grid-template-columns: minmax(0, 1fr) auto auto auto minmax(0, 1fr);
+    gap: 0.25rem 0.35rem;
+    font-size: 0.95rem;
+  }
 }
