@@ -11,6 +11,9 @@ $Staging = if ($StagingDir) { $StagingDir } else { Join-Path $Root "dist\staging
 $Backend = Join-Path $Staging "backend"
 $Python = Join-Path $Staging "runtime\python\python.exe"
 $DataDir = Join-Path $env:TEMP "tcg_tools_smoke_$(Get-Random)"
+$LogId = Get-Random
+$StdoutLog = Join-Path $env:TEMP "tcg_tools_smoke_${LogId}_out.log"
+$StderrLog = Join-Path $env:TEMP "tcg_tools_smoke_${LogId}_err.log"
 $HealthUrl = "http://127.0.0.1:$Port/api/v1/health"
 
 if (-not (Test-Path $Python)) {
@@ -26,14 +29,32 @@ $env:TCGTOOLS_PORT = "$Port"
 
 $proc = Start-Process -FilePath $Python -ArgumentList @(
     "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "$Port"
-) -WorkingDirectory $Backend -PassThru -WindowStyle Hidden
+) -WorkingDirectory $Backend -PassThru -WindowStyle Hidden `
+    -RedirectStandardOutput $StdoutLog -RedirectStandardError $StderrLog
+
+function Get-UvicornLogTail {
+    $chunks = @()
+    foreach ($path in @($StderrLog, $StdoutLog)) {
+        if (-not (Test-Path $path)) { continue }
+        try {
+            $text = Get-Content $path -Raw -ErrorAction Stop
+            if ($text -and $text.Trim()) { $chunks += $text.Trim() }
+        } catch {
+            $chunks += "(falha lendo $path)"
+        }
+    }
+    if ($chunks.Count -eq 0) { return "(sem log)" }
+    $joined = $chunks -join "`n---stdout---`n"
+    $lines = $joined -split "`n"
+    return ($lines | Select-Object -Last 40) -join "`n"
+}
 
 try {
     $deadline = (Get-Date).AddSeconds($TimeoutSec)
     $ok = $false
     while ((Get-Date) -lt $deadline) {
         if ($proc.HasExited) {
-            throw "uvicorn encerrou prematuramente (exit $($proc.ExitCode))"
+            throw "uvicorn encerrou prematuramente (exit $($proc.ExitCode)). Log:`n$(Get-UvicornLogTail)"
         }
         try {
             $resp = Invoke-WebRequest -Uri $HealthUrl -UseBasicParsing -TimeoutSec 3
@@ -46,7 +67,7 @@ try {
         }
     }
     if (-not $ok) {
-        throw "Timeout aguardando health em $HealthUrl"
+        throw "Timeout aguardando health em $HealthUrl. Log:`n$(Get-UvicornLogTail)"
     }
     Write-Host "Smoke staging OK: $HealthUrl" -ForegroundColor Green
 } finally {
@@ -54,4 +75,5 @@ try {
         Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
     }
     Remove-Item $DataDir -Recurse -Force -ErrorAction SilentlyContinue
+    Remove-Item $StdoutLog, $StderrLog -Force -ErrorAction SilentlyContinue
 }

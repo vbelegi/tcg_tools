@@ -2,10 +2,9 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased]
-
 ### Fixed
 
+- **CI smoke:** `requirements-prod.lock` inclui Pillow (avatars); `test-staging.ps1` imprime log do uvicorn se o processo cair
 - **Perfil:** caixa de Fourse Points com altura proporcional ao conteúdo (sem stretch no hero)
 - **Perfil incomplete:** contas incomplete passam a ter perfil e busca públicos (decklists/histórico)
 - **Resultado:** `GET/PATCH /classificacao` responde `{ standings: [...] }` — corrige tela em branco ao finalizar

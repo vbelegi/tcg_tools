@@ -10,7 +10,7 @@ $Out = if ($Output) { $Output } else { Join-Path $Backend "requirements-prod.loc
 
 $packages = @(
     "alembic", "annotated-types", "anyio", "bcrypt", "click", "colorama", "fastapi", "greenlet",
-    "h11", "httptools", "idna", "Mako", "MarkupSafe", "pydantic", "pydantic-core",
+    "h11", "httptools", "idna", "Mako", "MarkupSafe", "pillow", "pydantic", "pydantic-core",
     "pydantic-settings", "python-dotenv", "python-multipart", "SQLAlchemy", "starlette",
     "typing-extensions", "uvicorn", "watchfiles", "websockets"
 )
@@ -28,7 +28,7 @@ foreach ($line in $freeze) {
 }
 
 $header = @(
-    "# Production dependencies — exact pins for reproducible offline embeddable install.",
+    "# Production dependencies - exact pins for reproducible offline embeddable install.",
     "# Regenerate: ./scripts/update-prod-lock.ps1",
     "# Validate:  ./scripts/validate-prod-lock.ps1",
     ""
