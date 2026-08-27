@@ -4,6 +4,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **CI Pester:** registra PSGallery quando ausente no runner Windows (flake `No repository with the name 'PSGallery'`)
+
 ### Added
 
 - **V2 web (Fase 1):** Docker multi-stage, Compose (app + MySQL 8 + Caddy), `.env.example`, bootstrap admin opcional, docs em `docs/V2_WEB.md`
