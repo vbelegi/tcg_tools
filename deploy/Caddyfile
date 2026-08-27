@@ -1,0 +1,7 @@
+# SITE_ADDRESS:
+#   - ":80"           → HTTP only (teste por IP da VPS)
+#   - "torneios.exemplo.com" → HTTPS automático (Let's Encrypt)
+{$SITE_ADDRESS::80} {
+	encode gzip
+	reverse_proxy app:8000
+}

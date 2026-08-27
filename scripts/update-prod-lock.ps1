@@ -10,7 +10,7 @@ $Out = if ($Output) { $Output } else { Join-Path $Backend "requirements-prod.loc
 
 $packages = @(
     "alembic", "annotated-types", "anyio", "bcrypt", "click", "colorama", "fastapi", "greenlet",
-    "h11", "httptools", "idna", "Mako", "MarkupSafe", "pillow", "pydantic", "pydantic-core",
+    "h11", "httptools", "idna", "Mako", "MarkupSafe", "pillow", "pymysql", "pydantic", "pydantic-core",
     "pydantic-settings", "python-dotenv", "python-multipart", "SQLAlchemy", "starlette",
     "typing-extensions", "uvicorn", "watchfiles", "websockets"
 )

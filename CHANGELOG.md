@@ -4,6 +4,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- **V2 web (Fase 1):** Docker multi-stage, Compose (app + MySQL 8 + Caddy), `.env.example`, bootstrap admin opcional, docs em `docs/V2_WEB.md`
+
 ## [1.3.0] - 2026-08-26
 
 ### Fixed

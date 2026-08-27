@@ -49,11 +49,21 @@ def init_db() -> None:
             command.upgrade(cfg, "head")
 
         # Garantir coluna scores_submitted em DBs legados sem alembic
-        with engine.connect() as conn:
-            cols = {c["name"] for c in inspect(engine).get_columns("matches")} if "matches" in tables or "matches" in inspect(engine).get_table_names() else set()
-            if "matches" in inspect(engine).get_table_names() and "scores_submitted" not in cols:
-                conn.execute(text("ALTER TABLE matches ADD COLUMN scores_submitted BOOLEAN NOT NULL DEFAULT 0"))
-                conn.commit()
+        table_names = set(inspect(engine).get_table_names())
+        if "matches" in table_names:
+            cols = {c["name"] for c in inspect(engine).get_columns("matches")}
+            if "scores_submitted" not in cols:
+                dialect = engine.dialect.name
+                if dialect == "sqlite":
+                    ddl = "ALTER TABLE matches ADD COLUMN scores_submitted BOOLEAN NOT NULL DEFAULT 0"
+                else:
+                    ddl = (
+                        "ALTER TABLE matches ADD COLUMN scores_submitted "
+                        "BOOLEAN NOT NULL DEFAULT FALSE"
+                    )
+                with engine.connect() as conn:
+                    conn.execute(text(ddl))
+                    conn.commit()
     except Exception as exc:
         logger.error("Alembic upgrade failed: %s", exc)
         raise

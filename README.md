@@ -203,6 +203,7 @@ tcg_tools/
 
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Problemas comuns e soluções |
 
+| [docs/V2_WEB.md](docs/V2_WEB.md) | Hospedagem VPS / Docker (v2) |
 | [docs/INSTALADOR.md](docs/INSTALADOR.md) | Instalador setup.exe e atualizações |
 | [docs/BUILD_RELEASE.md](docs/BUILD_RELEASE.md) | Pipeline de build e checklist VM |
 
