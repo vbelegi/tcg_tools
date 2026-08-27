@@ -26,6 +26,15 @@ def upgrade() -> None:
     op.execute(
         """
         UPDATE users SET
+          email = COALESCE(email, CONCAT(LOWER(username), '@local')),
+          display_name = COALESCE(display_name, username),
+          role = 'admin',
+          status = 'active'
+        WHERE email IS NULL OR display_name IS NULL
+        """
+        if op.get_bind().dialect.name != "sqlite"
+        else """
+        UPDATE users SET
           email = COALESCE(email, lower(username) || '@local'),
           display_name = COALESCE(display_name, username),
           role = 'admin',

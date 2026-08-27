@@ -1,0 +1,3 @@
+deploy/docker-entrypoint.sh text eol=lf
+deploy/Caddyfile text eol=lf
+Dockerfile text eol=lf

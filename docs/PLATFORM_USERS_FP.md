@@ -1,6 +1,6 @@
 # Plataforma: usuários, Fourse Points e torneios externos
 
-Contrato de produto (LAN v1 → web v2). Moeda: **Fourse Points (FP)**.
+Contrato de produto (LAN v1 → web v2). Moeda: **Fourse Points (FP)**. Hospedagem VPS: ver `docs/V2_WEB.md`.
 
 ## Papéis
 

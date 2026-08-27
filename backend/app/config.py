@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     exports_dir: Path | None = None
     logs_dir: Path | None = None
     frontend_dist: Path | None = None
+    public_base_url: str | None = None
 
     @property
     def resolved_database_url(self) -> str:

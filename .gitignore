@@ -31,3 +31,5 @@ launcher/*.syso
 
 # IDE / secrets
 .env
+.env.*
+!.env.example

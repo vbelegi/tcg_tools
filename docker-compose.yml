@@ -1,0 +1,73 @@
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-tcg_tools}
+      MYSQL_USER: ${MYSQL_USER:-tcg}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?set MYSQL_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}
+    volumes:
+      - tcg_mysql_data:/var/lib/mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 25s
+    networks:
+      - tcg
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      TCGTOOLS_DATABASE_URL: mysql+pymysql://${MYSQL_USER:-tcg}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE:-tcg_tools}?charset=utf8mb4
+      TCGTOOLS_DATA_DIR: /data
+      TCGTOOLS_FRONTEND_DIST: /app/frontend/dist
+      TCGTOOLS_PUBLIC_BASE_URL: ${TCGTOOLS_PUBLIC_BASE_URL:-}
+      TCGTOOLS_BOOTSTRAP_ADMIN_PASSWORD: ${TCGTOOLS_BOOTSTRAP_ADMIN_PASSWORD:-}
+      TCGTOOLS_DB_WAIT_SEC: ${TCGTOOLS_DB_WAIT_SEC:-90}
+    volumes:
+      - tcg_app_data:/data
+    expose:
+      - "8000"
+    networks:
+      - tcg
+
+  caddy:
+    image: caddy:2.9-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+      ACME_EMAIL: ${ACME_EMAIL:-}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - tcg_caddy_data:/data
+      - tcg_caddy_config:/config
+    networks:
+      - tcg
+
+volumes:
+  tcg_mysql_data:
+  tcg_app_data:
+  tcg_caddy_data:
+  tcg_caddy_config:
+
+networks:
+  tcg:
+    driver: bridge
