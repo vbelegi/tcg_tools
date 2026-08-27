@@ -1,6 +1,6 @@
 """Create admin@local only when missing (Docker/VPS bootstrap).
 
-Uses TCGTOOLS_SET_ADMIN_PASSWORD (or argv via set_admin_password helpers).
+Uses TCGTOOLS_SET_ADMIN_PASSWORD / TCGTOOLS_BOOTSTRAP_ADMIN_PASSWORD.
 Does not overwrite an existing admin password.
 """
 
@@ -8,6 +8,19 @@ from __future__ import annotations
 
 import os
 import sys
+
+from sqlalchemy.orm import Session
+
+
+def bootstrap_admin_if_missing(db: Session, password: str) -> str:
+    """Ensure admin exists with a password. Returns 'created' or 'skipped'."""
+    from app.core.auth import get_admin, upsert_admin_password
+
+    admin = get_admin(db)
+    if admin is not None and admin.password_hash:
+        return "skipped"
+    upsert_admin_password(db, password)
+    return "created"
 
 
 def main() -> int:
@@ -21,18 +34,16 @@ def main() -> int:
         )
         return 1
 
-    from app.core.auth import get_admin, upsert_admin_password
     from app.core.auth.passwords import AuthError, MIN_PASSWORD_LEN
     from app.db.session import SessionLocal
 
     db = SessionLocal()
     try:
-        admin = get_admin(db)
-        if admin is not None and admin.password_hash:
+        result = bootstrap_admin_if_missing(db, password)
+        if result == "skipped":
             print("Admin já existe; bootstrap ignorado.")
-            return 0
-        upsert_admin_password(db, password)
-        print("Admin criado/atualizado (bootstrap).")
+        else:
+            print("Admin criado/atualizado (bootstrap).")
         return 0
     except AuthError as exc:
         print(f"Erro: {exc} (mínimo {MIN_PASSWORD_LEN} caracteres).", file=sys.stderr)
