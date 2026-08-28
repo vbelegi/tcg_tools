@@ -4,9 +4,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-08-28
+
 ### Added
 
-- **V2 web (Fase 3):** avatares WebP em `users.avatar_blob` (`GET /api/v1/media/avatars/{id}`); `claim_url` absoluto nos convites via `TCGTOOLS_PUBLIC_BASE_URL`; cookies de sessão com `Secure` quando a URL pública é HTTPS
+- **V2 web (Fase 3):** avatares WebP em `users.avatar_blob` (`GET /api/v1/media/avatars/{id}`); `claim_url` absoluto nos convites via `TCGTOOLS_PUBLIC_BASE_URL`; cookies de sessão com `Secure` quando a URL pública é HTTPS; script `deploy/backup-db.sh`
 
 ### Fixed
 
@@ -123,6 +125,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 - Scripts Windows: `setup.ps1`, `Iniciar TCG Tools.bat`
 - Alembic migrations (001 schema, 002 scores_submitted)
 
+[1.4.0]: compare/v1.3.0...v1.4.0
 [1.3.0]: compare/v1.2.0...v1.3.0
 [1.2.0]: compare/v1.1.0...v1.2.0
 [1.1.0]: compare/v1.0.0...v1.1.0
