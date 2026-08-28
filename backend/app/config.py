@@ -21,6 +21,14 @@ class Settings(BaseSettings):
     logs_dir: Path | None = None
     frontend_dist: Path | None = None
     public_base_url: str | None = None
+    cookie_secure: bool | None = None
+
+    @property
+    def resolved_cookie_secure(self) -> bool:
+        if self.cookie_secure is not None:
+            return self.cookie_secure
+        base = (self.public_base_url or "").strip()
+        return base.lower().startswith("https://")
 
     @property
     def resolved_database_url(self) -> str:

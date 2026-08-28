@@ -10,10 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.core.auth import (
-    ADMIN_EMAIL,
     AuthError,
-    SESSION_COOKIE,
-    SESSION_DAYS,
     authenticate,
     change_password,
     claim_invite,
@@ -23,7 +20,9 @@ from app.core.auth import (
     register_player,
     revoke_session,
 )
-from app.core.auth.avatars import AvatarError, save_user_avatar
+from app.core.auth.cookies import clear_session_cookie, set_session_cookie
+from app.core.auth.service import SESSION_COOKIE
+from app.core.auth.avatars import AvatarError, encode_user_avatar
 from app.core.auth.passwords import MIN_PASSWORD_LEN
 from app.db.session import get_db
 from app.models import User
@@ -104,10 +103,10 @@ async def auth_upload_avatar(
 ):
     data = await file.read()
     try:
-        rel = save_user_avatar(user.id, data, file.content_type)
+        blob = encode_user_avatar(data, file.content_type)
     except AvatarError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    user.avatar_path = rel
+    user.avatar_blob = blob
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -122,14 +121,7 @@ def login(body: LoginBody, response: Response, db: Session = Depends(get_db)):
         token = create_session(db, user)
     except AuthError as exc:
         raise HTTPException(status_code=401, detail=str(exc)) from exc
-    response.set_cookie(
-        key=SESSION_COOKIE,
-        value=token,
-        httponly=True,
-        samesite="lax",
-        max_age=SESSION_DAYS * 24 * 3600,
-        path="/",
-    )
+    set_session_cookie(response, token)
     return private_user_dict(user)
 
 
@@ -150,14 +142,7 @@ def register(body: RegisterBody, response: Response, db: Session = Depends(get_d
         token = create_session(db, user)
     except AuthError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    response.set_cookie(
-        key=SESSION_COOKIE,
-        value=token,
-        httponly=True,
-        samesite="lax",
-        max_age=SESSION_DAYS * 24 * 3600,
-        path="/",
-    )
+    set_session_cookie(response, token)
     return private_user_dict(user)
 
 
@@ -165,7 +150,7 @@ def register(body: RegisterBody, response: Response, db: Session = Depends(get_d
 def logout(request: Request, response: Response, db: Session = Depends(get_db)):
     token = request.cookies.get(SESSION_COOKIE)
     revoke_session(db, token)
-    response.delete_cookie(SESSION_COOKIE, path="/")
+    clear_session_cookie(response)
     return {"ok": True}
 
 
@@ -180,7 +165,7 @@ def auth_change_password(
         change_password(db, user, body.current_password, body.new_password)
     except AuthError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    response.delete_cookie(SESSION_COOKIE, path="/")
+    clear_session_cookie(response)
     return {"ok": True, "message": "Senha alterada. Faça login novamente."}
 
 
@@ -199,12 +184,5 @@ def auth_claim_invite(body: ClaimInviteBody, response: Response, db: Session = D
         token = create_session(db, user)
     except AuthError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    response.set_cookie(
-        key=SESSION_COOKIE,
-        value=token,
-        httponly=True,
-        samesite="lax",
-        max_age=SESSION_DAYS * 24 * 3600,
-        path="/",
-    )
+    set_session_cookie(response, token)
     return private_user_dict(user)
