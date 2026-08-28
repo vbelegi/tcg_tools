@@ -7,7 +7,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session as DbSession
 
-from app.core.auth.avatars import media_url
+from app.core.auth.avatars import user_avatar_url
 from app.core.premiacao.calculator import calcular_premiados, distribuir_premios
 from app.models import FoursePointsLedger, User
 
@@ -98,24 +98,24 @@ def replace_event_fp_ledger(
 
 def ranking(db: DbSession, *, limit: int = 100) -> list[dict[str, Any]]:
     rows = (
-        db.query(User.id, User.display_name, User.avatar_path, FoursePointsLedger.points)
+        db.query(User.id, User.display_name, User.avatar_blob, FoursePointsLedger.points)
         .join(FoursePointsLedger, FoursePointsLedger.user_id == User.id)
         .all()
     )
     totals: dict[int, dict[str, Any]] = {}
-    for uid, name, avatar_path, pts in rows:
+    for uid, name, avatar_blob, pts in rows:
         bucket = totals.setdefault(
             uid,
             {
                 "user_id": uid,
                 "display_name": name,
-                "avatar_url": media_url(avatar_path),
+                "avatar_url": user_avatar_url(uid, avatar_blob),
                 "points": 0,
             },
         )
         bucket["points"] += int(pts or 0)
         if bucket.get("avatar_url") is None:
-            bucket["avatar_url"] = media_url(avatar_path)
+            bucket["avatar_url"] = user_avatar_url(uid, avatar_blob)
     ordered = sorted(totals.values(), key=lambda r: (-r["points"], r["display_name"].lower()))
     ordered = [row for row in ordered if int(row.get("points") or 0) > 0]
     for i, row in enumerate(ordered[:limit], start=1):

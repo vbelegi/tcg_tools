@@ -4,13 +4,13 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- **V2 web (Fase 3):** avatares WebP em `users.avatar_blob` (`GET /api/v1/media/avatars/{id}`); `claim_url` absoluto nos convites via `TCGTOOLS_PUBLIC_BASE_URL`; cookies de sessão com `Secure` quando a URL pública é HTTPS
+
 ### Fixed
 
 - **CI Pester:** registra PSGallery quando ausente no runner Windows (flake `No repository with the name 'PSGallery'`)
-
-### Added
-
-- **V2 web (Fase 1):** Docker multi-stage, Compose (app + MySQL 8 + Caddy), `.env.example`, bootstrap admin opcional, docs em `docs/V2_WEB.md`
 
 ## [1.3.0] - 2026-08-26
 
@@ -29,7 +29,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 - **Perfil — navegação:** Meu Perfil no sidebar; nome linkado em Usuários; busca pública `GET /jogadores/buscar`
 - **Perfil — senha:** modal Alterar senha no próprio perfil (removido do sidebar)
 - **Perfil do jogador:** dashboard com stats, Insights, badges TCG, Recharts (FP por jogo/mês), histórico filtrável; avatar + editar nome
-- **Avatar:** `POST /auth/me/avatar` (512 KB, WebP 256px) servido em `/media`; placeholder `/avatars/default.png`
+- **Avatar:** `POST /auth/me/avatar` (512 KB, WebP 256px) em `users.avatar_blob`; `GET /api/v1/media/avatars/{id}`; placeholder `/avatars/default.png`
 - **PATCH /auth/me:** atualizar `display_name`
 - **Calendário público** (`/calendario`): grade mensal com todos os torneios, painel do dia e CTAs por status/auth
 - **TCGs:** catálogo com cor hex (admin `/tcgs`); seed Magic/Pokémon/Yu-Gi-Oh!/One Piece/Digimon/Lorcana/Riftbound; ícones em `frontend/public/tcg-icons/`

@@ -316,14 +316,14 @@ def claim_invite(
 
 
 def public_user_dict(user: User) -> dict:
-    from app.core.auth.avatars import media_url
+    from app.core.auth.avatars import user_avatar_url
 
     return {
         "id": user.id,
         "display_name": user.display_name,
         "role": user.role,
         "status": user.status,
-        "avatar_url": media_url(user.avatar_path),
+        "avatar_url": user_avatar_url(user.id, user.avatar_blob),
         "created_at": user.created_at.isoformat() if user.created_at else None,
     }
 

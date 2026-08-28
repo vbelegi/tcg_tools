@@ -28,6 +28,6 @@ describe("tcgIconUrl", () => {
 describe("resolveAvatarUrl", () => {
   it("uses default placeholder", () => {
     expect(resolveAvatarUrl(null)).toBe(DEFAULT_AVATAR_URL);
-    expect(resolveAvatarUrl("/media/avatars/user_1.webp")).toBe("/media/avatars/user_1.webp");
+    expect(resolveAvatarUrl("/api/v1/media/avatars/1")).toBe("/api/v1/media/avatars/1");
   });
 });

@@ -41,6 +41,26 @@ def test_invite_claim_and_login(api_client: TestClient, db_session: Session):
     assert login.status_code == 200
 
 
+def test_invite_api_returns_claim_url(api_client: TestClient, db_session: Session, monkeypatch):
+    from app.config import get_settings
+
+    monkeypatch.setenv("TCGTOOLS_PUBLIC_BASE_URL", "https://torneios.example.com")
+    get_settings.cache_clear()
+    user = create_incomplete_user(
+        db_session,
+        display_name="Convite URL",
+        email="convite.url@example.com",
+        phone="+5511999990009",
+        role=UserRole.player.value,
+    )
+    r = api_client.post(f"/api/v1/users/{user.id}/invite")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["claim_path"] == f"/convite/{body['token']}"
+    assert body["claim_url"] == f"https://torneios.example.com/convite/{body['token']}"
+    get_settings.cache_clear()
+
+
 def test_pending_attendance_blocks_start(api_client: TestClient, db_session: Session):
     r = api_client.post(
         "/api/v1/torneios",

@@ -17,7 +17,7 @@ Contrato de produto (LAN v1 → web v2). Moeda: **Fourse Points (FP)**. Hospedag
 - Email e celular: **únicos**; erro se já existirem.
 - **Auto-cadastro (player):** nome + e-mail + celular + senha + **data de nascimento** → status `active` (conta completa).
 - **Menor de 18:** data de nascimento obrigatória para todos os players; se &lt; 18 anos, exige também `guardian_name` + `guardian_phone` (register e claim-invite).
-- **Conta rápida incomplete (só staff/admin):** na ficha do torneio (ou painel Usuários) → nome + celular + email, sem senha; finalização via **link de convite** (7 dias, uso único). Admin **copia o link** e encaminha manualmente (sem e-mail automático na LAN v1).
+- **Conta rápida incomplete (só staff/admin):** na ficha do torneio (ou painel Usuários) → nome + celular + email, sem senha; finalização via **link de convite** (7 dias, uso único). Admin **copia o link** (`claim_url` com `TCGTOOLS_PUBLIC_BASE_URL` em produção) e encaminha manualmente (sem e-mail automático).
 - Admin pode **excluir torneio** (qualquer status) com confirmação pelo nome.
 - Staff pode **buscar conta existente** e inscrever na ficha do draft.
 - Preset opcional **`fp_k`** (default 10) para Fourse Points.
@@ -68,7 +68,7 @@ Público: stats (torneios, títulos, top 8, melhor colocação), **Insights** he
 
 **FP:** total e breakdown (`fp_by_*`, `fp_earned`, gráficos, posição no ranking) visíveis só para o **próprio jogador** e **admin**. Ranking público (`GET /ranking`) continua listando totais agregados.
 
-**Avatar:** upload próprio (`POST /auth/me/avatar`, máx. 512 KB; redimensiona para 256×256 WebP em `data/media/avatars/`). Placeholder: `/avatars/default.png`. Edição de nome: `PATCH /auth/me`. **Alterar senha** só no próprio perfil (modal); removido do sidebar.
+**Avatar:** upload próprio (`POST /auth/me/avatar`, máx. 512 KB; redimensiona para 256×256 WebP em `users.avatar_blob`). Leitura: `GET /api/v1/media/avatars/{user_id}`. Placeholder: `/avatars/default.png`. Edição de nome: `PATCH /auth/me`. **Alterar senha** só no próprio perfil (modal); removido do sidebar.
 
 **Inscrição (draft / staff):** um campo de busca (conta existente). Se não achar → criar **incomplete** (nome + e-mail + celular) e inscrever. Sem walk-in sem conta; um jogador por vez; seed em “opções avançadas”. Link de convite **não** é gerado nessa hora — admin gera depois em `/usuarios` (futuro: rotina automática).
 
