@@ -20,12 +20,9 @@ async def lifespan(app: FastAPI):
 
 
 settings = get_settings()
-settings.resolved_media_dir.mkdir(parents=True, exist_ok=True)
-settings.resolved_avatars_dir.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(title="TCG Tools", version="1.0.0", lifespan=lifespan)
 app.include_router(api_v1_router)
-app.mount("/media", StaticFiles(directory=settings.resolved_media_dir), name="media")
 
 dist = settings.resolved_frontend_dist
 index_html = dist / "index.html"

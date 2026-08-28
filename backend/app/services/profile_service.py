@@ -8,7 +8,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session as DbSession, joinedload
 
-from app.core.auth.avatars import media_url
+from app.core.auth.avatars import user_avatar_url
 from app.core.auth.fourse_points import ranking, user_fp_total
 from app.core.auth.service import public_user_dict
 from app.models import Event, FoursePointsLedger, Player, User, UserRole
@@ -165,7 +165,7 @@ def build_public_profile(
     payload: dict[str, Any] = {
         **public_user_dict(user),
         "created_at": user.created_at.isoformat() if user.created_at else None,
-        "avatar_url": media_url(user.avatar_path),
+        "avatar_url": user_avatar_url(user.id, user.avatar_blob),
         "stats": stats,
         "insights": insights,
         "badge_games": [],

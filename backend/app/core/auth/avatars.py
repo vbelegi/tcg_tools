@@ -1,13 +1,10 @@
-"""Avatar upload processing (square resize + WebP)."""
+"""Avatar upload processing (square resize + WebP bytes in DB)."""
 
 from __future__ import annotations
 
 import io
-from pathlib import Path
 
 from PIL import Image
-
-from app.config import get_settings
 
 MAX_UPLOAD_BYTES = 512 * 1024
 AVATAR_PX = 256
@@ -18,11 +15,8 @@ class AvatarError(Exception):
     pass
 
 
-def save_user_avatar(user_id: int, data: bytes, content_type: str | None) -> str:
-    """Validate, crop/resize to square WebP, write under data/media/avatars.
-
-    Returns relative path suitable for StaticFiles mount (e.g. ``avatars/user_1.webp``).
-    """
+def encode_user_avatar(data: bytes, content_type: str | None) -> bytes:
+    """Validate, crop/resize to square WebP; return bytes for users.avatar_blob."""
     if content_type and content_type.lower() not in ALLOWED_CONTENT_TYPES:
         raise AvatarError("Formato inválido. Use JPEG, PNG ou WebP.")
     if len(data) > MAX_UPLOAD_BYTES:
@@ -50,25 +44,12 @@ def save_user_avatar(user_id: int, data: bytes, content_type: str | None) -> str
     else:
         img = img.convert("RGB")
 
-    settings = get_settings()
-    settings.resolved_avatars_dir.mkdir(parents=True, exist_ok=True)
-    rel = f"avatars/user_{user_id}.webp"
-    dest = settings.resolved_media_dir / rel
     buf = io.BytesIO()
     img.save(buf, format="WEBP", quality=82, method=4)
-    dest.write_bytes(buf.getvalue())
-    return rel.replace("\\", "/")
+    return buf.getvalue()
 
 
-def delete_user_avatar_file(avatar_path: str | None) -> None:
-    if not avatar_path:
-        return
-    path = get_settings().resolved_media_dir / avatar_path
-    if path.is_file():
-        path.unlink(missing_ok=True)
-
-
-def media_url(avatar_path: str | None) -> str | None:
-    if not avatar_path:
+def user_avatar_url(user_id: int, avatar_blob: bytes | None) -> str | None:
+    if not avatar_blob:
         return None
-    return f"/media/{avatar_path.lstrip('/')}"
+    return f"/api/v1/media/avatars/{user_id}"

@@ -132,11 +132,16 @@ def test_update_display_name_and_avatar(api_client: TestClient, db_session: Sess
     )
     assert upload.status_code == 200, upload.text
     assert upload.json()["avatar_url"]
-    assert upload.json()["avatar_url"].startswith("/media/avatars/")
+    assert upload.json()["avatar_url"].startswith("/api/v1/media/avatars/")
 
     profile = api_client.get(f"/api/v1/jogadores/{player.id}/perfil")
     assert profile.json()["avatar_url"] == upload.json()["avatar_url"]
     assert profile.json()["display_name"] == "Depois"
+
+    avatar_get = api_client.get(f"/api/v1/media/avatars/{player.id}")
+    assert avatar_get.status_code == 200
+    assert avatar_get.headers["content-type"].startswith("image/webp")
+    assert len(avatar_get.content) > 100
 
 
 def test_create_torneio_requires_tcg(api_client: TestClient):
