@@ -33,17 +33,6 @@ jobs:
         shell: pwsh
         run: ./scripts/ci/run-frontend-tests.ps1
 
-  launcher:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.22"
-      - name: Launcher tests
-        shell: pwsh
-        run: ./scripts/ci/run-launcher-tests.ps1
-
   pester:
     runs-on: windows-latest
     steps:

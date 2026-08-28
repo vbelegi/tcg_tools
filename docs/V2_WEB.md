@@ -1,24 +1,24 @@
 # TCG Tools v2 — hospedagem web (VPS)
 
-Contrato e guia da **Fase 1** (Docker). Single-loja Fourse; instalador LAN permanece até validação do site.
+Guia de deploy Docker para produção. Ambientes oficiais: **dev local** + **VPS**.
 
-## Escopo
+## Escopo por fase
 
-| Incluído na Fase 1 | Fase 3 (web produção) |
-|--------------------|------------------------|
-| Docker + Compose (app, MySQL 8, Caddy) | Avatares WebP em `users.avatar_blob` |
-| `.env` na VPS (segredos fora do git) | `claim_url` absoluto nos convites (`TCGTOOLS_PUBLIC_BASE_URL`) |
-| Bootstrap opcional do `admin@local` | Cookies de sessão com flag `Secure` em HTTPS |
-| Migrations Alembic no start | — |
-
-Ambientes finais desejados: **dev local** + **VPS**; LAN só enquanto o web não estiver validado.
+| Fase | Conteúdo | Status |
+|------|----------|--------|
+| 1 | Docker + Compose (app, MySQL 8, Caddy) | Concluída |
+| 2 | VPS + domínio + HTTPS | Concluída |
+| 3 | Avatares no DB, `claim_url`, cookies `Secure` | Concluída |
+| 4 | Cutover web; remover instalador LAN / launcher | Concluída (v1.5.0) |
+| 5 | Deploy automático na VPS | Planejada |
+| 6 | Hardening (backup offsite, runbook update, Cloudflare) | Planejada |
 
 ## Pré-requisitos (VPS)
 
 - Ubuntu 24.04 (ou similar)
 - Docker Engine + Compose plugin
 - Firewall: 22, 80, 443
-- (Produção) DNS A/AAAA do domínio → IP da VPS
+- DNS do domínio → VPS (Cloudflare proxied ok)
 
 ## Arquivos
 
@@ -28,16 +28,15 @@ Ambientes finais desejados: **dev local** + **VPS**; LAN só enquanto o web não
 | `docker-compose.yml` | `db` + `app` + `caddy` |
 | `deploy/Caddyfile` | Reverse proxy / TLS |
 | `deploy/docker-entrypoint.sh` | Wait DB → migrate → bootstrap → uvicorn |
+| `deploy/backup-db.sh` | Dump MySQL (cron) |
 | `.env.example` | Modelo de segredos |
 
-## Deploy na VPS
+## Deploy inicial na VPS
 
 ```bash
-# como root ou user com docker
 mkdir -p /opt/tcg_tools
 cd /opt/tcg_tools
 git clone https://github.com/vbelegi/tcg_tools.git .
-# ou: git pull
 
 cp .env.example .env
 nano .env   # MYSQL_* , TCGTOOLS_PUBLIC_BASE_URL, SITE_ADDRESS
@@ -47,61 +46,66 @@ docker compose ps
 curl -fsS https://torneios.seudominio.com/api/v1/health
 ```
 
-Login inicial: **admin@local** + senha do bootstrap. Em seguida **remova** `TCGTOOLS_BOOTSTRAP_ADMIN_PASSWORD` do `.env` e rode `docker compose up -d` de novo (não sobrescreve admin existente).
+Login inicial: **admin@local** + senha do bootstrap. Remova `TCGTOOLS_BOOTSTRAP_ADMIN_PASSWORD` do `.env` após o primeiro login.
+
+## Atualizar produção (release)
+
+```bash
+cd /opt/tcg_tools
+# opcional: ./scripts/backup-db.sh ou deploy/backup-db.sh
+git pull origin main
+docker compose up -d --build
+docker compose ps
+curl -fsS https://torneios.seudominio.com/api/v1/health
+```
+
+Use `--build` quando mudar código, Dockerfile ou dependências. Só `.env` → `docker compose up -d`.
 
 ### SITE_ADDRESS
 
-- `:80` — HTTP pelo IP da VPS (teste)
-- `torneios.seudominio.com` — HTTPS (Let's Encrypt); DNS deve apontar antes
+- `torneios.seudominio.com` — HTTPS (produção)
+- `:80` — HTTP pelo IP (teste)
 
 ### TCGTOOLS_PUBLIC_BASE_URL
 
-- Produção: `https://torneios.seudominio.com` (sem barra final)
-- Usado em `claim_url` ao gerar convites em `/usuarios`
-- Quando começa com `https://`, cookies de sessão recebem `Secure` automaticamente
-- Override: `TCGTOOLS_COOKIE_SECURE=true|false`
+- `https://torneios.seudominio.com` (sem barra final)
+- Convites em `/usuarios` usam `claim_url` absoluto
+- Cookies `Secure` quando URL é HTTPS
 
-### Avatares (Fase 3)
+### Avatares
 
-- Upload: `POST /auth/me/avatar` → WebP 256×256 em `users.avatar_blob`
+- Upload: `POST /auth/me/avatar` → `users.avatar_blob`
 - Leitura: `GET /api/v1/media/avatars/{user_id}`
-- Migration `008` importa arquivos antigos de `data/media/avatars/` se existirem
-- Backup MySQL inclui avatares (não depende mais de volume de arquivos)
+- Favicon: `frontend/public/favicon.ico`
 
-### Backup periódico (recomendado na VPS)
+### Backup
 
-Script manual em `/opt/tcg_tools/scripts/backup-db.sh` (cron diário) — ver runbook do operador ou histórico de deploy.
+```bash
+chmod 700 deploy/backup-db.sh
+./deploy/backup-db.sh
+# cron diário recomendado — ver INSTALACAO.md
+```
 
 ## Segredos
 
 - Nunca commitar `.env`
-- Senha do MySQL e bootstrap só no servidor
-- Hash do admin fica no banco após o primeiro boot
 - `chmod 600 .env` na VPS
+- Senhas MySQL só no servidor
 
 ## Dev local (sem Docker)
 
-Continua como hoje: SQLite + `uvicorn` + `npm run dev`. Cookies sem `Secure` quando `TCGTOOLS_PUBLIC_BASE_URL` não é HTTPS.
+`scripts/setup.ps1` + `scripts/Iniciar TCG Tools.bat` ou `uvicorn` + `npm run dev`. Dados em `./data/`.
 
-## Smoke / testes de empacotamento
+## Smoke (dev machine)
 
 ```powershell
-# Na máquina de desenvolvimento (Windows)
 Invoke-Pester -Path scripts/tests/Docker.Tests.ps1 -CI
 ./scripts/validate-prod-lock.ps1
-```
-
-Com Docker disponível:
-
-```powershell
 docker compose config
-# build completo (demorado):
-# docker compose build app
 ```
 
 ## Próximas fases
 
-2. ~~Validar stack na VPS Hostinger + domínio~~  
-3. ~~Avatares no DB, URL pública, cookies HTTPS~~  
-4. Cutover da loja; deprecar LAN  
-5. Deploy automático pós-merge em `main` (ou por tag de release)
+5. Deploy automático (tag `v*` ou workflow manual)  
+6. Backup offsite, runbook operacional, revisão Cloudflare SSL
+

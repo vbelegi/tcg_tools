@@ -4,6 +4,24 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-08-28
+
+### Added
+
+- **Favicon web:** `favicon.ico` + `apple-touch-icon` no frontend (ícone herdado do antigo launcher)
+
+### Removed
+
+- **Launcher Go** (`TCGTools.exe`, bandeja, LAN)
+- **Instalador Windows** (`setup.exe`, Inno Setup, Python embeddable no release)
+- **CI:** jobs Go launcher, build Inno, artifact `TCGTools-*-setup.exe`
+
+### Changed
+
+- **Produção:** apenas VPS Docker ([docs/V2_WEB.md](docs/V2_WEB.md)); dev local via `setup.ps1` / `Iniciar TCG Tools.bat`
+- **Release:** tag `v*` publica GitHub Release (notas); deploy manual na VPS com `git pull` + `docker compose up -d --build`
+- **Docs:** `INSTALADOR.md` arquivado em `docs/archive/`; README, BUILD_RELEASE, INSTALACAO, OPERADOR atualizados
+
 ## [1.4.0] - 2026-08-28
 
 ### Added
@@ -125,6 +143,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 - Scripts Windows: `setup.ps1`, `Iniciar TCG Tools.bat`
 - Alembic migrations (001 schema, 002 scores_submitted)
 
+[1.5.0]: compare/v1.4.0...v1.5.0
 [1.4.0]: compare/v1.3.0...v1.4.0
 [1.3.0]: compare/v1.2.0...v1.3.0
 [1.2.0]: compare/v1.1.0...v1.2.0

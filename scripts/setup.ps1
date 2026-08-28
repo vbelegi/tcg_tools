@@ -1,4 +1,4 @@
-# TCG Tools — setup inicial (Windows)
+# TCG Tools — setup inicial (dev local, Windows)
 
 $ErrorActionPreference = "Stop"
 
@@ -7,9 +7,7 @@ $Backend = Join-Path $Root "backend"
 $Frontend = Join-Path $Root "frontend"
 $Runtime = Join-Path $Root "runtime"
 
-. (Join-Path $PSScriptRoot "lib\Embed-Python.ps1")
-
-Write-Host "TCG Tools — Setup" -ForegroundColor Cyan
+Write-Host "TCG Tools — Setup (dev)" -ForegroundColor Cyan
 
 function Install-BackendDeps {
     param([string]$PythonExe)
@@ -22,7 +20,6 @@ function Install-BackendDeps {
     if ($LASTEXITCODE -ne 0) { throw "Falha ao instalar dependencias Python." }
 }
 
-$PythonExe = $null
 $uv = Get-Command uv -ErrorAction SilentlyContinue
 
 if ($uv) {
@@ -43,10 +40,7 @@ if ($uv) {
         Write-Host "Usando Python 3.13 (py -3.13)..."
         Install-BackendDeps -PythonExe $py313
     } else {
-        Write-Host "py -3.13 nao encontrado; tentando Python embeddable..." -ForegroundColor Yellow
-        New-Item -ItemType Directory -Force -Path $Runtime | Out-Null
-        $PythonExe = Install-EmbedPython -RuntimeDir $Runtime
-        Install-BackendDeps -PythonExe $PythonExe
+        throw "Python 3.13 necessario. Instale via python.org ou use 'uv' (https://docs.astral.sh/uv/)."
     }
 }
 

@@ -1,4 +1,7 @@
-# Instalador Windows — TCG Tools
+# Instalador Windows — TCG Tools (legado)
+
+> **Removido na v1.5.0.** Produção usa VPS Docker — [V2_WEB.md](../V2_WEB.md).  
+> Este documento permanece apenas como referência histórica.
 
 ## Para a loja
 

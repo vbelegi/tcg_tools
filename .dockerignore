@@ -11,8 +11,6 @@ frontend/coverage
 dist
 data
 *.db
-launcher
-docs
 scripts/tests
 **/*.md
 !frontend/public/**

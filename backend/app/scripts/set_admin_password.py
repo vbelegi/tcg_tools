@@ -1,4 +1,4 @@
-"""CLI: set or reset admin password (used by installer)."""
+"""CLI: set or reset admin password (dev / Docker bootstrap)."""
 
 from __future__ import annotations
 

@@ -1,217 +1,97 @@
 # TCG Tools
 
+Aplicação web para gestão de torneios TCG: premiação, organização Suíço/Eliminatória, Fourse Points e export de logs.
 
+**Produção (Fourse):** site hospedado na VPS — ver [docs/V2_WEB.md](docs/V2_WEB.md).  
+**Desenvolvimento:** SQLite local no Windows — seções abaixo.
 
-Aplicação web local para gestão de torneios TCG na loja: premiação, organização Suíço/Eliminatória e export de logs.
+## Requisitos (dev)
 
-
-
-## Requisitos
-
-
-
-- Windows 10+
-
-- Python **3.13** (recomendado; `py` padrão no Windows pode apontar para 3.14)
-
-- Node.js 18+ (apenas para build do frontend)
-
-
-
-> **Nota:** Se `py` usar 3.14 por padrão, prefixe comandos com `py -3.13` ou use `scripts\Iniciar TCG Tools.bat`.
-
-
+- Windows 10+ (ou Linux/macOS com Python/Node)
+- Python **3.13** (recomendado; prefixe `py -3.13` se o padrão for outra versão)
+- Node.js 18+
 
 ## Desenvolvimento
 
-
-
-### Backend
-
-
+### Setup rápido (Windows)
 
 ```powershell
-
-cd backend
-
-py -3.13 -m pip install -e ".[dev]"
-
-py -3.13 -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
-
+scripts\setup.ps1
+scripts\Iniciar TCG Tools.bat
 ```
 
-
-
-### Frontend
-
-
-
-```powershell
-
-cd frontend
-
-npm install
-
-npm run dev          # desenvolvimento
-
-npm run generate:api # regenerar tipos TypeScript a partir do OpenAPI
-
-npm run build
-
-npm run test         # Vitest
-
-```
-
-
-
-Acesse `http://127.0.0.1:5173` (proxy `/api` → backend).
-
-**Login (obrigatório):** após o setup, defina a senha do admin (`admin@local`):
+Dados em `./data/` (SQLite). Defina a senha do admin (`admin@local`):
 
 ```powershell
 $env:TCGTOOLS_DATA_DIR='.\data'; cd backend; py -3.13 -m app.scripts.set_admin_password --password admin123
 ```
 
-(O `scripts\setup.ps1` imprime o comando equivalente para o data dir em uso.)
-
-
-
-### Produção local
-
-
+### Backend / frontend separados
 
 ```powershell
+cd backend
+py -3.13 -m pip install -e ".[dev]"
+py -3.13 -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 
 cd frontend
-
-npm run build
-
-cd ..\backend
-
-py -3.13 -m uvicorn app.main:app --host 127.0.0.1 --port 8000
-
+npm install
+npm run dev    # http://127.0.0.1:5173 (proxy /api)
+npm run test
 ```
 
+## Produção (VPS)
 
+Deploy Docker: [docs/V2_WEB.md](docs/V2_WEB.md).
 
-Acesse `http://127.0.0.1:8000`
-
-
-
-## Instalação na loja
-
-1. Baixe e execute `TCGTools-{versão}-setup.exe` ([docs/INSTALADOR.md](docs/INSTALADOR.md))
-2. Use o atalho **TCG Tools** (launcher com bandeja do sistema)
-
-Checklist: [docs/INSTALACAO.md](docs/INSTALACAO.md) · Build/release: [docs/BUILD_RELEASE.md](docs/BUILD_RELEASE.md)
-
-**Dados:** `%APPDATA%\TCGTools\` (SQLite, exports, logs) · **Dev:** `./data/` via `scripts\setup.ps1`  
-
-**Logs de torneios:** `./logs/` (JSON exportados)  
-
-**CSV de premiação:** `./exports/` (gerados sob demanda)
-
-
+```bash
+cd /opt/tcg_tools
+git pull origin main
+docker compose up -d --build
+```
 
 ## Testes
 
-
-
 ```powershell
-
 cd backend
-
 py -3.13 -m pytest tests/ -v --cov=app --cov-fail-under=80
 
-
-
 cd ..\frontend
-
 npm run test
 
-cd ..\launcher
-
-go test ./...
-
+Invoke-Pester -Path scripts/tests -CI
 ```
 
-
-
-CI (GitHub Actions): pytest + coverage ≥80%, frontend test + build.
-
-
+CI: pytest, frontend Vitest, Pester, Docker packaging tests.
 
 ## Estrutura
 
-
-
 ```
-
 tcg_tools/
-
-├── backend/
-
-│   ├── app/              # FastAPI, core, services, models
-
-│   ├── config/           # premiacao_presets.json
-
-│   ├── alembic/          # migrações SQLite
-
-│   └── tests/            # unit, integration, db (Alembic fixtures)
-
-├── frontend/             # React + Vite + TypeScript
-
-├── launcher/             # TCGTools.exe (Go, bandeja do sistema)
-
-├── scripts/              # setup.ps1, build-release.ps1, installer.iss
-
-├── config/               # settings.json legado (migração one-shot)
-
-├── exports/              # CSV gerados (gitignored)
-
-└── logs/                 # JSON de torneios exportados
-
+├── backend/          # FastAPI, Alembic, testes
+├── frontend/         # React + Vite
+├── deploy/           # Caddy, entrypoint, backup-db.sh
+├── scripts/          # setup.ps1, CI helpers
+├── Dockerfile
+└── docker-compose.yml
 ```
-
-
 
 ## Funcionalidades
 
-
-
 - **Premiação:** calcular split, tabela, presets, export CSV
-
-- **Torneios:** Suíço e Eliminatória, pairings, resultados, reabrir rodada, premiação integrada, log JSON
-
+- **Torneios:** Suíço e Eliminatória, pairings, FP, torneios externos
 - **Sorteador:** sorteio em lote ou encadeado
-
-- **Auth / LAN:** login `admin@local`; acesso opcional na rede local
-
+- **Usuários:** admin/staff/player, convites, perfis públicos
 - **Decklists:** opcional após finalizar torneio
-
-
 
 ## Documentação
 
-
-
 | Documento | Conteúdo |
-
 |-----------|----------|
-
-| [docs/OPERADOR.md](docs/OPERADOR.md) | Manual do mesário, fluxograma |
-
-| [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Problemas comuns e soluções |
-
-| [docs/V2_WEB.md](docs/V2_WEB.md) | Hospedagem VPS / Docker (v2) |
-| [docs/INSTALADOR.md](docs/INSTALADOR.md) | Instalador setup.exe e atualizações |
-| [docs/BUILD_RELEASE.md](docs/BUILD_RELEASE.md) | Pipeline de build e checklist VM |
-
-| [docs/modelo_premiacao.md](docs/modelo_premiacao.md) | Fórmulas e parâmetros do split |
-
-| [docs/configuracao.md](docs/configuracao.md) | Presets JSON, exports, variáveis de ambiente |
-
-| [docs/INSTALACAO.md](docs/INSTALACAO.md) | Checklist loja, backup |
-
+| [docs/V2_WEB.md](docs/V2_WEB.md) | **Produção VPS / Docker** |
+| [docs/OPERADOR.md](docs/OPERADOR.md) | Manual do mesário |
+| [docs/INSTALACAO.md](docs/INSTALACAO.md) | Checklist pós-deploy |
+| [docs/BUILD_RELEASE.md](docs/BUILD_RELEASE.md) | Tags, CI, release |
+| [docs/PLATFORM_USERS_FP.md](docs/PLATFORM_USERS_FP.md) | Usuários e FP |
+| [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Problemas comuns |
+| [docs/configuracao.md](docs/configuracao.md) | Presets, env vars |
 | [CHANGELOG.md](CHANGELOG.md) | Histórico de versões |
-
