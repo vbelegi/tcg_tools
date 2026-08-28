@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import RequireAdmin, RequireStaff, get_optional_user
 from app.core.auth import AuthError, create_incomplete_user, create_invite, private_user_dict, public_user_dict
+from app.core.auth.invites import invite_claim_path, invite_claim_url
 from app.core.auth.fourse_points import ranking
 from app.db.session import get_db
 from app.models import User, UserRole, UserStatus
@@ -83,7 +84,8 @@ def invite_user(user_id: int, _: RequireAdmin, db: Session = Depends(get_db)):
     return {
         "token": invite.token,
         "expires_at": invite.expires_at.isoformat(),
-        "claim_path": f"/convite/{invite.token}",
+        "claim_path": invite_claim_path(invite.token),
+        "claim_url": invite_claim_url(invite.token),
         "user": private_user_dict(user),
     }
 

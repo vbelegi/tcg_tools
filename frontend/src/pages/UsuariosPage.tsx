@@ -4,7 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "../api/client";
 
-function inviteAbsoluteUrl(claimPath: string): string {
+function inviteAbsoluteUrl(claimPath: string, claimUrl?: string | null): string {
+  if (claimUrl?.trim()) return claimUrl.trim();
   const path = claimPath.startsWith("/") ? claimPath : `/${claimPath}`;
   return `${window.location.origin}${path}`;
 }
@@ -39,7 +40,7 @@ export function UsuariosPage() {
   const invite = useMutation({
     mutationFn: (id: number) => api.inviteUser(id),
     onSuccess: async (res) => {
-      const url = inviteAbsoluteUrl(res.claim_path);
+      const url = inviteAbsoluteUrl(res.claim_path, res.claim_url);
       try {
         await navigator.clipboard.writeText(url);
         setInviteMsg(

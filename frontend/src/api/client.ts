@@ -202,9 +202,10 @@ export const api = {
     request("/users", { method: "POST", body: JSON.stringify(body) }),
 
   inviteUser: (userId: number) =>
-    request<{ token: string; claim_path: string; expires_at: string }>(`/users/${userId}/invite`, {
-      method: "POST",
-    }),
+    request<{ token: string; claim_path: string; claim_url: string | null; expires_at: string }>(
+      `/users/${userId}/invite`,
+      { method: "POST" },
+    ),
 
   ranking: () =>
     request<
