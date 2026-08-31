@@ -4,6 +4,27 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-08-31
+
+### Added
+
+- **Security hardening:** rate limiting em login/registro/claim-invite; hash SHA-256 de tokens de sessão no DB; revogação de sessões anteriores no login
+- **Calendário:** filtro de visibilidade alinhado à listagem pública (rascunhos fechados ocultos)
+- **Headers HTTP** no Caddy (CSP, X-Frame-Options, nosniff, Referrer-Policy)
+- **Frontend:** validação de redirect `next` (anti open-redirect)
+
+### Changed
+
+- Senha mínima **10 caracteres**
+- `/docs` e OpenAPI desabilitados quando `TCGTOOLS_ENVIRONMENT=production`
+- SPA fallback com proteção contra path traversal
+- Buscas `ilike` escapam `%` e `_`; limite de body HTTP (1 MB)
+- Upload de avatar lê stream com limite; exports do client enviam cookies corretamente
+
+### Security
+
+- Migration `010`: invalida sessões existentes (re-login após deploy)
+
 ## [1.8.0] - 2026-08-31
 
 ### Added
@@ -177,6 +198,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 - Scripts Windows: `setup.ps1`, `Iniciar TCG Tools.bat`
 - Alembic migrations (001 schema, 002 scores_submitted)
 
+[1.9.0]: compare/v1.8.0...v1.9.0
 [1.8.0]: compare/v1.7.0...v1.8.0
 [1.7.0]: compare/v1.6.0...v1.7.0
 [1.6.0]: compare/v1.5.0...v1.6.0
