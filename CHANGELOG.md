@@ -4,6 +4,18 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-08-31
+
+### Added
+
+- **Papéis (admin):** `PATCH /api/v1/users/{id}/role` — promover/rebaixar entre `staff` e `player` (UI em Usuários)
+- **Agenda:** eventos no calendário sem inscrição — tabela `calendar_announcements`, CRUD staff em `/agenda`, feed unificado em `GET /api/v1/calendar`
+- **Mobile:** menu hambúrguer em telas ≤900px; sidebar em drawer; Perfil/Sair/Entrar acima dos links
+
+### Changed
+
+- **Calendário público:** exibe torneios e eventos da agenda com estilos distintos
+
 ## [1.7.0] - 2026-08-31
 
 ### Added
@@ -165,6 +177,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 - Scripts Windows: `setup.ps1`, `Iniciar TCG Tools.bat`
 - Alembic migrations (001 schema, 002 scores_submitted)
 
+[1.8.0]: compare/v1.7.0...v1.8.0
 [1.7.0]: compare/v1.6.0...v1.7.0
 [1.6.0]: compare/v1.5.0...v1.6.0
 [1.5.0]: compare/v1.4.0...v1.5.0
