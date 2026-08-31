@@ -207,6 +207,12 @@ export const api = {
       { method: "POST" },
     ),
 
+  updateUserRole: (userId: number, role: "staff" | "player") =>
+    request<{ id: number; role: string }>(`/users/${userId}/role`, {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    }),
+
   ranking: () =>
     request<
       Array<{
@@ -319,6 +325,60 @@ export const api = {
 
   listCalendarTorneios: (year: number, month: number) =>
     request<Torneio[]>(`/torneios/calendar?year=${year}&month=${month}`),
+
+  getCalendar: (year: number, month: number) =>
+    request<{
+      tournaments: Torneio[];
+      announcements: Array<{
+        id: number;
+        title: string;
+        event_date: string;
+        description: string | null;
+        start_time: string | null;
+        location: string | null;
+      }>;
+    }>(`/calendar?year=${year}&month=${month}`),
+
+  listCalendarAnnouncements: (year?: number, month?: number) => {
+    const params = new URLSearchParams();
+    if (year != null) params.set("year", String(year));
+    if (month != null) params.set("month", String(month));
+    const qs = params.toString();
+    return request<
+      Array<{
+        id: number;
+        title: string;
+        event_date: string;
+        description: string | null;
+        start_time: string | null;
+        location: string | null;
+      }>
+    >(`/calendar/announcements${qs ? `?${qs}` : ""}`);
+  },
+
+  createCalendarAnnouncement: (body: {
+    title: string;
+    event_date: string;
+    description?: string | null;
+    start_time?: string | null;
+    location?: string | null;
+  }) =>
+    request("/calendar/announcements", { method: "POST", body: JSON.stringify(body) }),
+
+  updateCalendarAnnouncement: (
+    id: number,
+    body: {
+      title?: string;
+      event_date?: string;
+      description?: string | null;
+      start_time?: string | null;
+      location?: string | null;
+    },
+  ) =>
+    request(`/calendar/announcements/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
+
+  deleteCalendarAnnouncement: (id: number) =>
+    request<void>(`/calendar/announcements/${id}`, { method: "DELETE" }),
 
   listTcgGames: (includeInactive = false) =>
     request<TcgGame[]>(`/tcg-games${includeInactive ? "?include_inactive=true" : ""}`),

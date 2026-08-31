@@ -25,6 +25,22 @@ export function UsuariosPage() {
     queryFn: () => api.listUsers(q || undefined),
   });
 
+  const { data: me } = useQuery({
+    queryKey: ["auth-me"],
+    queryFn: () => api.authMe(),
+    retry: false,
+  });
+
+  const roleChange = useMutation({
+    mutationFn: ({ id, role }: { id: number; role: "staff" | "player" }) =>
+      api.updateUserRole(id, role),
+    onSuccess: async () => {
+      setError("");
+      await qc.invalidateQueries({ queryKey: ["users"] });
+    },
+    onError: (e) => setError((e as Error).message),
+  });
+
   const create = useMutation({
     mutationFn: () => api.createUser({ display_name: displayName, email, phone, role }),
     onSuccess: async () => {
@@ -139,7 +155,25 @@ export function UsuariosPage() {
                   <td>{u.email}</td>
                   <td>{u.phone}</td>
                   <td>
-                    <span className="badge">{u.role}</span>
+                    {u.role === "admin" || u.id === me?.id ? (
+                      <span className="badge">{u.role}</span>
+                    ) : (
+                      <select
+                        className="role-select"
+                        value={u.role === "staff" ? "staff" : "player"}
+                        disabled={roleChange.isPending}
+                        onChange={(e) =>
+                          roleChange.mutate({
+                            id: u.id,
+                            role: e.target.value as "staff" | "player",
+                          })
+                        }
+                        aria-label={`Papel de ${u.display_name}`}
+                      >
+                        <option value="player">player</option>
+                        <option value="staff">staff</option>
+                      </select>
+                    )}
                   </td>
                   <td>
                     <span className={u.status === "incomplete" ? "badge badge-warn" : "badge badge-ok"}>
