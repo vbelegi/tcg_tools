@@ -4,10 +4,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-08-31
+
 ### Added
 
 - **Backup offsite (Fase 6):** `deploy/backup-offsite.sh` — upload de dumps MySQL para Google Drive via rclone
-- **Runbook VPS (Fase 6):** [RUNBOOK_VPS.md](docs/RUNBOOK_VPS.md) — deploy, backup, restore, operação
+- **Runbook VPS (Fase 6):** [RUNBOOK_VPS.md](docs/RUNBOOK_VPS.md) — deploy, backup, restore e operação
+
+### Changed
+
+- **Docs:** `V2_WEB.md`, `INSTALACAO.md`, `TROUBLESHOOTING.md` — links para runbook e offsite; Fase 6 concluída
 
 ## [1.6.0] - 2026-08-31
 
@@ -159,6 +165,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 - Scripts Windows: `setup.ps1`, `Iniciar TCG Tools.bat`
 - Alembic migrations (001 schema, 002 scores_submitted)
 
+[1.7.0]: compare/v1.6.0...v1.7.0
 [1.6.0]: compare/v1.5.0...v1.6.0
 [1.5.0]: compare/v1.4.0...v1.5.0
 [1.4.0]: compare/v1.3.0...v1.4.0

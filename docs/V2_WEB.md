@@ -11,7 +11,7 @@ Guia de deploy Docker para produção. Ambientes oficiais: **dev local** + **VPS
 | 3 | Avatares no DB, `claim_url`, cookies `Secure` | Concluída |
 | 4 | Cutover web; remover instalador LAN / launcher | Concluída (v1.5.0) |
 | 5 | Deploy automático na VPS | Concluída (v1.6.0) |
-| 6 | Hardening (backup offsite, runbook) | Em andamento (offsite + runbook) |
+| 6 | Hardening (backup offsite, runbook) | Concluída (v1.7.0) |
 
 ## Pré-requisitos (VPS)
 
@@ -173,10 +173,9 @@ Invoke-Pester -Path scripts/tests/Docker.Tests.ps1 -CI
 docker compose config
 ```
 
-## Próximas fases
+## Futuro (opcional)
 
-6. **Em andamento:** runbook em `RUNBOOK_VPS.md`; pendente teste de restore documentado na release  
-7. (futuro) Revisão Cloudflare SSL
+- Revisão Cloudflare (cache, SSL) — quando necessário
 
 ## Deploy automático (GitHub Actions)
 

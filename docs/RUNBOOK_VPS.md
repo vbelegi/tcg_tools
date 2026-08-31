@@ -139,6 +139,10 @@ docker compose exec app curl -fsS http://127.0.0.1:8000/api/v1/health
 
 Teste login e um torneio na UI.
 
+### Validar backups (recomendado)
+
+Após configurar cron local + offsite, execute um **restore de teste** em horário de baixo movimento (pode ser em clone do dump, não em produção). Confirme login, torneios e avatares. Anote data e dump usado nesta seção para referência da equipe.
+
 ## Senha do admin
 
 Conta bootstrap: **admin@local**.
