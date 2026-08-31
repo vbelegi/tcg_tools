@@ -11,7 +11,7 @@ Guia de deploy Docker para produção. Ambientes oficiais: **dev local** + **VPS
 | 3 | Avatares no DB, `claim_url`, cookies `Secure` | Concluída |
 | 4 | Cutover web; remover instalador LAN / launcher | Concluída (v1.5.0) |
 | 5 | Deploy automático na VPS | Concluída (v1.6.0) |
-| 6 | Hardening (backup offsite, runbook) | Em andamento (offsite rclone) |
+| 6 | Hardening (backup offsite, runbook) | Em andamento (offsite + runbook) |
 
 ## Pré-requisitos (VPS)
 
@@ -30,6 +30,7 @@ Guia de deploy Docker para produção. Ambientes oficiais: **dev local** + **VPS
 | `deploy/docker-entrypoint.sh` | Wait DB → migrate → bootstrap → uvicorn |
 | `deploy/backup-db.sh` | Dump MySQL (cron) |
 | `deploy/backup-offsite.sh` | Upload dumps para Google Drive (rclone) |
+| `docs/RUNBOOK_VPS.md` | Runbook operacional (deploy, backup, restore) |
 | `deploy/vps-deploy.sh` | Deploy na VPS: backup → git checkout → compose → health |
 | `.env.example` | Modelo de segredos |
 
@@ -152,6 +153,8 @@ Cron sugerido:
 
 Retenção local: 14 dias (`backup-db.sh`). No Drive, limpe arquivos antigos manualmente ou com política do Google.
 
+Runbook completo (deploy, restore, incidentes): [RUNBOOK_VPS.md](RUNBOOK_VPS.md).
+
 ## Segredos
 
 - Nunca commitar `.env`
@@ -172,7 +175,7 @@ docker compose config
 
 ## Próximas fases
 
-6. **Em andamento:** offsite ok; pendente runbook operacional  
+6. **Em andamento:** runbook em `RUNBOOK_VPS.md`; pendente teste de restore documentado na release  
 7. (futuro) Revisão Cloudflare SSL
 
 ## Deploy automático (GitHub Actions)

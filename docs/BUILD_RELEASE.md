@@ -89,4 +89,4 @@ docker compose config
 
 ## Próximo
 
-- **Fase 6 (em andamento):** backup offsite; pendente runbook operacional
+- **Fase 6 (em andamento):** backup offsite + runbook; pendente fechamento 1.7.0

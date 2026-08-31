@@ -2,7 +2,7 @@
 
 ## Produção (loja Fourse)
 
-O sistema roda em **https://torneios.fourse.com.br** (VPS Docker). Deploy e operação: [V2_WEB.md](V2_WEB.md).
+O sistema roda em **https://torneios.fourse.com.br** (VPS Docker). Deploy e operação: [V2_WEB.md](V2_WEB.md). Runbook: [RUNBOOK_VPS.md](RUNBOOK_VPS.md).
 
 ### Checklist pós-deploy ou release
 
@@ -43,5 +43,6 @@ Mais problemas: [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 ## Referências
 
 - [V2_WEB.md](V2_WEB.md) — produção VPS
+- [RUNBOOK_VPS.md](RUNBOOK_VPS.md) — operação (deploy, backup, restore)
 - [BUILD_RELEASE.md](BUILD_RELEASE.md) — tags e CI
 - [archive/INSTALADOR.md](archive/INSTALADOR.md) — instalador Windows (legado, removido v1.5.0)

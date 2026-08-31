@@ -137,6 +137,8 @@ Export JSON **v2** inclui campos SE (`third_place_match`, `best_of` por partida,
 
 ## Produção (VPS)
 
+Runbook: [RUNBOOK_VPS.md](RUNBOOK_VPS.md).
+
 ### Site retorna 502 ou health falha
 
 ```bash

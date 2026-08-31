@@ -7,6 +7,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 ### Added
 
 - **Backup offsite (Fase 6):** `deploy/backup-offsite.sh` — upload de dumps MySQL para Google Drive via rclone
+- **Runbook VPS (Fase 6):** [RUNBOOK_VPS.md](docs/RUNBOOK_VPS.md) — deploy, backup, restore, operação
 
 ## [1.6.0] - 2026-08-31
 
