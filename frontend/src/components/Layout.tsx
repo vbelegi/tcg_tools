@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation, useNavigate, useSearchParams } from "reac
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "../api/client";
+import { safeRedirectPath } from "../utils/safeRedirect";
 import { AuthModal, type AuthModalMode } from "./AuthModal";
 
 export function Layout() {
@@ -157,7 +158,7 @@ export function Layout() {
         mode={authMode}
         onModeChange={openAuth}
         onClose={closeAuth}
-        nextPath={nextPath || fromState || null}
+        nextPath={safeRedirectPath(nextPath || fromState || null)}
       />
     </div>
   );
