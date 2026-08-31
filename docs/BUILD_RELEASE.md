@@ -31,11 +31,22 @@ O workflow publica **GitHub Release** com notas geradas (sem artefato `.exe`).
 
 ## Deploy na VPS (após merge ou tag)
 
+Manual (passo a passo):
+
 ```bash
 cd /opt/tcg_tools
 git pull origin main
 docker compose up -d --build
 curl -fsS https://torneios.seudominio.com/api/v1/health
+```
+
+Ou com o script unificado ([V2_WEB.md](V2_WEB.md)):
+
+```bash
+cd /opt/tcg_tools
+chmod +x deploy/vps-deploy.sh
+export DEPLOY_REF=main   # ou v1.5.0
+./deploy/vps-deploy.sh
 ```
 
 Recomendado: backup MySQL antes (`deploy/backup-db.sh` ou cron).
@@ -69,5 +80,5 @@ docker compose config
 
 ## Próximo
 
-- **Fase 5:** deploy automático na VPS (SSH ou webhook)
+- **Fase 5 (em andamento):** `deploy/vps-deploy.sh`; pendente workflows + secrets
 - **Fase 6:** hardening (backup offsite, runbook de update)
