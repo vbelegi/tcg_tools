@@ -33,8 +33,10 @@ jobs:
             release:
               - 'backend/**'
               - 'frontend/**'
-              - 'launcher/**'
               - 'scripts/**'
+              - 'deploy/**'
+              - 'Dockerfile'
+              - 'docker-compose.yml'
               - '.github/workflows/release.yml'
               - '.github/workflows/windows-test-suite.yml'
 
@@ -46,81 +48,38 @@ jobs:
       github.event_name == 'pull_request'
     uses: ./.github/workflows/windows-test-suite.yml
 
-  build:
-    needs: [changes, test]
+  verify-docker:
+    needs: changes
     if: |
-      (
-        github.event_name == 'pull_request' &&
-        needs.changes.outputs.release == 'true'
-      ) || (
-        github.event_name == 'push' && (
-          startsWith(github.ref, 'refs/tags/v') ||
-          github.ref == 'refs/heads/main' ||
-          github.ref == 'refs/heads/master' ||
-          needs.changes.outputs.release == 'true'
-        )
-      )
-    runs-on: windows-latest
+      needs.changes.outputs.release == 'true' ||
+      startsWith(github.ref, 'refs/tags/v') ||
+      github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
-      - uses: actions/setup-node@v5
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.22"
-      - name: Cache Python embed zip
-        uses: actions/cache@v4
-        with:
-          path: dist/python-embed.zip
-          key: python-embed-3.13.0-${{ runner.os }}
-      - name: Install Inno Setup
-        run: choco install innosetup -y
-      - name: Build release
-        shell: pwsh
+      - name: Validate compose config
         run: |
-          ./scripts/validate-prod-lock.ps1
-          ./scripts/build-release.ps1 -SkipTests
-      - name: Smoke test staging
-        shell: pwsh
-        run: ./scripts/test-staging.ps1
-      - name: Resolve artifact name
-        id: meta
-        shell: pwsh
+          export MYSQL_PASSWORD=test-pass
+          export MYSQL_ROOT_PASSWORD=test-root
+          export SITE_ADDRESS=":80"
+          docker compose config
+
+  release:
+    needs: [test, verify-docker]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Verify tag matches pyproject version
+        shell: bash
         run: |
-          $version = (Select-String -Path backend/pyproject.toml -Pattern 'version\s*=\s*"([^"]+)"').Matches[0].Groups[1].Value
-          if ($env:GITHUB_REF -match '^refs/tags/v') {
-            $tag = $env:GITHUB_REF -replace 'refs/tags/v',''
-            if ($tag -ne $version) { throw "Tag v$tag != pyproject version $version" }
-            echo "name=TCGTools-$version-setup.exe" >> $env:GITHUB_OUTPUT
-            echo "is_release=true" >> $env:GITHUB_OUTPUT
-          } elseif ($env:GITHUB_REF -eq 'refs/heads/main' -or $env:GITHUB_REF -eq 'refs/heads/master') {
-            echo "name=TCGTools-$version-setup.exe" >> $env:GITHUB_OUTPUT
-            echo "is_release=false" >> $env:GITHUB_OUTPUT
-          } elseif ($env:GITHUB_EVENT_NAME -eq 'pull_request') {
-            $pr = $env:GITHUB_REF -replace 'refs/pull/','' -replace '/merge',''
-            $sha = $env:GITHUB_SHA.Substring(0,7)
-            echo "name=TCGTools-pr$pr-$sha-setup.exe" >> $env:GITHUB_OUTPUT
-            echo "is_release=false" >> $env:GITHUB_OUTPUT
-          } else {
-            $branch = $env:GITHUB_REF -replace 'refs/heads/','' -replace '/','-'
-            $sha = $env:GITHUB_SHA.Substring(0,7)
-            echo "name=TCGTools-$branch-$sha-setup.exe" >> $env:GITHUB_OUTPUT
-            echo "is_release=false" >> $env:GITHUB_OUTPUT
-          }
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.meta.outputs.name }}
-          path: dist/TCGTools-*-setup.exe
+          VERSION=$(grep -E '^version = ' backend/pyproject.toml | sed -E 's/version = "([^"]+)"/\1/')
+          TAG="${GITHUB_REF#refs/tags/v}"
+          if [ "$TAG" != "$VERSION" ]; then
+            echo "Tag v$TAG != pyproject version $VERSION"
+            exit 1
+          fi
       - name: GitHub Release
-        if: steps.meta.outputs.is_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/TCGTools-*-setup.exe
           generate_release_notes: true

@@ -19,17 +19,7 @@ O projeto requer **Python 3.13**. Se `py` aponta para 3.14:
 py -3.13 -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-Use sempre `scripts\Iniciar TCG Tools.bat`, que tenta 3.13 primeiro.
-
-### Lock de instância (`.bat` dev)
-
-Se o app “não abre” mas a porta está livre, remova o lock:
-
-```
-%TEMP%\tcg_tools_instance.lock
-```
-
-Em produção use **TCGTools.exe** (mutex `Local\TCGTools_SingleInstance`, por usuário). Não rode `.bat` e launcher ao mesmo tempo na mesma sessão.
+Use `scripts\Iniciar TCG Tools.bat` ou `py -3.13 -m uvicorn ...`.
 
 ## Login / senha
 
@@ -37,12 +27,10 @@ Em produção use **TCGTools.exe** (mutex `Local\TCGTools_SingleInstance`, por u
 
 O app exige login com e-mail (bootstrap **admin@local**) e senha. Sem senha gravada, o login falha.
 
-**Instalação (setup.exe):** defina/altere a senha no wizard (ou modo “Apenas alterar senha”).
-
 **Desenvolvimento:**
 
 ```powershell
-$env:TCGTOOLS_DATA_DIR='.\data'   # ou %APPDATA%\TCGTools
+$env:TCGTOOLS_DATA_DIR='.\data'
 cd backend
 py -3.13 -m app.scripts.set_admin_password --password SuaSenhaAqui
 ```
@@ -147,23 +135,20 @@ npm run generate:api
 
 Export JSON **v2** inclui campos SE (`third_place_match`, `best_of` por partida, etc.).
 
-## Instalador e launcher
+## Produção (VPS)
 
-### SmartScreen bloqueia o setup.exe
+### Site retorna 502 ou health falha
 
-Instalador não assinado na v1. Clique **Mais informações → Executar mesmo assim**.
+```bash
+docker compose ps
+docker compose logs app --tail 40
+```
 
-### Ícone da bandeja não aparece (RDP / política de grupo)
+Verifique senhas MySQL no `.env` e se `docker compose up -d --build` foi executado após `git pull`.
 
-Verifique `%APPDATA%\TCGTools\launcher.log`. O servidor pode estar rodando — abra manualmente a URL em `launcher_config.json`.
+### HTTPS / convites
 
-### Porta alterada não surte efeito
-
-Edite `%APPDATA%\TCGTools\launcher_config.json`, **Encerrar** pelo menu da bandeja e abra o atalho novamente.
-
-### Backup antes de desinstalar
-
-Desinstalar remove `%APPDATA%\TCGTools\` inteiro. Copie `tcg_tools.db` antes.
+Confirme `TCGTOOLS_PUBLIC_BASE_URL=https://seu-dominio` no `.env` e reinicie com `docker compose up -d`.
 
 ## Suporte técnico
 
