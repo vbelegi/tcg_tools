@@ -81,7 +81,8 @@ a:hover {
 }
 
 .sidebar-actions {
-  margin-top: 1.5rem;
+  margin-top: 0;
+  margin-bottom: 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -120,6 +121,74 @@ a:hover {
   flex: 1;
   padding: 2rem;
   max-width: 960px;
+}
+
+.mobile-nav-toggle {
+  display: none;
+}
+
+.mobile-nav-backdrop {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .mobile-nav-toggle {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 110;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0.45rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    cursor: pointer;
+  }
+
+  .mobile-nav-toggle span {
+    display: block;
+    height: 2px;
+    background: var(--text);
+    border-radius: 1px;
+  }
+
+  .mobile-nav-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    border: none;
+    background: rgba(0, 0, 0, 0.45);
+    cursor: pointer;
+  }
+
+  .app-shell .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 100;
+    width: min(280px, 86vw);
+    transform: translateX(-105%);
+    transition: transform 0.2s ease;
+    box-shadow: none;
+    overflow-y: auto;
+  }
+
+  .app-shell.mobile-nav-open .sidebar {
+    transform: translateX(0);
+    box-shadow: 0 0 24px rgba(0, 0, 0, 0.35);
+  }
+
+  .main-content {
+    padding: 3.75rem 1rem 1.5rem;
+    max-width: none;
+  }
 }
 
 .card-grid {
@@ -1092,6 +1161,20 @@ th {
 .calendar-chip-more {
   font-size: 0.65rem;
   opacity: 0.7;
+}
+
+.calendar-chip-announcement {
+  color: var(--warning);
+  border-color: rgba(251, 191, 36, 0.45);
+}
+
+.badge-announcement {
+  background: rgba(251, 191, 36, 0.15);
+  color: var(--warning);
+}
+
+.calendar-announcement-card {
+  border-left: 3px solid var(--warning);
 }
 
 .calendar-detail {
@@ -2217,7 +2300,22 @@ th {
 
 .admin-inline-add-field {
   flex: 1 1 14rem;
-  margin: 0;
+}
+
+.role-select {
+  min-width: 6.5rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.admin-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: flex-end;
 }
 
 .admin-color-row {

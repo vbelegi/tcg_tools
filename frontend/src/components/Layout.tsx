@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -10,6 +10,7 @@ export function Layout() {
   const location = useLocation();
   const [params, setParams] = useSearchParams();
   const qc = useQueryClient();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { data: me } = useQuery({
     queryKey: ["auth-me"],
     queryFn: () => api.authMe(),
@@ -39,6 +40,10 @@ export function Layout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- close once when session appears
   }, [me]);
 
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [location.pathname]);
+
   const logout = useMutation({
     mutationFn: () => api.logout(),
     onSuccess: async () => {
@@ -55,12 +60,62 @@ export function Layout() {
     [location.state],
   );
 
+  const accountActions = (
+    <div className="sidebar-actions">
+      {me ? (
+        <>
+          <NavLink to={`/jogadores/${me.id}`} className="secondary sidebar-profile-link">
+            Meu Perfil
+          </NavLink>
+          <button
+            className="secondary"
+            type="button"
+            style={{ width: "100%" }}
+            onClick={() => logout.mutate()}
+            disabled={logout.isPending}
+          >
+            Sair ({me.display_name})
+          </button>
+        </>
+      ) : (
+        <button
+          className="primary"
+          type="button"
+          style={{ width: "100%" }}
+          onClick={() => openAuth("login")}
+        >
+          Entrar
+        </button>
+      )}
+    </div>
+  );
+
   return (
-    <div className="app-shell">
+    <div className={`app-shell${mobileNavOpen ? " mobile-nav-open" : ""}`}>
+      <button
+        type="button"
+        className="mobile-nav-toggle"
+        aria-label={mobileNavOpen ? "Fechar menu" : "Abrir menu"}
+        aria-expanded={mobileNavOpen}
+        onClick={() => setMobileNavOpen((open) => !open)}
+      >
+        <span />
+        <span />
+        <span />
+      </button>
+      {mobileNavOpen && (
+        <button
+          type="button"
+          className="mobile-nav-backdrop"
+          aria-label="Fechar menu"
+          onClick={() => setMobileNavOpen(false)}
+        />
+      )}
       <aside className="sidebar">
         <div className="sidebar-brand">
           <h1 className="brand-title">TCG Tools</h1>
         </div>
+        {accountActions}
         <nav>
           <NavLink to="/" end>
             Início
@@ -70,6 +125,7 @@ export function Layout() {
           <NavLink to="/torneios">Torneios</NavLink>
           {isStaff && (
             <>
+              <NavLink to="/agenda">Agenda</NavLink>
               <NavLink to="/premiacao">Premiação</NavLink>
               <NavLink to="/sorteador">Sorteador</NavLink>
             </>
@@ -81,33 +137,6 @@ export function Layout() {
             </>
           )}
         </nav>
-        <div className="sidebar-actions">
-          {me ? (
-            <>
-              <NavLink to={`/jogadores/${me.id}`} className="secondary sidebar-profile-link">
-                Meu Perfil
-              </NavLink>
-              <button
-                className="secondary"
-                type="button"
-                style={{ width: "100%" }}
-                onClick={() => logout.mutate()}
-                disabled={logout.isPending}
-              >
-                Sair ({me.display_name})
-              </button>
-            </>
-          ) : (
-            <button
-              className="primary"
-              type="button"
-              style={{ width: "100%" }}
-              onClick={() => openAuth("login")}
-            >
-              Entrar
-            </button>
-          )}
-        </div>
         <footer className="sidebar-footer">
           <a
             className="powered-by"

@@ -73,8 +73,37 @@ describe("Layout", () => {
       </QueryClientProvider>,
     );
     await waitFor(() => expect(screen.getByText("Premiação")).toBeInTheDocument());
+    expect(screen.getByText("Agenda")).toBeInTheDocument();
     expect(screen.getByText("Usuários")).toBeInTheDocument();
     expect(screen.getByText("Meu Perfil")).toBeInTheDocument();
     expect(screen.queryByText("Alterar senha")).not.toBeInTheDocument();
+  });
+
+  it("renders mobile menu toggle on small viewport", async () => {
+    const qc = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        matches: query.includes("max-width: 900px"),
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    });
+    render(
+      <QueryClientProvider client={qc}>
+        <MemoryRouter>
+          <Layout />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    expect(screen.getByRole("button", { name: "Abrir menu" })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("button", { name: "Entrar" })).toBeInTheDocument());
   });
 });
