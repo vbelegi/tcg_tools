@@ -10,7 +10,7 @@ Guia de deploy Docker para produção. Ambientes oficiais: **dev local** + **VPS
 | 2 | VPS + domínio + HTTPS | Concluída |
 | 3 | Avatares no DB, `claim_url`, cookies `Secure` | Concluída |
 | 4 | Cutover web; remover instalador LAN / launcher | Concluída (v1.5.0) |
-| 5 | Deploy automático na VPS | Em andamento (`deploy/vps-deploy.sh`) |
+| 5 | Deploy automático na VPS | Concluída (v1.6.0) |
 | 6 | Hardening (backup offsite, runbook update, Cloudflare) | Planejada |
 
 ## Pré-requisitos (VPS)
@@ -144,8 +144,25 @@ docker compose config
 
 ## Próximas fases
 
-5. **Em andamento:** `vps-deploy.sh` pronto; pendente workflows GitHub Actions + secrets SSH  
 6. Backup offsite, runbook operacional, revisão Cloudflare SSL
+
+## Deploy automático (GitHub Actions)
+
+Secrets no environment **`production`** (recomendado: aprovação manual antes do deploy):
+
+| Secret | Uso |
+|--------|-----|
+| `VPS_SSH_HOST` | IP ou hostname da VPS |
+| `VPS_SSH_USER` | ex.: `root` |
+| `VPS_SSH_KEY` | chave privada `tcg_tools_deploy` (Actions → VPS) |
+| `VPS_DEPLOY_PATH` | opcional; padrão `/opt/tcg_tools` |
+
+| Workflow | Quando |
+|----------|--------|
+| **Deploy VPS** (`deploy-vps.yml`) | Manual — Actions → escolher `ref` (ex. `main`, `v1.6.0`) |
+| **Release** (`release.yml`) | Tag `v*` → testes → GitHub Release → deploy na VPS |
+
+Na VPS, o job SSH executa `deploy/vps-deploy.sh` (backup → git checkout → compose → health).
 
 ## VPS — chaves SSH (deploy automático)
 

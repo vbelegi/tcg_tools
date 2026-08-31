@@ -4,6 +4,17 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-08-31
+
+### Added
+
+- **Deploy automático VPS (Fase 5):** `deploy/vps-deploy.sh`; workflow manual **Deploy VPS**; deploy após tag `v*` no `release.yml` (environment `production` + secrets SSH)
+
+### Changed
+
+- **Release:** tag `v*` dispara testes, GitHub Release e deploy na VPS via SSH
+- **Docs:** `V2_WEB.md` e `BUILD_RELEASE.md` — secrets, chaves SSH e workflows
+
 ## [1.5.0] - 2026-08-28
 
 ### Added
@@ -143,6 +154,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 - Scripts Windows: `setup.ps1`, `Iniciar TCG Tools.bat`
 - Alembic migrations (001 schema, 002 scores_submitted)
 
+[1.6.0]: compare/v1.5.0...v1.6.0
 [1.5.0]: compare/v1.4.0...v1.5.0
 [1.4.0]: compare/v1.3.0...v1.4.0
 [1.3.0]: compare/v1.2.0...v1.3.0

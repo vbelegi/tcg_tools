@@ -15,7 +15,8 @@ O instalador Windows (`setup.exe`) e o launcher Go foram **removidos na v1.5.0**
 |----------|-----|
 | `ci.yml` | Backend, frontend, Pester, lockfile (push/PR) |
 | `windows-test-suite.yml` | Suite reutilizável (release + PR) |
-| `release.yml` | Testes + `docker compose config` + GitHub Release em tag `v*` |
+| `release.yml` | Testes + `docker compose config` + GitHub Release + deploy VPS em tag `v*` |
+| `deploy-vps.yml` | Deploy manual na VPS (`workflow_dispatch`) |
 
 ## Release (tag)
 
@@ -23,15 +24,23 @@ O instalador Windows (`setup.exe`) e o launcher Go foram **removidos na v1.5.0**
 git checkout main
 git pull
 # CHANGELOG e pyproject já na versão alvo
-git tag v1.5.0
-git push origin v1.5.0
+git tag v1.6.0
+git push origin v1.6.0
 ```
 
-O workflow publica **GitHub Release** com notas geradas (sem artefato `.exe`).
+O workflow publica **GitHub Release** com notas geradas e **deploy na VPS** (environment `production`).
 
-## Deploy na VPS (após merge ou tag)
+## Deploy na VPS
 
-Manual (passo a passo):
+### Automático (tag)
+
+Após `git push origin vX.Y.Z`, o job `deploy-vps` em `release.yml` roda na VPS (após aprovação no environment `production`, se configurado).
+
+### Manual (Actions)
+
+**Actions → Deploy VPS → Run workflow** — informe `ref` (`main` ou `v1.6.0`).
+
+### Na VPS (sem Actions)
 
 ```bash
 cd /opt/tcg_tools
@@ -80,5 +89,4 @@ docker compose config
 
 ## Próximo
 
-- **Fase 5 (em andamento):** `deploy/vps-deploy.sh`; pendente workflows + secrets
-- **Fase 6:** hardening (backup offsite, runbook de update)
+- **Fase 6:** hardening (backup offsite, runbook de update, Cloudflare)
