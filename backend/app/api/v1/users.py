@@ -156,3 +156,31 @@ def public_profile(user_id: int, db: Session = Depends(get_db), viewer: User | N
         if not (is_owner or is_admin):
             raise HTTPException(status_code=404, detail="Jogador não encontrado.")
     return build_public_profile(db, user, viewer)
+
+
+class UpdateUserRoleBody(BaseModel):
+    role: str = Field(description="staff or player")
+
+
+@router.patch("/users/{user_id}/role")
+def update_user_role(
+    user_id: int,
+    body: UpdateUserRoleBody,
+    actor: RequireAdmin,
+    db: Session = Depends(get_db),
+):
+    if body.role not in {UserRole.staff.value, UserRole.player.value}:
+        raise HTTPException(status_code=400, detail="Papel inválido. Use staff ou player.")
+    if actor.id == user_id:
+        raise HTTPException(status_code=403, detail="Não é possível alterar o próprio papel.")
+    user = db.query(User).filter(User.id == user_id).one_or_none()
+    if user is None:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+    if user.role == UserRole.admin.value:
+        raise HTTPException(status_code=400, detail="Papel de administrador não pode ser alterado aqui.")
+    if user.role == body.role:
+        return private_user_dict(user)
+    user.role = body.role
+    db.commit()
+    db.refresh(user)
+    return private_user_dict(user)

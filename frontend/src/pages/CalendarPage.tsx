@@ -22,6 +22,19 @@ const MONTHS = [
   "dezembro",
 ];
 
+type CalendarAnnouncement = {
+  id: number;
+  title: string;
+  event_date: string;
+  description: string | null;
+  start_time: string | null;
+  location: string | null;
+};
+
+type DayItem =
+  | { kind: "tournament"; data: Torneio }
+  | { kind: "announcement"; data: CalendarAnnouncement };
+
 function statusLabel(status: Torneio["status"], registrationOpen?: boolean): string {
   if (status === "draft") return registrationOpen ? "Inscrições abertas" : "Rascunho";
   if (status === "running") return "Em andamento";
@@ -47,21 +60,28 @@ export function CalendarPage() {
   });
   const isStaff = Boolean(me && (me.role === "admin" || me.role === "staff"));
 
-  const { data: events = [], isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["calendar", cursor.year, cursor.month],
-    queryFn: () => api.listCalendarTorneios(cursor.year, cursor.month),
+    queryFn: () => api.getCalendar(cursor.year, cursor.month),
   });
+  const tournaments = data?.tournaments ?? [];
+  const announcements = data?.announcements ?? [];
 
   const byDay = useMemo(() => {
-    const map = new Map<number, Torneio[]>();
-    for (const ev of events) {
-      const day = Number(ev.event_date.slice(8, 10));
+    const map = new Map<number, DayItem[]>();
+    const add = (day: number, item: DayItem) => {
       const list = map.get(day) ?? [];
-      list.push(ev);
+      list.push(item);
       map.set(day, list);
+    };
+    for (const ev of tournaments) {
+      add(Number(ev.event_date.slice(8, 10)), { kind: "tournament", data: ev });
+    }
+    for (const ann of announcements) {
+      add(Number(ann.event_date.slice(8, 10)), { kind: "announcement", data: ann });
     }
     return map;
-  }, [events]);
+  }, [tournaments, announcements]);
 
   const firstWeekday = new Date(cursor.year, cursor.month - 1, 1).getDay();
   const daysInMonth = new Date(cursor.year, cursor.month, 0).getDate();
@@ -71,7 +91,7 @@ export function CalendarPage() {
   ];
   while (cells.length % 7 !== 0) cells.push(null);
 
-  const selectedEvents = selectedDay != null ? (byDay.get(selectedDay) ?? []) : [];
+  const selectedItems = selectedDay != null ? (byDay.get(selectedDay) ?? []) : [];
 
   const shiftMonth = (delta: number) => {
     const d = new Date(cursor.year, cursor.month - 1 + delta, 1);
@@ -140,7 +160,7 @@ export function CalendarPage() {
           </div>
           <div className="calendar-grid">
             {cells.map((day, idx) => {
-              const dayEvents = day != null ? (byDay.get(day) ?? []) : [];
+              const dayItems = day != null ? (byDay.get(day) ?? []) : [];
               const selected = day != null && day === selectedDay;
               return (
                 <button
@@ -152,21 +172,31 @@ export function CalendarPage() {
                 >
                   {day != null && <span className="calendar-day-num">{day}</span>}
                   <div className="calendar-chips">
-                    {dayEvents.slice(0, 2).map((ev) => (
-                      <span
-                        key={ev.id}
-                        className="calendar-chip"
-                        style={{
-                          color: ev.tcg_game?.color_hex ?? "var(--primary)",
-                          borderColor: ev.tcg_game?.color_hex ?? "var(--border)",
-                        }}
-                        title={ev.name}
-                      >
-                        {ev.name}
-                      </span>
-                    ))}
-                    {dayEvents.length > 2 && (
-                      <span className="calendar-chip-more">+{dayEvents.length - 2}</span>
+                    {dayItems.slice(0, 2).map((item) =>
+                      item.kind === "tournament" ? (
+                        <span
+                          key={`t-${item.data.id}`}
+                          className="calendar-chip"
+                          style={{
+                            color: item.data.tcg_game?.color_hex ?? "var(--primary)",
+                            borderColor: item.data.tcg_game?.color_hex ?? "var(--border)",
+                          }}
+                          title={item.data.name}
+                        >
+                          {item.data.name}
+                        </span>
+                      ) : (
+                        <span
+                          key={`a-${item.data.id}`}
+                          className="calendar-chip calendar-chip-announcement"
+                          title={item.data.title}
+                        >
+                          {item.data.title}
+                        </span>
+                      ),
+                    )}
+                    {dayItems.length > 2 && (
+                      <span className="calendar-chip-more">+{dayItems.length - 2}</span>
                     )}
                   </div>
                 </button>
@@ -183,17 +213,35 @@ export function CalendarPage() {
               : "Selecione um dia"}
           </h2>
           {selectedDay == null && (
-            <p className="calendar-empty">Clique em um dia para ver os torneios.</p>
+            <p className="calendar-empty">Clique em um dia para ver os eventos.</p>
           )}
-          {selectedDay != null && selectedEvents.length === 0 && (
+          {selectedDay != null && selectedItems.length === 0 && (
             <div className="calendar-empty">
-              <p>Nenhum torneio neste dia.</p>
+              <p>Nenhum evento neste dia.</p>
             </div>
           )}
-          {selectedEvents.map((t) => {
+          {selectedItems.map((item) => {
+            if (item.kind === "announcement") {
+              const ann = item.data;
+              return (
+                <article key={`a-${ann.id}`} className="calendar-event-card calendar-announcement-card">
+                  <div className="calendar-event-top">
+                    <h3>{ann.title}</h3>
+                    <span className="badge badge-announcement">Evento</span>
+                  </div>
+                  {ann.description && <p className="calendar-event-desc">{ann.description}</p>}
+                  <ul className="calendar-event-meta">
+                    {ann.start_time && <li>Horário: {ann.start_time}</li>}
+                    {ann.location && <li>Local: {ann.location}</li>}
+                  </ul>
+                </article>
+              );
+            }
+
+            const t = item.data;
             const cta = ctaFor(t);
             return (
-              <article key={t.id} className="calendar-event-card">
+              <article key={`t-${t.id}`} className="calendar-event-card">
                 {t.tcg_game && (
                   <p className="calendar-event-tcg" style={{ color: t.tcg_game.color_hex }}>
                     {t.tcg_game.name}

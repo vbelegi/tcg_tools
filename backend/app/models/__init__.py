@@ -249,3 +249,17 @@ class FoursePointsLedger(Base):
 
     user: Mapped[User] = relationship(back_populates="fp_entries")
     event: Mapped[Event] = relationship(back_populates="fp_entries")
+
+
+class CalendarAnnouncement(Base):
+    __tablename__ = "calendar_announcements"
+    __table_args__ = (Index("ix_calendar_announcements_event_date", "event_date"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    event_date: Mapped[date] = mapped_column(Date, nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    start_time: Mapped[str | None] = mapped_column(String(5), nullable=True)
+    location: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_by_user_id: Mapped[int | None] = mapped_column(Integer, nullable=True)

@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { RequireAdmin, RequireAuth, RequireStaff } from "./components/RequireAuth";
+import { AgendaPage } from "./pages/AgendaPage";
 import { CalendarPage } from "./pages/CalendarPage";
 import { ClaimInvitePage } from "./pages/ClaimInvitePage";
 import { Home } from "./pages/Home";
@@ -50,6 +51,7 @@ createRoot(document.getElementById("root")!).render(
             <Route element={<Layout />}>
               <Route path="premiacao" element={<PremiacaoPage />} />
               <Route path="sorteador" element={<SorteadorPage />} />
+              <Route path="agenda" element={<AgendaPage />} />
               <Route path="torneios/novo" element={<TorneioNovoPage />} />
             </Route>
           </Route>
