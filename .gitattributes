@@ -1,5 +1,6 @@
 deploy/docker-entrypoint.sh text eol=lf
 deploy/vps-deploy.sh text eol=lf
 deploy/backup-db.sh text eol=lf
+deploy/backup-offsite.sh text eol=lf
 deploy/Caddyfile text eol=lf
 Dockerfile text eol=lf

@@ -20,9 +20,10 @@ Describe "Docker packaging files" {
         $compose | Should -Match '(?m)^\s*caddy:\s*$'
     }
 
-    It "has deploy entrypoint, backup, vps-deploy and Caddyfile" {
+    It "has deploy entrypoint, backup, offsite, vps-deploy and Caddyfile" {
         Test-Path (Join-Path $script:RepoRoot "deploy\docker-entrypoint.sh") | Should -Be $true
         Test-Path (Join-Path $script:RepoRoot "deploy\backup-db.sh") | Should -Be $true
+        Test-Path (Join-Path $script:RepoRoot "deploy\backup-offsite.sh") | Should -Be $true
         Test-Path (Join-Path $script:RepoRoot "deploy\vps-deploy.sh") | Should -Be $true
         Test-Path (Join-Path $script:RepoRoot "deploy\Caddyfile") | Should -Be $true
     }
@@ -33,6 +34,7 @@ Describe "Docker packaging files" {
         $envExample | Should -Match 'MYSQL_ROOT_PASSWORD='
         $envExample | Should -Match 'TCGTOOLS_BOOTSTRAP_ADMIN_PASSWORD='
         $envExample | Should -Match 'SITE_ADDRESS='
+        $envExample | Should -Match 'BACKUP_RCLONE_REMOTE'
     }
 
     It "documents V2 web deploy" {

@@ -89,4 +89,4 @@ docker compose config
 
 ## Próximo
 
-- **Fase 6:** hardening (backup offsite, runbook de update, Cloudflare)
+- **Fase 6 (em andamento):** backup offsite; pendente runbook operacional

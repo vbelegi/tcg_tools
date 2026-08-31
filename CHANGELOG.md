@@ -4,6 +4,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- **Backup offsite (Fase 6):** `deploy/backup-offsite.sh` — upload de dumps MySQL para Google Drive via rclone
+
 ## [1.6.0] - 2026-08-31
 
 ### Added
