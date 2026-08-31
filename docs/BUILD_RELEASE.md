@@ -24,8 +24,8 @@ O instalador Windows (`setup.exe`) e o launcher Go foram **removidos na v1.5.0**
 git checkout main
 git pull
 # CHANGELOG e pyproject já na versão alvo
-git tag v1.6.0
-git push origin v1.6.0
+git tag v1.7.0
+git push origin v1.7.0
 ```
 
 O workflow publica **GitHub Release** com notas geradas e **deploy na VPS** (environment `production`).
@@ -38,7 +38,7 @@ Após `git push origin vX.Y.Z`, o job `deploy-vps` em `release.yml` roda na VPS 
 
 ### Manual (Actions)
 
-**Actions → Deploy VPS → Run workflow** — informe `ref` (`main` ou `v1.6.0`).
+**Actions → Deploy VPS → Run workflow** — informe `ref` (`main` ou `v1.7.0`).
 
 ### Na VPS (sem Actions)
 
@@ -54,7 +54,7 @@ Ou com o script unificado ([V2_WEB.md](V2_WEB.md)):
 ```bash
 cd /opt/tcg_tools
 chmod +x deploy/vps-deploy.sh
-export DEPLOY_REF=main   # ou v1.5.0
+export DEPLOY_REF=main   # ou v1.7.0
 ./deploy/vps-deploy.sh
 ```
 
@@ -89,4 +89,4 @@ docker compose config
 
 ## Próximo
 
-- **Fase 6:** hardening (backup offsite, runbook de update, Cloudflare)
+- Melhorias opcionais: Cloudflare, monitoramento externo (ver [V2_WEB.md](V2_WEB.md))

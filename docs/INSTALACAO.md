@@ -2,7 +2,7 @@
 
 ## Produção (loja Fourse)
 
-O sistema roda em **https://torneios.fourse.com.br** (VPS Docker). Deploy e operação: [V2_WEB.md](V2_WEB.md).
+O sistema roda em **https://torneios.fourse.com.br** (VPS Docker). Deploy e operação: [V2_WEB.md](V2_WEB.md). Runbook: [RUNBOOK_VPS.md](RUNBOOK_VPS.md).
 
 ### Checklist pós-deploy ou release
 
@@ -12,7 +12,7 @@ O sistema roda em **https://torneios.fourse.com.br** (VPS Docker). Deploy e oper
 4. Iniciar, resultados, finalizar, export JSON
 5. Gerar convite em `/usuarios` — link com domínio público
 6. Upload de avatar e perfil público
-7. Backup MySQL (`deploy/backup-db.sh` ou cron)
+7. Backup MySQL (`deploy/backup-db.sh`) + offsite (`deploy/backup-offsite.sh` / cron)
 
 ## Desenvolvimento (clone do repositório)
 
@@ -29,7 +29,7 @@ Manual do operador: [OPERADOR.md](OPERADOR.md).
 
 | Ambiente | O quê |
 |----------|--------|
-| **VPS** | `mysqldump` via `deploy/backup-db.sh` (inclui avatares no banco) |
+| **VPS** | `deploy/backup-db.sh` (local) + `deploy/backup-offsite.sh` (Google Drive / rclone) |
 | **Dev** | Copiar `./data/tcg_tools.db` |
 
 ## Porta ocupada (dev)
@@ -43,5 +43,6 @@ Mais problemas: [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 ## Referências
 
 - [V2_WEB.md](V2_WEB.md) — produção VPS
+- [RUNBOOK_VPS.md](RUNBOOK_VPS.md) — operação (deploy, backup, restore)
 - [BUILD_RELEASE.md](BUILD_RELEASE.md) — tags e CI
 - [archive/INSTALADOR.md](archive/INSTALADOR.md) — instalador Windows (legado, removido v1.5.0)

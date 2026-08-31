@@ -2,7 +2,7 @@
 
 Aplicação web para gestão de torneios TCG: premiação, organização Suíço/Eliminatória, Fourse Points e export de logs.
 
-**Produção (Fourse):** site hospedado na VPS — ver [docs/V2_WEB.md](docs/V2_WEB.md).  
+**Produção (Fourse):** site hospedado na VPS — [docs/V2_WEB.md](docs/V2_WEB.md), runbook [docs/RUNBOOK_VPS.md](docs/RUNBOOK_VPS.md).  
 **Desenvolvimento:** SQLite local no Windows — seções abaixo.
 
 ## Requisitos (dev)
@@ -88,6 +88,7 @@ tcg_tools/
 | Documento | Conteúdo |
 |-----------|----------|
 | [docs/V2_WEB.md](docs/V2_WEB.md) | **Produção VPS / Docker** |
+| [docs/RUNBOOK_VPS.md](docs/RUNBOOK_VPS.md) | **Runbook operação VPS** |
 | [docs/OPERADOR.md](docs/OPERADOR.md) | Manual do mesário |
 | [docs/INSTALACAO.md](docs/INSTALACAO.md) | Checklist pós-deploy |
 | [docs/BUILD_RELEASE.md](docs/BUILD_RELEASE.md) | Tags, CI, release |

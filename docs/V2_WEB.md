@@ -11,7 +11,7 @@ Guia de deploy Docker para produção. Ambientes oficiais: **dev local** + **VPS
 | 3 | Avatares no DB, `claim_url`, cookies `Secure` | Concluída |
 | 4 | Cutover web; remover instalador LAN / launcher | Concluída (v1.5.0) |
 | 5 | Deploy automático na VPS | Concluída (v1.6.0) |
-| 6 | Hardening (backup offsite, runbook update, Cloudflare) | Planejada |
+| 6 | Hardening (backup offsite, runbook) | Concluída (v1.7.0) |
 
 ## Pré-requisitos (VPS)
 
@@ -29,6 +29,8 @@ Guia de deploy Docker para produção. Ambientes oficiais: **dev local** + **VPS
 | `deploy/Caddyfile` | Reverse proxy / TLS |
 | `deploy/docker-entrypoint.sh` | Wait DB → migrate → bootstrap → uvicorn |
 | `deploy/backup-db.sh` | Dump MySQL (cron) |
+| `deploy/backup-offsite.sh` | Upload dumps para Google Drive (rclone) |
+| `docs/RUNBOOK_VPS.md` | Runbook operacional (deploy, backup, restore) |
 | `deploy/vps-deploy.sh` | Deploy na VPS: backup → git checkout → compose → health |
 | `.env.example` | Modelo de segredos |
 
@@ -118,11 +120,40 @@ O script: backup MySQL → `git fetch` + checkout → `docker compose up -d --bu
 
 ### Backup
 
+Local (MySQL dump):
+
 ```bash
-chmod 700 deploy/backup-db.sh
+chmod 700 deploy/backup-db.sh deploy/backup-offsite.sh
 ./deploy/backup-db.sh
-# cron diário recomendado — ver INSTALACAO.md
+# cron diário recomendado — ver abaixo
 ```
+
+Offsite (Google Drive via rclone):
+
+1. Na VPS: `apt install rclone` e `rclone config` (remote ex. `tcg_backup`)
+2. No `.env` (opcional se usar os padrões abaixo):
+
+```bash
+BACKUP_RCLONE_REMOTE=tcg_backup
+BACKUP_RCLONE_PATH=tcg_tools-backups
+```
+
+3. Upload:
+
+```bash
+./deploy/backup-offsite.sh
+```
+
+Cron sugerido:
+
+```cron
+0 3 * * * /opt/tcg_tools/deploy/backup-db.sh >> /opt/tcg_tools/backups/backup.log 2>&1
+15 3 * * * /opt/tcg_tools/deploy/backup-offsite.sh >> /opt/tcg_tools/backups/offsite.log 2>&1
+```
+
+Retenção local: 14 dias (`backup-db.sh`). No Drive, limpe arquivos antigos manualmente ou com política do Google.
+
+Runbook completo (deploy, restore, incidentes): [RUNBOOK_VPS.md](RUNBOOK_VPS.md).
 
 ## Segredos
 
@@ -142,9 +173,9 @@ Invoke-Pester -Path scripts/tests/Docker.Tests.ps1 -CI
 docker compose config
 ```
 
-## Próximas fases
+## Futuro (opcional)
 
-6. Backup offsite, runbook operacional, revisão Cloudflare SSL
+- Revisão Cloudflare (cache, SSL) — quando necessário
 
 ## Deploy automático (GitHub Actions)
 
