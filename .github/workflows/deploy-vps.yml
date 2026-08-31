@@ -1,0 +1,41 @@
+name: Deploy VPS
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to deploy (branch, tag, or commit SHA)"
+        required: true
+        default: main
+        type: string
+      skip_backup:
+        description: "Skip pre-deploy MySQL backup"
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          DEPLOY_REF: ${{ inputs.ref }}
+          SKIP_BACKUP: ${{ inputs.skip_backup && '1' || '0' }}
+          TCGTOOLS_DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH }}
+        with:
+          host: ${{ secrets.VPS_SSH_HOST }}
+          username: ${{ secrets.VPS_SSH_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script_stop: true
+          command_timeout: 45m
+          envs: DEPLOY_REF,SKIP_BACKUP,TCGTOOLS_DEPLOY_PATH
+          script: |
+            cd "${TCGTOOLS_DEPLOY_PATH:-/opt/tcg_tools}"
+            ./deploy/vps-deploy.sh

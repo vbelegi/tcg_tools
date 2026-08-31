@@ -39,6 +39,10 @@ Describe "Docker packaging files" {
         Test-Path (Join-Path $script:RepoRoot "docs\V2_WEB.md") | Should -Be $true
     }
 
+    It "has VPS deploy workflow" {
+        Test-Path (Join-Path $script:RepoRoot ".github\workflows\deploy-vps.yml") | Should -Be $true
+    }
+
     It "prod lock includes pymysql" {
         $lock = Get-Content (Join-Path $script:RepoRoot "backend\requirements-prod.lock") -Raw
         $lock | Should -Match '(?i)pymysql=='
