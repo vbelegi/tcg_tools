@@ -10,7 +10,7 @@ from app.scripts.bootstrap_admin import bootstrap_admin_if_missing, main
 
 
 def test_bootstrap_skips_when_admin_has_password(db_session: Session):
-    upsert_admin_password(db_session, "abcdef")
+    upsert_admin_password(db_session, "abcdefgh12")
     admin = get_admin(db_session)
     assert admin is not None
     assert admin.password_hash
@@ -27,7 +27,7 @@ def test_bootstrap_skips_when_admin_has_password(db_session: Session):
 def test_bootstrap_creates_when_missing(db_session: Session):
     assert get_admin(db_session) is None or not (get_admin(db_session).password_hash or "")
     # Fresh migrated DB may have no admin row
-    assert bootstrap_admin_if_missing(db_session, "abcdef") == "created"
+    assert bootstrap_admin_if_missing(db_session, "abcdefgh12") == "created"
     admin = get_admin(db_session)
     assert admin is not None
     assert admin.email == ADMIN_EMAIL

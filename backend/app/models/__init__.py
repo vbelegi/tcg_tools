@@ -210,7 +210,7 @@ class Session(Base):
         Index("ix_sessions_expires_at", "expires_at"),
     )
 
-    token: Mapped[str] = mapped_column(String(64), primary_key=True)
+    token: Mapped[str] = mapped_column(String(64), primary_key=True)  # SHA-256 hex of session cookie
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)

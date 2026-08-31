@@ -32,14 +32,14 @@ def test_resolved_cookie_secure_false_without_https(monkeypatch):
 def test_login_sets_secure_cookie_when_https_base(db_session: Session, monkeypatch):
     monkeypatch.setenv("TCGTOOLS_PUBLIC_BASE_URL", "https://torneios.example.com")
     get_settings.cache_clear()
-    upsert_admin_password(db_session, "abcdef")
+    upsert_admin_password(db_session, "abcdefgh12")
 
     def _override_db():
         yield db_session
 
     app.dependency_overrides[get_db] = _override_db
     client = TestClient(app)
-    r = client.post("/api/v1/auth/login", json={"email": ADMIN_EMAIL, "password": "abcdef"})
+    r = client.post("/api/v1/auth/login", json={"email": ADMIN_EMAIL, "password": "abcdefgh12"})
     assert r.status_code == 200
     cookie = r.headers.get("set-cookie", "")
     assert "Secure" in cookie

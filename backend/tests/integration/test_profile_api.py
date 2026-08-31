@@ -18,7 +18,7 @@ def test_profile_hides_fp_from_strangers(api_client: TestClient, db_session: Ses
         display_name="Perfil Jogador",
         email="perfil.j@example.com",
         phone="+5511988880001",
-        password="abcdef",
+        password="abcdefgh12",
         birth_date=date(1998, 1, 15),
     )
 
@@ -89,7 +89,7 @@ def test_profile_hides_fp_from_strangers(api_client: TestClient, db_session: Ses
     # owner sees FP
     login = api_client.post(
         "/api/v1/auth/login",
-        json={"email": "perfil.j@example.com", "password": "abcdef"},
+        json={"email": "perfil.j@example.com", "password": "abcdefgh12"},
     )
     assert login.status_code == 200
     own = api_client.get(f"/api/v1/jogadores/{player.id}/perfil")
@@ -108,14 +108,14 @@ def test_update_display_name_and_avatar(api_client: TestClient, db_session: Sess
         display_name="Antes",
         email="avatar.u@example.com",
         phone="+5511988880002",
-        password="abcdef",
+        password="abcdefgh12",
         birth_date=date(1990, 5, 5),
     )
     api_client.post("/api/v1/auth/logout")
     assert (
         api_client.post(
             "/api/v1/auth/login",
-            json={"email": "avatar.u@example.com", "password": "abcdef"},
+            json={"email": "avatar.u@example.com", "password": "abcdefgh12"},
         ).status_code
         == 200
     )
@@ -180,7 +180,7 @@ def test_public_player_search(api_client: TestClient, db_session: Session):
         display_name="Busca Alpha",
         email="busca.alpha@example.com",
         phone="+5511988880011",
-        password="abcdef",
+        password="abcdefgh12",
         birth_date=date(1994, 2, 2),
     )
     register_player(
@@ -188,7 +188,7 @@ def test_public_player_search(api_client: TestClient, db_session: Session):
         display_name="Outro Nome",
         email="outro.nome@example.com",
         phone="+5511988880012",
-        password="abcdef",
+        password="abcdefgh12",
         birth_date=date(1993, 3, 3),
     )
     api_client.post("/api/v1/auth/logout")

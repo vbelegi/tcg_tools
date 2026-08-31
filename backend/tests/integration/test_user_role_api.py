@@ -62,7 +62,7 @@ def test_cannot_change_admin_user_role(api_client: TestClient, db_session: Sessi
         phone="+5511999000099",
         role=UserRole.admin.value,
         status="active",
-        password_hash=hash_password("secret"),
+        password_hash=hash_password("secret1234"),
     )
     db_session.add(other_admin)
     db_session.commit()

@@ -54,14 +54,14 @@ def installed_layout_client(
     engine = create_engine(url, connect_args={"check_same_thread": False})
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     session: Session = SessionLocal()
-    upsert_admin_password(session, "testpass")
+    upsert_admin_password(session, "testpass12")
 
     def _override_db() -> Generator[Session, None, None]:
         yield session
 
     app.dependency_overrides[get_db] = _override_db
     client = TestClient(app)
-    r = client.post("/api/v1/auth/login", json={"email": "admin@local", "password": "testpass"})
+    r = client.post("/api/v1/auth/login", json={"email": "admin@local", "password": "testpass12"})
     assert r.status_code == 200, r.text
 
     try:

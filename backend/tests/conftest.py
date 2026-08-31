@@ -18,6 +18,15 @@ from app.main import app
 from app.services.torneio_service import TorneioService
 
 
+@pytest.fixture(autouse=True)
+def _reset_rate_limits() -> Generator[None, None, None]:
+    from app.core.rate_limit import reset_rate_limits_for_tests
+
+    reset_rate_limits_for_tests()
+    yield
+    reset_rate_limits_for_tests()
+
+
 def _alembic_config(db_url: str) -> Config:
     backend_root = Path(__file__).resolve().parents[1]
     cfg = Config(str(backend_root / "alembic.ini"))
@@ -183,14 +192,14 @@ def api_client(db_session: Session) -> Generator[TestClient, None, None]:
     """FastAPI client with real DB session (Alembic-migrated) and admin login."""
     from app.core.auth import upsert_admin_password
 
-    upsert_admin_password(db_session, "testpass")
+    upsert_admin_password(db_session, "testpass12")
 
     def _override_db() -> Generator[Session, None, None]:
         yield db_session
 
     app.dependency_overrides[get_db] = _override_db
     client = TestClient(app)
-    r = client.post("/api/v1/auth/login", json={"email": "admin@local", "password": "testpass"})
+    r = client.post("/api/v1/auth/login", json={"email": "admin@local", "password": "testpass12"})
     assert r.status_code == 200, r.text
     yield client
     app.dependency_overrides.clear()

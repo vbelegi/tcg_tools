@@ -22,6 +22,12 @@ class Settings(BaseSettings):
     frontend_dist: Path | None = None
     public_base_url: str | None = None
     cookie_secure: bool | None = None
+    environment: str = "development"
+    max_request_body_bytes: int = 1_048_576
+
+    @property
+    def is_production(self) -> bool:
+        return self.environment.strip().lower() == "production"
 
     @property
     def resolved_cookie_secure(self) -> bool:

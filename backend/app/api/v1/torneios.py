@@ -7,6 +7,7 @@ from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.api.deps import RequireAdmin, RequireStaff, get_current_user, get_optional_user
+from app.api.v1.event_visibility import filter_calendar_tournaments
 from app.db.session import get_db
 from app.models import Player, User, UserRole
 from app.schemas.torneio import (
@@ -18,6 +19,7 @@ from app.schemas.torneio import (
     TorneioCreateRequest,
     TorneioUpdate,
 )
+from app.core.torneios.state_machine import StateMachineError
 from app.services.torneio_service import TorneioError, TorneioService
 
 router = APIRouter(prefix="/torneios", tags=["torneios"])
@@ -194,12 +196,15 @@ def calendar_torneios(
     year: int,
     month: int,
     svc: TorneioService = Depends(get_torneio_service),
+    viewer: User | None = Depends(get_optional_user),
+    db: Session = Depends(get_db),
 ):
     if month < 1 or month > 12:
         raise HTTPException(status_code=422, detail="Mês inválido.")
     if year < 2000 or year > 2100:
         raise HTTPException(status_code=422, detail="Ano inválido.")
-    return svc.list_calendar_events(year, month)
+    events = svc.list_calendar_events(year, month)
+    return filter_calendar_tournaments(events, viewer, db)
 
 
 @router.get("/{event_id}")
@@ -322,8 +327,10 @@ def iniciar(
     try:
         svc.start_event(event_id)
         return svc.get_event(event_id)
-    except (TorneioError, Exception) as exc:
+    except (TorneioError, StateMachineError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail="Não foi possível iniciar o torneio.") from exc
 
 
 @router.get("/{event_id}/rodadas")

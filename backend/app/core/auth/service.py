@@ -16,6 +16,7 @@ from app.core.auth.passwords import (
     validate_password_plain,
     verify_password,
 )
+from app.core.auth.session_tokens import generate_session_token, hash_session_token
 from app.models import InviteToken, Session as AuthSession, User, UserRole, UserStatus
 
 SESSION_COOKIE = "tcgtools_session"
@@ -93,10 +94,11 @@ def authenticate(db: DbSession, email: str, password: str) -> User:
 
 
 def create_session(db: DbSession, user: User) -> str:
-    token = secrets.token_urlsafe(32)
+    db.query(AuthSession).filter(AuthSession.user_id == user.id).delete()
+    token = generate_session_token()
     now = _now()
     row = AuthSession(
-        token=token,
+        token=hash_session_token(token),
         user_id=user.id,
         created_at=now,
         expires_at=now + timedelta(days=SESSION_DAYS),
@@ -109,7 +111,8 @@ def create_session(db: DbSession, user: User) -> str:
 def get_user_for_token(db: DbSession, token: str | None) -> User | None:
     if not token:
         return None
-    row = db.query(AuthSession).filter(AuthSession.token == token).one_or_none()
+    token_hash = hash_session_token(token)
+    row = db.query(AuthSession).filter(AuthSession.token == token_hash).one_or_none()
     if row is None:
         return None
     if row.expires_at < _now():
@@ -125,7 +128,7 @@ def get_user_for_token(db: DbSession, token: str | None) -> User | None:
 def revoke_session(db: DbSession, token: str | None) -> None:
     if not token:
         return
-    db.query(AuthSession).filter(AuthSession.token == token).delete()
+    db.query(AuthSession).filter(AuthSession.token == hash_session_token(token)).delete()
     db.commit()
 
 
