@@ -197,7 +197,7 @@ export function UsuariosPage() {
                       {u.status}
                     </span>
                   </td>
-                  <td className="admin-row-actions">
+                  <td className="admin-col-actions">
                     {u.status === "incomplete" && (
                       <button
                         className="secondary"
