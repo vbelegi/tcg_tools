@@ -36,7 +36,7 @@ type DayItem =
   | { kind: "announcement"; data: CalendarAnnouncement };
 
 function statusLabel(status: Torneio["status"], registrationOpen?: boolean): string {
-  if (status === "draft") return registrationOpen ? "Inscrições abertas" : "Rascunho";
+  if (status === "draft") return registrationOpen ? "Inscrições abertas" : "Inscrições fechadas";
   if (status === "running") return "Em andamento";
   return "Concluído";
 }

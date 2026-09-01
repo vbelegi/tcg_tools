@@ -14,7 +14,7 @@ from app.models import Session as AuthSession
 from app.services.torneio_service import TorneioService
 
 
-def test_calendar_hides_closed_draft_from_anonymous(
+def test_calendar_shows_closed_draft_to_anonymous(
     db_session: Session, torneio_service: TorneioService,
 ):
     from app.core.auth import upsert_admin_password
@@ -23,7 +23,7 @@ def test_calendar_hides_closed_draft_from_anonymous(
 
     upsert_admin_password(db_session, "testpass12")
     event = torneio_service.create_event(
-        name="Secret Draft",
+        name="Store-only signup",
         event_date=date.today(),
         format="swiss",
         max_rounds=2,
@@ -42,7 +42,9 @@ def test_calendar_hides_closed_draft_from_anonymous(
     r = client.get(f"/api/v1/calendar?year={today.year}&month={today.month}")
     assert r.status_code == 200
     ids = [t["id"] for t in r.json()["tournaments"]]
-    assert event.id not in ids
+    assert event.id in ids
+    row = next(t for t in r.json()["tournaments"] if t["id"] == event.id)
+    assert row["registration_open"] is False
 
     torneio_service.update_event(event.id, {"registration_open": True})
     r2 = client.get(f"/api/v1/calendar?year={today.year}&month={today.month}")

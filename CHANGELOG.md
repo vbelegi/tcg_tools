@@ -4,6 +4,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Calendário:** torneios em fase de inscrição aparecem no calendário público mesmo com inscrição online fechada (`registration_open: false`); sem CTA de inscrição pelo site
+
 ## [1.11.0] - 2026-09-01
 
 ### Added

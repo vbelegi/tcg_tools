@@ -22,6 +22,15 @@ def is_public_list_event(event: dict) -> bool:
     return status == "draft" and bool(event.get("registration_open"))
 
 
+def is_public_calendar_event(event: dict) -> bool:
+    """Pre-start and finished tournaments are visible on the public calendar.
+
+    registration_open only controls online signup, not calendar visibility.
+    """
+    status = event.get("status")
+    return status in {"draft", "finished"}
+
+
 def registered_event_ids(db: Session, user_id: int) -> set[int]:
     rows = db.query(Player.event_id).filter(Player.user_id == user_id).all()
     return {int(r[0]) for r in rows}
@@ -38,5 +47,5 @@ def filter_calendar_tournaments(
     return [
         e
         for e in events
-        if is_public_list_event(e) or int(e["id"]) in registered
+        if is_public_calendar_event(e) or int(e["id"]) in registered
     ]
