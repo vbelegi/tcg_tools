@@ -69,6 +69,23 @@ export function UsuariosPage() {
     onError: (e) => setError((e as Error).message),
   });
 
+  const passwordReset = useMutation({
+    mutationFn: (id: number) => api.resetUserPassword(id),
+    onSuccess: async (res) => {
+      setError("");
+      const url = inviteAbsoluteUrl(res.reset_path, res.reset_url);
+      try {
+        await navigator.clipboard.writeText(url);
+        setInviteMsg(
+          `Link de redefinição copiado. Encaminhe ao usuário. Válido até ${res.expires_at}: ${url}`,
+        );
+      } catch {
+        setInviteMsg(`Copie e encaminhe o link de redefinição (válido até ${res.expires_at}): ${url}`);
+      }
+    },
+    onError: (e) => setError((e as Error).message),
+  });
+
   const onCreate = (e: FormEvent) => {
     e.preventDefault();
     create.mutate();
@@ -180,7 +197,7 @@ export function UsuariosPage() {
                       {u.status}
                     </span>
                   </td>
-                  <td>
+                  <td className="admin-row-actions">
                     {u.status === "incomplete" && (
                       <button
                         className="secondary"
@@ -188,6 +205,24 @@ export function UsuariosPage() {
                         onClick={() => invite.mutate(u.id)}
                       >
                         {invite.isPending ? "…" : "Convite"}
+                      </button>
+                    )}
+                    {u.status === "active" && u.id !== me?.id && (
+                      <button
+                        className="secondary"
+                        type="button"
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              `Gerar link de redefinição de senha para ${u.display_name}? Sessões ativas serão encerradas.`,
+                            )
+                          ) {
+                            passwordReset.mutate(u.id);
+                          }
+                        }}
+                        disabled={passwordReset.isPending}
+                      >
+                        Reset senha
                       </button>
                     )}
                   </td>

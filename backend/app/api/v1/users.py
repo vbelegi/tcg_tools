@@ -9,8 +9,8 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api.deps import RequireAdmin, RequireStaff, get_optional_user
-from app.core.auth import AuthError, create_incomplete_user, create_invite, private_user_dict, public_user_dict
-from app.core.auth.invites import invite_claim_path, invite_claim_url
+from app.core.auth import AuthError, create_incomplete_user, create_invite, create_password_reset, private_user_dict, public_user_dict
+from app.core.auth.invites import invite_claim_path, invite_claim_url, password_reset_path, password_reset_url
 from app.core.auth.fourse_points import ranking
 from app.db.session import get_db
 from app.models import User, UserRole, UserStatus
@@ -91,6 +91,28 @@ def invite_user(user_id: int, _: RequireAdmin, db: Session = Depends(get_db)):
         "expires_at": invite.expires_at.isoformat(),
         "claim_path": invite_claim_path(invite.token),
         "claim_url": invite_claim_url(invite.token),
+        "user": private_user_dict(user),
+    }
+
+
+@router.post("/users/{user_id}/password-reset")
+def reset_user_password(user_id: int, actor: RequireAdmin, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).one_or_none()
+    if user is None:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+    if actor.id == user_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Use Alterar senha na própria conta. Reset por link é para outros usuários.",
+        )
+    try:
+        raw_token, row = create_password_reset(db, user)
+    except AuthError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {
+        "expires_at": row.expires_at.isoformat(),
+        "reset_path": password_reset_path(raw_token),
+        "reset_url": password_reset_url(raw_token),
         "user": private_user_dict(user),
     }
 

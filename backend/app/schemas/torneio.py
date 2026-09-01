@@ -22,6 +22,7 @@ class TorneioCreateRequest(BaseModel):
     description: str | None = None
     start_time: str | None = None
     tcg_game_id: int
+    pairing_mode: Literal["platform", "manual"] = "platform"
 
     @field_validator("se_bo_config")
     @classmethod
@@ -65,6 +66,7 @@ class TorneioUpdate(BaseModel):
     description: str | None = None
     start_time: str | None = None
     tcg_game_id: int | None = None
+    pairing_mode: Literal["platform", "manual"] | None = None
 
     @field_validator("se_bo_config")
     @classmethod
@@ -94,6 +96,17 @@ class TorneioUpdate(BaseModel):
         if not (0 <= h <= 23 and 0 <= m <= 59):
             raise ValueError("Horário inválido.")
         return f"{h:02d}:{m:02d}"
+
+
+class ManualPlacement(BaseModel):
+    player_id: int
+    placement: int = Field(ge=1)
+    is_drop: bool = False
+    decklist: str | None = None
+
+
+class ManualFinalizeRequest(BaseModel):
+    placements: list[ManualPlacement]
 
 
 class JogadorCreate(BaseModel):

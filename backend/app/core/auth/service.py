@@ -17,11 +17,19 @@ from app.core.auth.passwords import (
     verify_password,
 )
 from app.core.auth.session_tokens import generate_session_token, hash_session_token
-from app.models import InviteToken, Session as AuthSession, User, UserRole, UserStatus
+from app.models import (
+    InviteToken,
+    PasswordResetToken,
+    Session as AuthSession,
+    User,
+    UserRole,
+    UserStatus,
+)
 
 SESSION_COOKIE = "tcgtools_session"
 SESSION_DAYS = 7
 INVITE_DAYS = 7
+PASSWORD_RESET_DAYS = 2
 
 
 def _now() -> datetime:
@@ -313,6 +321,48 @@ def claim_invite(
     require_guardian_if_minor(user.birth_date, user.guardian_name, user.guardian_phone)
     user.updated_at = _now()
     row.used_at = _now()
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def create_password_reset(db: DbSession, user: User) -> tuple[str, PasswordResetToken]:
+    if user.status != UserStatus.active.value:
+        raise AuthError("Só é possível resetar senha de contas ativas.")
+    now = _now()
+    db.query(PasswordResetToken).filter(
+        PasswordResetToken.user_id == user.id,
+        PasswordResetToken.used_at.is_(None),
+    ).delete()
+    db.query(AuthSession).filter(AuthSession.user_id == user.id).delete()
+    raw = generate_session_token()
+    row = PasswordResetToken(
+        token=hash_session_token(raw),
+        user_id=user.id,
+        created_at=now,
+        expires_at=now + timedelta(days=PASSWORD_RESET_DAYS),
+    )
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return raw, row
+
+
+def claim_password_reset(db: DbSession, token: str, password: str) -> User:
+    token_hash = hash_session_token(token)
+    row = db.query(PasswordResetToken).filter(PasswordResetToken.token == token_hash).one_or_none()
+    if row is None or row.used_at is not None:
+        raise AuthError("Link inválido ou já utilizado.")
+    if row.expires_at < _now():
+        raise AuthError("Link expirado.")
+    user = db.query(User).filter(User.id == row.user_id).one()
+    if user.status != UserStatus.active.value:
+        raise AuthError("Conta não está ativa.")
+    validate_password_plain(password)
+    user.password_hash = hash_password(password)
+    user.updated_at = _now()
+    row.used_at = _now()
+    db.query(AuthSession).filter(AuthSession.user_id == user.id).delete()
     db.commit()
     db.refresh(user)
     return user

@@ -1,20 +1,17 @@
 import { FormEvent, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "../api/client";
 
-export function ClaimInvitePage() {
+export function ResetPasswordPage() {
   const { token = "" } = useParams();
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const passwordRef = useRef<HTMLInputElement>(null);
   const password2Ref = useRef<HTMLInputElement>(null);
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
-  const [birthDate, setBirthDate] = useState("");
-  const [guardianName, setGuardianName] = useState("");
-  const [guardianPhone, setGuardianPhone] = useState("");
-  const [guardianRelation, setGuardianRelation] = useState("");
   const [error, setError] = useState("");
   const [passwordInvalid, setPasswordInvalid] = useState(false);
   const [password2Invalid, setPassword2Invalid] = useState(false);
@@ -27,16 +24,11 @@ export function ClaimInvitePage() {
   const minPasswordLen = authStatus?.min_password_length ?? 10;
 
   const claim = useMutation({
-    mutationFn: () =>
-      api.claimInvite({
-        token,
-        password,
-        birth_date: birthDate,
-        guardian_name: guardianName || undefined,
-        guardian_phone: guardianPhone || undefined,
-        guardian_relation: guardianRelation || undefined,
-      }),
-    onSuccess: () => navigate("/", { replace: true }),
+    mutationFn: () => api.claimPasswordReset(token, password),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["auth-me"] });
+      navigate("/", { replace: true });
+    },
     onError: (e) => setError((e as Error).message),
   });
 
@@ -44,10 +36,6 @@ export function ClaimInvitePage() {
     e.preventDefault();
     setPasswordInvalid(false);
     setPassword2Invalid(false);
-    if (!birthDate) {
-      setError("Data de nascimento é obrigatória.");
-      return;
-    }
     if (password.length < minPasswordLen) {
       setError(`Senha deve ter pelo menos ${minPasswordLen} caracteres.`);
       setPasswordInvalid(true);
@@ -65,17 +53,17 @@ export function ClaimInvitePage() {
 
   return (
     <div className="login-page">
-      <h1>Finalizar cadastro</h1>
-      <p>Defina sua senha para ativar a conta Fourse / TCG Tools.</p>
+      <h1>Redefinir senha</h1>
+      <p>Defina uma nova senha para sua conta.</p>
       {error && <p className="error">{error}</p>}
       <form onSubmit={onSubmit} className="login-form">
         <div className="form-row">
           <div className="form-label-row">
-            <label htmlFor="pw">Senha</label>
+            <label htmlFor="reset-pw">Nova senha</label>
             <span className="form-hint">mín. {minPasswordLen} caracteres</span>
           </div>
           <input
-            id="pw"
+            id="reset-pw"
             ref={passwordRef}
             type="password"
             value={password}
@@ -85,12 +73,14 @@ export function ClaimInvitePage() {
             }}
             required
             className={passwordInvalid ? "input-invalid" : undefined}
+            autoComplete="new-password"
+            autoFocus
           />
         </div>
         <div className="form-row">
-          <label htmlFor="pw2">Confirmar senha</label>
+          <label htmlFor="reset-pw2">Confirmar senha</label>
           <input
-            id="pw2"
+            id="reset-pw2"
             ref={password2Ref}
             type="password"
             value={password2}
@@ -100,36 +90,11 @@ export function ClaimInvitePage() {
             }}
             required
             className={password2Invalid ? "input-invalid" : undefined}
-          />
-        </div>
-        <div className="form-row">
-          <label htmlFor="bd">Data de nascimento</label>
-          <input
-            id="bd"
-            type="date"
-            value={birthDate}
-            onChange={(e) => setBirthDate(e.target.value)}
-            required
-          />
-        </div>
-        <div className="form-row">
-          <label htmlFor="gn">Responsável (obrigatório se menor de 18)</label>
-          <input id="gn" value={guardianName} onChange={(e) => setGuardianName(e.target.value)} />
-        </div>
-        <div className="form-row">
-          <label htmlFor="gp">Celular do responsável</label>
-          <input id="gp" value={guardianPhone} onChange={(e) => setGuardianPhone(e.target.value)} />
-        </div>
-        <div className="form-row">
-          <label htmlFor="gr">Parentesco</label>
-          <input
-            id="gr"
-            value={guardianRelation}
-            onChange={(e) => setGuardianRelation(e.target.value)}
+            autoComplete="new-password"
           />
         </div>
         <button className="primary" type="submit" disabled={claim.isPending || !password}>
-          {claim.isPending ? "Salvando…" : "Ativar conta"}
+          {claim.isPending ? "Salvando…" : "Salvar senha"}
         </button>
       </form>
     </div>

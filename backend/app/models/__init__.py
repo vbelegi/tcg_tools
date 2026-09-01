@@ -41,6 +41,11 @@ class EventSource(str, enum.Enum):
     external = "external"
 
 
+class PairingMode(str, enum.Enum):
+    platform = "platform"
+    manual = "manual"
+
+
 class RoundStatus(str, enum.Enum):
     pending = "pending"
     active = "active"
@@ -100,6 +105,9 @@ class Event(Base):
     third_place_match: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     se_bo_config: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     source: Mapped[str] = mapped_column(String(16), nullable=False, default=EventSource.internal.value)
+    pairing_mode: Mapped[str] = mapped_column(
+        String(16), nullable=False, default=PairingMode.platform.value
+    )
     registration_open: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     fp_n_at_start: Mapped[int | None] = mapped_column(Integer, nullable=True)
     external_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -200,6 +208,9 @@ class User(Base):
 
     sessions: Mapped[list[Session]] = relationship(back_populates="user", cascade="all, delete-orphan")
     invites: Mapped[list[InviteToken]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    password_resets: Mapped[list[PasswordResetToken]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
     fp_entries: Mapped[list[FoursePointsLedger]] = relationship(back_populates="user")
 
 
@@ -229,6 +240,19 @@ class InviteToken(Base):
     used_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     user: Mapped[User] = relationship(back_populates="invites")
+
+
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
+    __table_args__ = (Index("ix_password_reset_tokens_user_id", "user_id"),)
+
+    token: Mapped[str] = mapped_column(String(64), primary_key=True)  # SHA-256 hex
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    user: Mapped[User] = relationship(back_populates="password_resets")
 
 
 class FoursePointsLedger(Base):

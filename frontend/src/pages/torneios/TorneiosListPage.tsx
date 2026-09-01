@@ -63,6 +63,7 @@ export function TorneiosListPage() {
                 {t.status === "draft" && t.registration_open && (
                   <span className="badge"> inscrição aberta</span>
                 )}
+                {t.pairing_mode === "manual" && <span className="badge"> sem rodadas</span>}
               </p>
               <p>
                 {t.format === "swiss" ? "Suíço" : "Eliminatória"} · {t.player_count} jogadores

@@ -104,10 +104,11 @@ export function AgendaPage() {
     setLocation(row.location ?? "");
     setDescription(row.description ?? "");
     setError("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
-    <div className="admin-page">
+    <div className="admin-page agenda-page">
       <header className="torneio-manage-header">
         <div>
           <h1>Agenda</h1>
@@ -122,8 +123,8 @@ export function AgendaPage() {
       <details className="torneio-advanced admin-create-panel" open>
         <summary>{editing ? "Editar evento" : "Novo evento"}</summary>
         <form onSubmit={onSubmit} className="admin-form-dense">
-          <div className="admin-form-grid">
-            <div className="form-row">
+          <div className="admin-form-grid agenda-form-grid">
+            <div className="form-row agenda-field-full">
               <label htmlFor="agenda-title">Título</label>
               <input
                 id="agenda-title"
@@ -151,7 +152,7 @@ export function AgendaPage() {
                 onChange={(e) => setStartTime(e.target.value)}
               />
             </div>
-            <div className="form-row">
+            <div className="form-row agenda-field-full">
               <label htmlFor="agenda-location">Local</label>
               <input
                 id="agenda-location"
@@ -159,7 +160,7 @@ export function AgendaPage() {
                 onChange={(e) => setLocation(e.target.value)}
               />
             </div>
-            <div className="form-row">
+            <div className="form-row agenda-field-full">
               <label htmlFor="agenda-desc">Descrição</label>
               <textarea
                 id="agenda-desc"
@@ -169,18 +170,26 @@ export function AgendaPage() {
               />
             </div>
           </div>
-          <button
-            className="primary"
-            type="submit"
-            disabled={create.isPending || update.isPending}
-          >
-            {editing ? (update.isPending ? "Salvando…" : "Salvar") : create.isPending ? "Criando…" : "Criar"}
-          </button>
-          {editing && (
-            <button className="secondary" type="button" onClick={resetForm}>
-              Cancelar
+          <div className="agenda-form-actions">
+            <button
+              className="primary"
+              type="submit"
+              disabled={create.isPending || update.isPending}
+            >
+              {editing
+                ? update.isPending
+                  ? "Salvando…"
+                  : "Salvar"
+                : create.isPending
+                  ? "Criando…"
+                  : "Criar"}
             </button>
-          )}
+            {editing && (
+              <button className="secondary" type="button" onClick={resetForm}>
+                Cancelar
+              </button>
+            )}
+          </div>
         </form>
       </details>
 
@@ -203,25 +212,27 @@ export function AgendaPage() {
 
         {isLoading && <p>Carregando...</p>}
 
-        <div className="resultado-table-wrap">
-          <table className="resultado-table">
+        <div className="resultado-table-wrap agenda-table-wrap">
+          <table className="resultado-table agenda-table">
             <thead>
               <tr>
                 <th>Data</th>
                 <th>Título</th>
                 <th>Horário</th>
                 <th>Local</th>
-                <th />
+                <th className="agenda-actions-col">Ações</th>
               </tr>
             </thead>
             <tbody>
               {data.map((row) => (
                 <tr key={row.id}>
-                  <td>{row.event_date}</td>
-                  <td>{row.title}</td>
-                  <td>{row.start_time ?? "—"}</td>
-                  <td>{row.location ?? "—"}</td>
-                  <td className="admin-row-actions">
+                  <td className="agenda-date-cell">{row.event_date}</td>
+                  <td className="agenda-title-cell">{row.title}</td>
+                  <td className="agenda-time-cell">{row.start_time ?? "—"}</td>
+                  <td className="agenda-location-cell" title={row.location ?? undefined}>
+                    {row.location ?? "—"}
+                  </td>
+                  <td className="admin-row-actions agenda-actions-cell">
                     <button className="secondary" type="button" onClick={() => startEdit(row)}>
                       Editar
                     </button>
@@ -241,6 +252,37 @@ export function AgendaPage() {
             </tbody>
           </table>
         </div>
+
+        <ul className="agenda-card-list">
+          {data.map((row) => (
+            <li key={row.id} className="agenda-card">
+              <div className="agenda-card-top">
+                <strong>{row.title}</strong>
+                <span className="badge">{row.event_date}</span>
+              </div>
+              <ul className="agenda-card-meta">
+                <li>Horário: {row.start_time ?? "—"}</li>
+                <li>Local: {row.location ?? "—"}</li>
+              </ul>
+              {row.description && <p className="agenda-card-desc">{row.description}</p>}
+              <div className="admin-row-actions agenda-card-actions">
+                <button className="secondary" type="button" onClick={() => startEdit(row)}>
+                  Editar
+                </button>
+                <button
+                  className="secondary danger"
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm(`Excluir "${row.title}"?`)) remove.mutate(row.id);
+                  }}
+                  disabled={remove.isPending}
+                >
+                  Excluir
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
       </section>
     </div>
   );

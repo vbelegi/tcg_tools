@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
@@ -19,6 +19,8 @@ type AuthModalProps = {
 export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthModalProps) {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const password2Ref = useRef<HTMLInputElement>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
@@ -29,12 +31,16 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
   const [guardianPhone, setGuardianPhone] = useState("");
   const [guardianRelation, setGuardianRelation] = useState("");
   const [error, setError] = useState("");
+  const [passwordInvalid, setPasswordInvalid] = useState(false);
+  const [password2Invalid, setPassword2Invalid] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setError("");
     setPassword("");
     setPassword2("");
+    setPasswordInvalid(false);
+    setPassword2Invalid(false);
   }, [open, mode]);
 
   const { data: authStatus } = useQuery({
@@ -76,13 +82,24 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
+    setPasswordInvalid(false);
+    setPassword2Invalid(false);
+
     if (mode === "register") {
       if (!birthDate) {
         setError("Data de nascimento é obrigatória.");
         return;
       }
+      if (password.length < minPasswordLen) {
+        setError(`Senha deve ter pelo menos ${minPasswordLen} caracteres.`);
+        setPasswordInvalid(true);
+        passwordRef.current?.focus();
+        return;
+      }
       if (password !== password2) {
         setError("Confirmação de senha não confere.");
+        setPassword2Invalid(true);
+        password2Ref.current?.focus();
         return;
       }
       register.mutate();
@@ -95,7 +112,7 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
   const title = mode === "login" ? "Entrar" : "Criar conta";
   const canSubmit =
     !pending &&
-    password.length >= minPasswordLen &&
+    password.length > 0 &&
     (mode === "login" || (Boolean(displayName.trim()) && Boolean(birthDate) && Boolean(phone.trim())));
 
   return (
@@ -202,14 +219,23 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
           />
         </div>
         <div className="form-row">
-          <label htmlFor="auth-pass">Senha</label>
+          <div className="form-label-row">
+            <label htmlFor="auth-pass">Senha</label>
+            {mode === "register" && (
+              <span className="form-hint">mín. {minPasswordLen} caracteres</span>
+            )}
+          </div>
           <input
             id="auth-pass"
+            ref={passwordRef}
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setPasswordInvalid(false);
+            }}
             required
-            minLength={minPasswordLen}
+            className={passwordInvalid ? "input-invalid" : undefined}
             autoComplete={mode === "login" ? "current-password" : "new-password"}
             autoFocus
           />
@@ -219,11 +245,15 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
             <label htmlFor="auth-pass2">Confirmar senha</label>
             <input
               id="auth-pass2"
+              ref={password2Ref}
               type="password"
               value={password2}
-              onChange={(e) => setPassword2(e.target.value)}
+              onChange={(e) => {
+                setPassword2(e.target.value);
+                setPassword2Invalid(false);
+              }}
               required
-              minLength={minPasswordLen}
+              className={password2Invalid ? "input-invalid" : undefined}
               autoComplete="new-password"
             />
           </div>

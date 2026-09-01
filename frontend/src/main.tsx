@@ -12,9 +12,11 @@ import { LoginPage } from "./pages/LoginPage";
 import { PlayerProfilePage } from "./pages/PlayerProfilePage";
 import { PremiacaoPage } from "./pages/premiacao/PremiacaoPage";
 import { RankingPage } from "./pages/RankingPage";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { SorteadorPage } from "./pages/sorteador/SorteadorPage";
 import { TcgGamesPage } from "./pages/TcgGamesPage";
 import { TorneioDetailPage } from "./pages/torneios/TorneioDetailPage";
+import { TorneioColocacaoPage } from "./pages/torneios/TorneioColocacaoPage";
 import { TorneioExternoPage } from "./pages/torneios/TorneioExternoPage";
 import { TorneioNovoPage } from "./pages/torneios/TorneioNovoPage";
 import { TorneioResultadoPage } from "./pages/torneios/TorneioResultadoPage";
@@ -32,6 +34,7 @@ createRoot(document.getElementById("root")!).render(
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/convite/:token" element={<ClaimInvitePage />} />
+          <Route path="/redefinir-senha/:token" element={<ResetPasswordPage />} />
           <Route element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="calendario" element={<CalendarPage />} />
@@ -53,6 +56,7 @@ createRoot(document.getElementById("root")!).render(
               <Route path="sorteador" element={<SorteadorPage />} />
               <Route path="agenda" element={<AgendaPage />} />
               <Route path="torneios/novo" element={<TorneioNovoPage />} />
+              <Route path="torneios/:id/colocacoes" element={<TorneioColocacaoPage />} />
             </Route>
           </Route>
           <Route element={<RequireAdmin />}>
