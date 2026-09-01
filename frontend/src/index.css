@@ -252,6 +252,24 @@ a.card p {
   margin-bottom: 1rem;
 }
 
+.form-label-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.form-label-row label {
+  margin-bottom: 0;
+}
+
+.form-hint {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
 .form-row label {
   display: block;
   margin-bottom: 0.25rem;

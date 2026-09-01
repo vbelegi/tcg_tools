@@ -14,6 +14,7 @@ from app.core.auth import (
     authenticate,
     change_password,
     claim_invite,
+    claim_password_reset,
     create_session,
     get_admin,
     private_user_dict,
@@ -33,6 +34,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 _auth_login_limit = rate_limit_dependency("auth_login", limit=10, window_sec=60)
 _auth_register_limit = rate_limit_dependency("auth_register", limit=5, window_sec=300)
 _auth_claim_limit = rate_limit_dependency("auth_claim_invite", limit=10, window_sec=300)
+_auth_reset_claim_limit = rate_limit_dependency("auth_claim_password_reset", limit=10, window_sec=300)
 
 
 async def _read_upload_limited(file: UploadFile, max_bytes: int) -> bytes:
@@ -79,6 +81,11 @@ class ClaimInviteBody(BaseModel):
     guardian_name: str | None = None
     guardian_phone: str | None = None
     guardian_relation: str | None = None
+
+
+class ClaimPasswordResetBody(BaseModel):
+    token: str
+    password: str
 
 
 class UpdateMeBody(BaseModel):
@@ -215,6 +222,22 @@ def auth_claim_invite(
             guardian_phone=body.guardian_phone,
             guardian_relation=body.guardian_relation,
         )
+        token = create_session(db, user)
+    except AuthError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    set_session_cookie(response, token)
+    return private_user_dict(user)
+
+
+@router.post("/claim-password-reset")
+def auth_claim_password_reset(
+    body: ClaimPasswordResetBody,
+    response: Response,
+    db: Session = Depends(get_db),
+    _: None = Depends(_auth_reset_claim_limit),
+):
+    try:
+        user = claim_password_reset(db, body.token, body.password)
         token = create_session(db, user)
     except AuthError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

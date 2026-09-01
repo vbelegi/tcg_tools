@@ -164,6 +164,12 @@ export const api = {
       body: JSON.stringify(body),
     }),
 
+  claimPasswordReset: (token: string, password: string) =>
+    request<{ id: number; email: string; display_name: string }>("/auth/claim-password-reset", {
+      method: "POST",
+      body: JSON.stringify({ token, password }),
+    }),
+
   listUsers: (q?: string) =>
     request<
       Array<{
@@ -204,6 +210,12 @@ export const api = {
   inviteUser: (userId: number) =>
     request<{ token: string; claim_path: string; claim_url: string | null; expires_at: string }>(
       `/users/${userId}/invite`,
+      { method: "POST" },
+    ),
+
+  resetUserPassword: (userId: number) =>
+    request<{ reset_path: string; reset_url: string | null; expires_at: string }>(
+      `/users/${userId}/password-reset`,
       { method: "POST" },
     ),
 

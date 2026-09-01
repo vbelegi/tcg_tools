@@ -200,6 +200,9 @@ class User(Base):
 
     sessions: Mapped[list[Session]] = relationship(back_populates="user", cascade="all, delete-orphan")
     invites: Mapped[list[InviteToken]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    password_resets: Mapped[list[PasswordResetToken]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
     fp_entries: Mapped[list[FoursePointsLedger]] = relationship(back_populates="user")
 
 
@@ -229,6 +232,19 @@ class InviteToken(Base):
     used_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     user: Mapped[User] = relationship(back_populates="invites")
+
+
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
+    __table_args__ = (Index("ix_password_reset_tokens_user_id", "user_id"),)
+
+    token: Mapped[str] = mapped_column(String(64), primary_key=True)  # SHA-256 hex
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    user: Mapped[User] = relationship(back_populates="password_resets")
 
 
 class FoursePointsLedger(Base):

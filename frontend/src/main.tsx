@@ -12,6 +12,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { PlayerProfilePage } from "./pages/PlayerProfilePage";
 import { PremiacaoPage } from "./pages/premiacao/PremiacaoPage";
 import { RankingPage } from "./pages/RankingPage";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { SorteadorPage } from "./pages/sorteador/SorteadorPage";
 import { TcgGamesPage } from "./pages/TcgGamesPage";
 import { TorneioDetailPage } from "./pages/torneios/TorneioDetailPage";
@@ -32,6 +33,7 @@ createRoot(document.getElementById("root")!).render(
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/convite/:token" element={<ClaimInvitePage />} />
+          <Route path="/redefinir-senha/:token" element={<ResetPasswordPage />} />
           <Route element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="calendario" element={<CalendarPage />} />
