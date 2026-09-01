@@ -4,14 +4,25 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-09-01
+
 ### Added
 
-- **Torneios:** formulário para editar torneios em rascunho (nome, data, horário, TCG, inscrição, etc.; formato e premiação permanecem fixos após criação)
-- **Torneios:** modo **sem rodadas** (`pairing_mode: manual`) — inscrição no calendário com colocações manuais ao final (operação em ferramenta externa)
+- **Agenda:** layout do formulário e tabela corrigidos; lista em cards no mobile
+- **Auth:** reset de senha por admin (link `/redefinir-senha/:token`); hint de requisitos de senha no cadastro
+- **Torneios:** formulário para editar torneios em rascunho (nome, data, horário, TCG, inscrição, etc.)
+- **Torneios:** modo **sem rodadas** (`pairing_mode: manual`) — inscrição no calendário com colocações manuais ao final
 
 ### Changed
 
-- **Torneios:** unicidade de nome passa a ser por combinação **nome + data** (permite torneios recorrentes com o mesmo nome em datas diferentes)
+- **Auth:** login não bloqueia submit por tamanho de senha; validação de senha no cadastro ocorre no submit
+- **Torneios:** unicidade de nome por combinação **nome + data** (torneios recorrentes com mesmo nome)
+
+### Database
+
+- Migration `011`: tabela `password_reset_tokens`
+- Migration `012`: coluna `events.pairing_mode` (default `platform`)
+
 ## [1.9.0] - 2026-08-31
 
 ### Added
