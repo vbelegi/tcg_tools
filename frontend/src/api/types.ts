@@ -56,6 +56,7 @@ export interface Torneio {
   config_warnings?: string[];
   players?: Player[];
   source?: "internal" | "external";
+  pairing_mode?: "platform" | "manual";
   registration_open?: boolean;
   fp_n_at_start?: number | null;
   pending_checkins?: number;

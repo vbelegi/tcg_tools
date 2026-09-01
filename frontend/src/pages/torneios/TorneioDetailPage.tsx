@@ -326,6 +326,7 @@ export function TorneioDetailPage() {
   }
 
   const isDraft = torneio.status === "draft";
+  const isManual = torneio.pairing_mode === "manual";
   const isRunning = torneio.status === "running";
   const isFinished = torneio.status === "finished";
   const hasActiveRound = isRunning && !torneio.between_rounds && torneio.current_round > 0;
@@ -346,10 +347,22 @@ export function TorneioDetailPage() {
   const canStart =
     isDraft &&
     isStaff &&
+    !isManual &&
     playerCount >= 4 &&
     !seedsIncomplete &&
     pendingCount === 0 &&
     !iniciar.isPending;
+  const canRegisterPlacements =
+    isDraft &&
+    isStaff &&
+    isManual &&
+    playerCount >= 1 &&
+    pendingCount === 0;
+  const placementBlockReason = pendingCount > 0
+    ? "Faça check-in de todas as inscrições pendentes"
+    : playerCount < 1
+      ? "Adicione ao menos um jogador com check-in"
+      : undefined;
   const startBlockReason = seedsIncomplete
     ? "Corrija o seeding parcial antes de iniciar"
     : pendingCount > 0
@@ -514,6 +527,7 @@ export function TorneioDetailPage() {
             {torneio.tcg_game ? ` · ${torneio.tcg_game.name}` : ""} ·{" "}
             <span className="badge">{torneio.status}</span>
             {torneio.source === "external" && <span className="badge">externo</span>}
+            {isManual && <span className="badge">sem rodadas</span>}
           </p>
           {isDraft && isStaff && (
             <label className="torneio-reg-toggle">
@@ -527,7 +541,7 @@ export function TorneioDetailPage() {
             </label>
           )}
         </div>
-        {isDraft && isStaff && (
+        {isDraft && isStaff && !isManual && (
           <div className="torneio-manage-primary">
             <button
               className="primary"
@@ -540,6 +554,22 @@ export function TorneioDetailPage() {
             </button>
             {!canStart && startBlockReason && (
               <p className="field-hint">{startBlockReason}</p>
+            )}
+          </div>
+        )}
+        {isDraft && isStaff && isManual && (
+          <div className="torneio-manage-primary">
+            <Link
+              className="primary"
+              to={`/torneios/${eventId}/colocacoes`}
+              aria-disabled={!canRegisterPlacements}
+              style={!canRegisterPlacements ? { pointerEvents: "none", opacity: 0.6 } : undefined}
+              title={placementBlockReason}
+            >
+              Registrar colocações
+            </Link>
+            {!canRegisterPlacements && placementBlockReason && (
+              <p className="field-hint">{placementBlockReason}</p>
             )}
           </div>
         )}
@@ -626,7 +656,7 @@ export function TorneioDetailPage() {
                 </span>
               </h2>
             </div>
-            {isStaff && torneio.format === "single_elimination" && (
+            {isStaff && torneio.format === "single_elimination" && !isManual && (
               <div className="torneio-se-block">
                 <SeFormatOptions
                   thirdPlaceMatch={thirdPlaceMatch}
@@ -670,7 +700,7 @@ export function TorneioDetailPage() {
                   ` (configurado: ${torneio.max_rounds})`}
               </p>
             )}
-            {seedsIncomplete && (
+            {seedsIncomplete && !isManual && (
               <p className="error" role="alert">
                 {seedErrorMessage} Remova e cadastre de novo com seed, ou remova os seeds existentes.
               </p>

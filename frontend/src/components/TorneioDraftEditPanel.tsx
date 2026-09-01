@@ -26,6 +26,9 @@ export function TorneioDraftEditPanel({ eventId, torneio }: Props) {
   const [maxRounds, setMaxRounds] = useState(
     torneio.max_rounds != null ? String(torneio.max_rounds) : "",
   );
+  const [pairingMode, setPairingMode] = useState<"platform" | "manual">(
+    torneio.pairing_mode ?? "platform",
+  );
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
 
@@ -38,6 +41,7 @@ export function TorneioDraftEditPanel({ eventId, torneio }: Props) {
     setEntryFee(String(torneio.entry_fee ?? 0));
     setBestOf(torneio.best_of ?? 3);
     setMaxRounds(torneio.max_rounds != null ? String(torneio.max_rounds) : "");
+    setPairingMode(torneio.pairing_mode ?? "platform");
   }, [
     torneio.id,
     torneio.name,
@@ -48,6 +52,7 @@ export function TorneioDraftEditPanel({ eventId, torneio }: Props) {
     torneio.entry_fee,
     torneio.best_of,
     torneio.max_rounds,
+    torneio.pairing_mode,
   ]);
 
   const isDirty = useMemo(() => {
@@ -60,9 +65,10 @@ export function TorneioDraftEditPanel({ eventId, torneio }: Props) {
       (tcgGameId ? Number(tcgGameId) : null) !== (torneio.tcg_game?.id ?? null) ||
       (parseFloat(entryFee) || 0) !== (torneio.entry_fee ?? 0) ||
       bestOf !== (torneio.best_of ?? 3) ||
-      rounds !== (torneio.max_rounds ?? null)
+      rounds !== (torneio.max_rounds ?? null) ||
+      pairingMode !== (torneio.pairing_mode ?? "platform")
     );
-  }, [name, eventDate, startTime, description, tcgGameId, entryFee, bestOf, maxRounds, torneio]);
+  }, [name, eventDate, startTime, description, tcgGameId, entryFee, bestOf, maxRounds, pairingMode, torneio]);
 
   const save = useMutation({
     mutationFn: () => {
@@ -78,6 +84,7 @@ export function TorneioDraftEditPanel({ eventId, torneio }: Props) {
         entry_fee: parseFloat(entryFee) || 0,
         best_of: bestOf,
         max_rounds: torneio.format === "swiss" ? rounds : undefined,
+        pairing_mode: pairingMode,
       });
     },
     onSuccess: async () => {
@@ -189,6 +196,16 @@ export function TorneioDraftEditPanel({ eventId, torneio }: Props) {
               <option value={3}>3</option>
               <option value={5}>5</option>
             </select>
+          </div>
+          <div className="form-row torneio-edit-field-full">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={pairingMode === "manual"}
+                onChange={(e) => setPairingMode(e.target.checked ? "manual" : "platform")}
+              />
+              Sem rodadas na plataforma (operação externa — colocações manuais)
+            </label>
           </div>
           {error && (
             <p className="error torneio-edit-field-full" role="alert">

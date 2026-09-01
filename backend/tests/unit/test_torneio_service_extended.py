@@ -137,6 +137,55 @@ def test_update_event_name_date_conflict(torneio_service: TorneioService):
     assert svc.get_event(e1.id)["name"] == "Torneio A Renomeado"
 
 
+def test_finalize_manual_placements(torneio_service: TorneioService):
+    svc = torneio_service
+    today = date.today()
+    event = svc.create_event(
+        name="Manual Mode",
+        event_date=today,
+        format="swiss",
+        max_rounds=2,
+        entry_fee=10,
+        best_of=3,
+        premiacao_preset_id="standard",
+    )
+    event.pairing_mode = "manual"
+    svc._commit()
+    from tests.conftest import enroll_named_players
+
+    enroll_named_players(svc, event.id, ("A", "B", "C", "D"))
+    players = svc.get_event(event.id)["players"]
+    placements = [
+        {"player_id": players[0]["id"], "placement": 1, "is_drop": False},
+        {"player_id": players[1]["id"], "placement": 2, "is_drop": False},
+        {"player_id": players[2]["id"], "placement": 3, "is_drop": False},
+        {"player_id": players[3]["id"], "placement": 4, "is_drop": True},
+    ]
+    svc.finalize_manual_placements(event.id, placements)
+    finished = svc.get_event(event.id)
+    assert finished["status"] == "finished"
+    assert finished["pairing_mode"] == "manual"
+    assert svc._require_event(event.id).premiacao_resultado is not None
+
+
+def test_manual_mode_blocks_start_event(torneio_service: TorneioService, swiss_event):
+    svc = torneio_service
+    event = svc._require_event(swiss_event.id)
+    event.pairing_mode = "manual"
+    svc._commit()
+    with pytest.raises(TorneioError, match="sem rodadas"):
+        svc.start_event(swiss_event.id)
+
+
+def test_update_pairing_mode_in_draft(torneio_service: TorneioService, swiss_event):
+    svc = torneio_service
+    eid = swiss_event.id
+    svc.update_event(eid, {"pairing_mode": "manual"})
+    assert svc.get_event(eid)["pairing_mode"] == "manual"
+    svc.update_event(eid, {"pairing_mode": "platform"})
+    assert svc.get_event(eid)["pairing_mode"] == "platform"
+
+
 def test_remove_player_draft(torneio_service: TorneioService, swiss_event):
     svc = torneio_service
     eid = swiss_event.id

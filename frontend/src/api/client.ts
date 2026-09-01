@@ -444,6 +444,12 @@ export const api = {
 
     request<Torneio>(`/torneios/${id}/iniciar`, { method: "POST" }),
 
+  finalizarColocacoes: (id: number, body: object) =>
+    request<Torneio>(`/torneios/${id}/finalizar-colocacoes`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
   getRodadas: (id: number) => request<Round[]>(`/torneios/${id}/rodadas`),
 
   getRodada: (id: number, n: number) => request<Round>(`/torneios/${id}/rodadas/${n}`),

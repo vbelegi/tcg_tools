@@ -33,6 +33,7 @@ from app.core.torneios.state_machine import (
     validate_start_next_round,
 )
 from app.models import Event, Match, Player, Round
+from app.models import PairingMode
 from app.repositories.event_repository import EventRepository
 from app.repositories.protocols import EventRepositoryProtocol
 
@@ -75,6 +76,28 @@ class TorneioService:
 
     def _normalize_name(self, name: str) -> str:
         return name.strip()
+
+    def _pairing_mode(self, event: Event) -> str:
+        return getattr(event, "pairing_mode", PairingMode.platform.value) or PairingMode.platform.value
+
+    def _active_roster_players(self, event: Event) -> list[Player]:
+        from app.models import Attendance
+
+        return [
+            p
+            for p in event.players
+            if getattr(p, "attendance", Attendance.checked_in.value) == Attendance.checked_in.value
+            and not p.dropped_at
+        ]
+
+    def _pending_checkins(self, event: Event) -> int:
+        from app.models import Attendance
+
+        return sum(
+            1
+            for p in event.players
+            if getattr(p, "attendance", Attendance.checked_in.value) == Attendance.pending.value
+        )
 
     def _ensure_unique_event_name_date(
         self,
@@ -324,6 +347,11 @@ class TorneioService:
                     event.se_bo_config = {str(k): v for k, v in normalized.items()} if normalized else None
         if "registration_open" in data and data["registration_open"] is not None:
             event.registration_open = bool(data["registration_open"])
+        if "pairing_mode" in data and data["pairing_mode"] is not None:
+            mode = data["pairing_mode"]
+            if mode not in {PairingMode.platform.value, PairingMode.manual.value}:
+                raise TorneioError("Modo de operação inválido.")
+            event.pairing_mode = mode
         self._commit()
         return event
 
@@ -453,11 +481,11 @@ class TorneioService:
         event = self._require_event(event_id)
         if getattr(event, "source", "internal") == "external":
             raise TorneioError("Torneios externos não possuem rodadas internas.")
-        pending = sum(
-            1
-            for p in event.players
-            if getattr(p, "attendance", Attendance.checked_in.value) == Attendance.pending.value
-        )
+        if self._pairing_mode(event) == PairingMode.manual.value:
+            raise TorneioError(
+                "Este torneio opera sem rodadas na plataforma. Use registrar colocações."
+            )
+        pending = self._pending_checkins(event)
         state = self._repo.to_tournament_state(event)
         validate_start(state, pending_attendance=pending)
 
@@ -801,6 +829,136 @@ class TorneioService:
         self._award_fourse_points(event, standings)
         return event
 
+    def finalize_manual_placements(
+        self,
+        event_id: int,
+        placements: list[dict[str, Any]],
+    ) -> Event:
+        from app.core.auth.fourse_points import compute_fp_awards, replace_event_fp_ledger
+
+        event = self._require_event(event_id)
+        if event.status != "draft":
+            raise TorneioError("Só é possível registrar colocações em torneios em rascunho.")
+        if self._pairing_mode(event) != PairingMode.manual.value:
+            raise TorneioError("Este torneio não está em modo sem rodadas.")
+        pending = self._pending_checkins(event)
+        if pending > 0:
+            raise TorneioError(
+                f"Há {pending} inscrição(ões) pendente(s) de check-in. "
+                "Confirme a presença ou remova os ausentes antes de finalizar."
+            )
+        if not placements:
+            raise TorneioError("Informe ao menos uma colocação.")
+
+        players_by_id = {p.id: p for p in event.players}
+        active_ids = {p.id for p in self._active_roster_players(event)}
+        if not active_ids:
+            raise TorneioError("Informe ao menos um jogador com check-in.")
+
+        rows_by_player: dict[int, dict[str, Any]] = {}
+        for row in placements:
+            pid = int(row["player_id"])
+            if pid not in players_by_id:
+                raise TorneioError(f"Jogador {pid} não encontrado neste torneio.")
+            if pid in rows_by_player:
+                raise TorneioError(f"Colocação duplicada para o jogador {pid}.")
+            rows_by_player[pid] = row
+
+        if set(rows_by_player.keys()) != active_ids:
+            missing = active_ids - set(rows_by_player.keys())
+            extra = set(rows_by_player.keys()) - active_ids
+            if missing:
+                names = ", ".join(players_by_id[i].name for i in sorted(missing))
+                raise TorneioError(f"Faltando colocação para: {names}.")
+            if extra:
+                raise TorneioError("Há colocações para jogadores sem check-in ou removidos.")
+
+        non_drop_placements: list[int] = []
+        for row in rows_by_player.values():
+            if row.get("is_drop"):
+                continue
+            placement = int(row["placement"])
+            non_drop_placements.append(placement)
+
+        if not non_drop_placements:
+            raise TorneioError("Informe ao menos uma colocação válida (não-drop).")
+        if len(set(non_drop_placements)) != len(non_drop_placements):
+            raise TorneioError("Colocações duplicadas entre jogadores não-drop.")
+        if min(non_drop_placements) < 1:
+            raise TorneioError("Colocações devem ser maiores que zero.")
+
+        preset = event.premiacao_preset or {}
+        config = {k: v for k, v in preset.items() if k != "label"}
+        try:
+            validar_config({**config, "label": "x"})
+        except ConfigError as exc:
+            raise TorneioError(f"Preset de premiação inválido no evento: {exc}") from exc
+
+        standings_snapshot: list[dict[str, Any]] = []
+        members: list[BandMember] = []
+        fp_placements: list[dict[str, Any]] = []
+
+        sorted_rows = sorted(
+            rows_by_player.values(),
+            key=lambda r: (bool(r.get("is_drop")), int(r["placement"])),
+        )
+        for row in sorted_rows:
+            player = players_by_id[int(row["player_id"])]
+            is_drop = bool(row.get("is_drop"))
+            if "decklist" in row:
+                raw_deck = row.get("decklist")
+                player.decklist = (str(raw_deck).strip() if raw_deck is not None else "") or None
+            placement = int(row["placement"])
+            standings_snapshot.append(
+                {
+                    "rank": None if is_drop else placement,
+                    "player_id": player.id,
+                    "name": player.name,
+                    "points": 0,
+                    "omw": 0,
+                    "gw": 0,
+                    "ogw": 0,
+                    "decklist": player.decklist,
+                    "is_drop": is_drop,
+                    "rank_label": "DROP" if is_drop else f"{placement}º",
+                }
+            )
+            if not is_drop:
+                members.append(
+                    BandMember(
+                        player_id=player.id,
+                        band_label=f"{placement}º",
+                        is_drop=False,
+                        name=player.name,
+                    )
+                )
+            if player.user_id:
+                fp_placements.append(
+                    {
+                        "user_id": player.user_id,
+                        "placement": None if is_drop else placement,
+                        "is_drop": is_drop,
+                    }
+                )
+
+        n = len(non_drop_placements)
+        event.fp_n_at_start = n
+        event.registration_open = False
+        event.premiacao_resultado = build_premiacao_resultado(
+            format=event.format,
+            n=n,
+            config=config,
+            third_place_match=event.third_place_match,
+            members=members,
+            standings_snapshot=standings_snapshot,
+            entry_fee=event.entry_fee,
+        )
+        event.status = "finished"
+        self._commit()
+        awards = compute_fp_awards(n=n, config=preset, placements=fp_placements)
+        replace_event_fp_ledger(self._db, event.id, awards)
+        return event
+
     def _award_fourse_points(self, event: Event, standings) -> None:
         from app.core.auth.fourse_points import compute_fp_awards, replace_event_fp_ledger
 
@@ -983,6 +1141,7 @@ class TorneioService:
             "se_bo_config": event.se_bo_config,
             "status": event.status,
             "source": getattr(event, "source", "internal"),
+            "pairing_mode": self._pairing_mode(event),
             "registration_open": bool(getattr(event, "registration_open", False)),
             "fp_n_at_start": getattr(event, "fp_n_at_start", None),
             "description": getattr(event, "description", None),

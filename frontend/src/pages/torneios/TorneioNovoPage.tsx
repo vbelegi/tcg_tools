@@ -25,6 +25,7 @@ export function TorneioNovoPage() {
   const [seBoConfig, setSeBoConfig] = useState<SeBoConfig>({});
   const [expectedPlayers, setExpectedPlayers] = useState("8");
   const [registrationOpen, setRegistrationOpen] = useState(true);
+  const [pairingMode, setPairingMode] = useState<"platform" | "manual">("platform");
   const [error, setError] = useState("");
 
   const sePhaseRounds = useMemo(() => {
@@ -62,6 +63,7 @@ export function TorneioNovoPage() {
         description: description.trim() || null,
         start_time: startTime || null,
         tcg_game_id: Number(tcgGameId),
+        pairing_mode: pairingMode,
       });
     },
     onSuccess: (t) => navigate(`/torneios/${t.id}`),
@@ -188,6 +190,16 @@ export function TorneioNovoPage() {
             </option>
           ))}
         </select>
+      </div>
+      <div className="form-row">
+        <label className="checkbox-label">
+          <input
+            type="checkbox"
+            checked={pairingMode === "manual"}
+            onChange={(e) => setPairingMode(e.target.checked ? "manual" : "platform")}
+          />
+          Sem rodadas na plataforma (operação externa — colocações manuais)
+        </label>
       </div>
       <div className="form-row">
         <label className="checkbox-label">

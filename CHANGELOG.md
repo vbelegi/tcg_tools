@@ -7,6 +7,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 ### Added
 
 - **Torneios:** formulário para editar torneios em rascunho (nome, data, horário, TCG, inscrição, etc.; formato e premiação permanecem fixos após criação)
+- **Torneios:** modo **sem rodadas** (`pairing_mode: manual`) — inscrição no calendário com colocações manuais ao final (operação em ferramenta externa)
 
 ### Changed
 

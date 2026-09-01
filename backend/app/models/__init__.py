@@ -41,6 +41,11 @@ class EventSource(str, enum.Enum):
     external = "external"
 
 
+class PairingMode(str, enum.Enum):
+    platform = "platform"
+    manual = "manual"
+
+
 class RoundStatus(str, enum.Enum):
     pending = "pending"
     active = "active"
@@ -100,6 +105,9 @@ class Event(Base):
     third_place_match: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     se_bo_config: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     source: Mapped[str] = mapped_column(String(16), nullable=False, default=EventSource.internal.value)
+    pairing_mode: Mapped[str] = mapped_column(
+        String(16), nullable=False, default=PairingMode.platform.value
+    )
     registration_open: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     fp_n_at_start: Mapped[int | None] = mapped_column(Integer, nullable=True)
     external_notes: Mapped[str | None] = mapped_column(Text, nullable=True)

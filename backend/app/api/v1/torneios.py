@@ -15,6 +15,7 @@ from app.schemas.torneio import (
     DropRequest,
     ExternalTorneioCreate,
     JogadorCreate,
+    ManualFinalizeRequest,
     MatchUpdate,
     TorneioCreateRequest,
     TorneioUpdate,
@@ -138,6 +139,7 @@ def create_torneio(
         raw.description = (body.description or "").strip() or None
         raw.start_time = body.start_time
         raw.tcg_game_id = body.tcg_game_id
+        raw.pairing_mode = body.pairing_mode
         svc._commit()
         return svc.get_event(event.id)
     except TorneioError as exc:
@@ -440,6 +442,23 @@ def drop_jogador(
 ):
     try:
         svc.drop_player(event_id, player_id, body.mid_round)
+    except TorneioError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.post("/{event_id}/finalizar-colocacoes")
+def finalizar_colocacoes(
+    event_id: int,
+    body: ManualFinalizeRequest,
+    _: RequireStaff,
+    svc: TorneioService = Depends(get_torneio_service),
+):
+    try:
+        svc.finalize_manual_placements(
+            event_id,
+            [p.model_dump() for p in body.placements],
+        )
+        return svc.get_event(event_id)
     except TorneioError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 

@@ -16,6 +16,7 @@ import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { SorteadorPage } from "./pages/sorteador/SorteadorPage";
 import { TcgGamesPage } from "./pages/TcgGamesPage";
 import { TorneioDetailPage } from "./pages/torneios/TorneioDetailPage";
+import { TorneioColocacaoPage } from "./pages/torneios/TorneioColocacaoPage";
 import { TorneioExternoPage } from "./pages/torneios/TorneioExternoPage";
 import { TorneioNovoPage } from "./pages/torneios/TorneioNovoPage";
 import { TorneioResultadoPage } from "./pages/torneios/TorneioResultadoPage";
@@ -55,6 +56,7 @@ createRoot(document.getElementById("root")!).render(
               <Route path="sorteador" element={<SorteadorPage />} />
               <Route path="agenda" element={<AgendaPage />} />
               <Route path="torneios/novo" element={<TorneioNovoPage />} />
+              <Route path="torneios/:id/colocacoes" element={<TorneioColocacaoPage />} />
             </Route>
           </Route>
           <Route element={<RequireAdmin />}>
