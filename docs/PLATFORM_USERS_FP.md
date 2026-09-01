@@ -44,13 +44,17 @@ FP_i = \mathrm{round}(\mathrm{premio\_fracao}(i) \times N \times K)
 
 ## Visibilidade pública
 
-Sem login / player: vê torneios **`finished`**, drafts com **`registration_open`** (vitrine + CTA) e, se player, eventos em que está inscrito. Em andamento (inscrito): pairings/classificação só leitura.
+**Lista `/torneios`:** sem login / player vê torneios **`finished`**, drafts com **`registration_open`** (vitrine + CTA de self-inscrição) e, se logado, eventos em que está inscrito. Drafts **sem inscrição online** não aparecem na lista nem na ficha pública (404) — inscrição nesses casos é na loja ou por outros canais; staff continua inscrevendo na ficha do torneio.
 
-**Calendário** (`/calendario`): público; lista **todos** os torneios do mês (status + TCG + descrição/horário). CTAs:
+**Calendário** (`/calendario`): público; exibe torneios **`draft`** e **`finished`** do mês (mais eventos da agenda), com TCG, descrição e horário — **independente** de `registration_open`. CTAs:
 - finished → resultado
-- draft com inscrição aberta → self-inscrição / entrar
-- running → só inscrito ou staff
-- draft fechado → só infos (sem CTA)
+- draft com inscrição online → self-inscrição / entrar (ou login)
+- draft sem inscrição online → badge "Sem inscrição online" + nota; sem CTA pelo site
+- running → pairings só inscrito ou staff (demais veem nota informativa)
+
+Em andamento (inscrito): pairings/classificação só leitura.
+
+**`registration_open`:** controla apenas self-inscrição pelo site; não impede inscrição presencial pela staff nem a exibição no calendário.
 
 **TCG:** catálogo admin (`/tcgs`) com nome + cor hex para chips do calendário. Torneio **exige** `tcg_game_id` na criação (interno e externo). Campos opcionais: `description`, `start_time`. Default de criação: **inscrição aberta**.
 
