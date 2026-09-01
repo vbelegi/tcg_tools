@@ -160,7 +160,7 @@ export function UsuariosPage() {
                 <th>Celular</th>
                 <th>Papel</th>
                 <th>Status</th>
-                <th />
+                <th className="admin-col-actions">Ações</th>
               </tr>
             </thead>
             <tbody>

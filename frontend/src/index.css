@@ -2446,11 +2446,19 @@ th {
   color: var(--text);
 }
 
+.admin-col-actions,
+.admin-row-actions {
+  width: 1%;
+  white-space: nowrap;
+  text-align: center;
+  vertical-align: middle;
+}
+
 .admin-row-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
-  justify-content: flex-end;
+  justify-content: center;
 }
 
 .admin-color-row {
