@@ -76,13 +76,20 @@ class TorneioService:
     def _normalize_name(self, name: str) -> str:
         return name.strip()
 
-    def _ensure_unique_event_name(self, name: str, exclude_id: int | None = None) -> None:
+    def _ensure_unique_event_name_date(
+        self,
+        name: str,
+        event_date: date,
+        exclude_id: int | None = None,
+    ) -> None:
         normalized = self._normalize_name(name).casefold()
         for e in self._repo.list_all():
             if exclude_id and e.id == exclude_id:
                 continue
-            if self._normalize_name(e.name).casefold() == normalized:
-                raise TorneioError(f"Já existe um torneio com o nome '{name.strip()}'.")
+            if self._normalize_name(e.name).casefold() == normalized and e.event_date == event_date:
+                raise TorneioError(
+                    f"Já existe um torneio '{name.strip()}' na data {event_date.isoformat()}."
+                )
 
     def _ensure_unique_player_name(self, event: Event, name: str, exclude_id: int | None = None) -> None:
         normalized = self._normalize_name(name).casefold()
@@ -219,7 +226,7 @@ class TorneioService:
         clean_name = self._normalize_name(name)
         if not clean_name:
             raise TorneioError("Nome do torneio é obrigatório.")
-        self._ensure_unique_event_name(clean_name)
+        self._ensure_unique_event_name_date(clean_name, event_date)
         preset = self._resolve_preset(premiacao_preset_id)
         stored_bo = normalize_se_bo_config(se_bo_config) if se_bo_config else None
         if stored_bo:
@@ -273,12 +280,19 @@ class TorneioService:
         event = self._require_event(event_id)
         if event.status != "draft":
             raise TorneioError("Só é possível editar torneios em rascunho.")
+        new_name = event.name
         if "name" in data and data["name"] is not None:
             clean = self._normalize_name(data["name"])
             if not clean:
                 raise TorneioError("Nome do torneio é obrigatório.")
-            self._ensure_unique_event_name(clean, exclude_id=event.id)
-            event.name = clean
+            new_name = clean
+        new_date = event.event_date
+        if "event_date" in data and data["event_date"] is not None:
+            new_date = data["event_date"]
+        if new_name != event.name or new_date != event.event_date:
+            self._ensure_unique_event_name_date(new_name, new_date, exclude_id=event.id)
+        if "name" in data and data["name"] is not None:
+            event.name = new_name
         for key in ("event_date", "entry_fee", "best_of"):
             if key in data and data[key] is not None:
                 setattr(event, key, data[key])
@@ -296,7 +310,7 @@ class TorneioService:
                 if game is None or not game.active:
                     raise TorneioError("TCG inválido.")
             event.tcg_game_id = tcg_id
-        if "max_rounds" in data and data["max_rounds"] is not None:
+        if "max_rounds" in data:
             event.max_rounds = data["max_rounds"]
         if event.format == "single_elimination":
             if "third_place_match" in data and data["third_place_match"] is not None:
@@ -1029,7 +1043,7 @@ class TorneioService:
         clean_name = self._normalize_name(name)
         if not clean_name:
             raise TorneioError("Nome do torneio é obrigatório.")
-        self._ensure_unique_event_name(clean_name)
+        self._ensure_unique_event_name_date(clean_name, event_date)
         preset = self._resolve_preset(premiacao_preset_id)
         event = self._repo.create(
             name=clean_name,

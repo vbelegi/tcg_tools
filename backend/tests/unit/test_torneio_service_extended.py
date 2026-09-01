@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from unittest.mock import MagicMock
 
 import pytest
@@ -52,9 +52,89 @@ def test_update_event_draft_only(torneio_service: TorneioService, swiss_event):
     eid = swiss_event.id
     svc.update_event(eid, {"name": "Renamed"})
     assert svc.get_event(eid)["name"] == "Renamed"
+    svc.update_event(eid, {"entry_fee": 25.0, "event_date": date(2099, 6, 15)})
+    updated = svc.get_event(eid)
+    assert updated["entry_fee"] == 25.0
+    assert updated["event_date"] == "2099-06-15"
     svc.start_event(eid)
     with pytest.raises(TorneioError, match="rascunho"):
         svc.update_event(eid, {"name": "X"})
+
+
+def test_same_name_different_dates_allowed(torneio_service: TorneioService):
+    svc = torneio_service
+    today = date.today()
+    e1 = svc.create_event(
+        name="Semanal Pokémon",
+        event_date=today,
+        format="swiss",
+        max_rounds=2,
+        entry_fee=10,
+        best_of=3,
+        premiacao_preset_id="standard",
+    )
+    e2 = svc.create_event(
+        name="Semanal Pokémon",
+        event_date=today + timedelta(days=7),
+        format="swiss",
+        max_rounds=2,
+        entry_fee=10,
+        best_of=3,
+        premiacao_preset_id="standard",
+    )
+    assert e1.id != e2.id
+
+
+def test_same_name_same_date_rejected(torneio_service: TorneioService):
+    svc = torneio_service
+    today = date.today()
+    svc.create_event(
+        name="Semanal Pokémon",
+        event_date=today,
+        format="swiss",
+        max_rounds=2,
+        entry_fee=10,
+        best_of=3,
+        premiacao_preset_id="standard",
+    )
+    with pytest.raises(TorneioError, match="na data"):
+        svc.create_event(
+            name="semanal pokémon",
+            event_date=today,
+            format="swiss",
+            max_rounds=2,
+            entry_fee=10,
+            best_of=3,
+            premiacao_preset_id="standard",
+        )
+
+
+def test_update_event_name_date_conflict(torneio_service: TorneioService):
+    svc = torneio_service
+    today = date.today()
+    e1 = svc.create_event(
+        name="Torneio A",
+        event_date=today,
+        format="swiss",
+        max_rounds=2,
+        entry_fee=10,
+        best_of=3,
+        premiacao_preset_id="standard",
+    )
+    other_day = today + timedelta(days=7)
+    e2 = svc.create_event(
+        name="Torneio B",
+        event_date=other_day,
+        format="swiss",
+        max_rounds=2,
+        entry_fee=10,
+        best_of=3,
+        premiacao_preset_id="standard",
+    )
+    with pytest.raises(TorneioError, match="na data"):
+        svc.update_event(e2.id, {"name": "Torneio A", "event_date": today})
+    svc.update_event(e1.id, {"name": "Torneio A Renomeado"})
+    assert svc.get_event(e1.id)["name"] == "Torneio A Renomeado"
 
 
 def test_remove_player_draft(torneio_service: TorneioService, swiss_event):

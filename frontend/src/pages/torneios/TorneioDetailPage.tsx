@@ -7,6 +7,7 @@ import { Modal } from "../../components/Modal";
 import { PlayerPickerModal } from "../../components/PlayerPickerModal";
 import { RoundMatchesTable } from "../../components/RoundMatchesTable";
 import { SeFormatOptions, type SeBoConfig } from "../../components/SeFormatOptions";
+import { TorneioDraftEditPanel } from "../../components/TorneioDraftEditPanel";
 import { api } from "../../api/client";
 import { playersMissingSeed, seedRequirementMessage } from "../../utils/seeds";
 
@@ -607,6 +608,10 @@ export function TorneioDetailPage() {
             {selfRegister.isPending ? "Inscrevendo…" : "Inscrever-me neste torneio"}
           </button>
         </div>
+      )}
+
+      {isDraft && isStaff && (
+        <TorneioDraftEditPanel eventId={eventId} torneio={torneio} />
       )}
 
       {isDraft && (

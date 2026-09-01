@@ -4,6 +4,13 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- **Torneios:** formulário para editar torneios em rascunho (nome, data, horário, TCG, inscrição, etc.; formato e premiação permanecem fixos após criação)
+
+### Changed
+
+- **Torneios:** unicidade de nome passa a ser por combinação **nome + data** (permite torneios recorrentes com o mesmo nome em datas diferentes)
 ## [1.9.0] - 2026-08-31
 
 ### Added
