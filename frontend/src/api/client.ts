@@ -281,15 +281,11 @@ export const api = {
     ),
 
   exportCsv: async (ate: number, presetId?: string) => {
-
     const res = await fetch(`${BASE}/premiacao/export`, {
-
       method: "POST",
-
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
-
       body: JSON.stringify({ ate, preset_id: presetId }),
-
     });
 
     if (!res.ok) {
@@ -495,8 +491,10 @@ export const api = {
   getPremiacao: (id: number) => request<object>(`/torneios/${id}/premiacao`),
 
   exportLog: async (id: number) => {
-
-    const res = await fetch(`${BASE}/torneios/${id}/export-log`, { method: "POST" });
+    const res = await fetch(`${BASE}/torneios/${id}/export`, {
+      method: "GET",
+      credentials: "include",
+    });
 
     if (!res.ok) {
 

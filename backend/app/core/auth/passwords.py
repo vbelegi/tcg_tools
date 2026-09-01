@@ -5,7 +5,7 @@ from __future__ import annotations
 import bcrypt
 
 ADMIN_EMAIL = "admin@local"
-MIN_PASSWORD_LEN = 6
+MIN_PASSWORD_LEN = 10
 
 
 class AuthError(ValueError):

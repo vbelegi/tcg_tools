@@ -1,6 +1,6 @@
 import { FormEvent, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { api } from "../api/client";
 
@@ -14,6 +14,13 @@ export function ClaimInvitePage() {
   const [guardianPhone, setGuardianPhone] = useState("");
   const [guardianRelation, setGuardianRelation] = useState("");
   const [error, setError] = useState("");
+
+  const { data: authStatus } = useQuery({
+    queryKey: ["auth-status"],
+    queryFn: () => api.authStatus(),
+    staleTime: 60_000,
+  });
+  const minPasswordLen = authStatus?.min_password_length ?? 10;
 
   const claim = useMutation({
     mutationFn: () =>
@@ -96,7 +103,7 @@ export function ClaimInvitePage() {
             onChange={(e) => setGuardianRelation(e.target.value)}
           />
         </div>
-        <button className="primary" type="submit" disabled={claim.isPending || password.length < 6}>
+        <button className="primary" type="submit" disabled={claim.isPending || password.length < minPasswordLen}>
           {claim.isPending ? "Salvando…" : "Ativar conta"}
         </button>
       </form>

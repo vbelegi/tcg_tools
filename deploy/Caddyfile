@@ -3,5 +3,11 @@
 #   - "torneios.exemplo.com" → HTTPS automático (Let's Encrypt)
 {$SITE_ADDRESS::80} {
 	encode gzip
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options SAMEORIGIN
+		Referrer-Policy strict-origin-when-cross-origin
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
+	}
 	reverse_proxy app:8000
 }

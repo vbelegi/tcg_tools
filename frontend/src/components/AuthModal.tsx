@@ -1,8 +1,9 @@
 import { FormEvent, useEffect, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
 import { api } from "../api/client";
+import { safeRedirectPath } from "../utils/safeRedirect";
 import { Modal } from "./Modal";
 
 export type AuthModalMode = "login" | "register";
@@ -36,11 +37,19 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
     setPassword2("");
   }, [open, mode]);
 
+  const { data: authStatus } = useQuery({
+    queryKey: ["auth-status"],
+    queryFn: () => api.authStatus(),
+    staleTime: 60_000,
+  });
+  const minPasswordLen = authStatus?.min_password_length ?? 10;
+
   const afterAuth = async () => {
     setError("");
     await qc.invalidateQueries({ queryKey: ["auth-me"] });
     onClose();
-    if (nextPath) navigate(nextPath, { replace: true });
+    const target = safeRedirectPath(nextPath);
+    if (target) navigate(target, { replace: true });
   };
 
   const login = useMutation({
@@ -86,7 +95,7 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
   const title = mode === "login" ? "Entrar" : "Criar conta";
   const canSubmit =
     !pending &&
-    password.length >= 6 &&
+    password.length >= minPasswordLen &&
     (mode === "login" || (Boolean(displayName.trim()) && Boolean(birthDate) && Boolean(phone.trim())));
 
   return (
@@ -200,7 +209,7 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            minLength={6}
+            minLength={minPasswordLen}
             autoComplete={mode === "login" ? "current-password" : "new-password"}
             autoFocus
           />
@@ -214,7 +223,7 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
               value={password2}
               onChange={(e) => setPassword2(e.target.value)}
               required
-              minLength={6}
+              minLength={minPasswordLen}
               autoComplete="new-password"
             />
           </div>

@@ -14,7 +14,10 @@ from app.core.auth.invites import invite_claim_path, invite_claim_url
 from app.core.auth.fourse_points import ranking
 from app.db.session import get_db
 from app.models import User, UserRole, UserStatus
+from app.core.search import ilike_contains
 from app.services.profile_service import build_public_profile
+
+_LIKE_ESCAPE = "\\"
 
 router = APIRouter(tags=["users"])
 
@@ -38,9 +41,11 @@ def list_users(
 ):
     query = db.query(User).order_by(User.display_name.asc())
     if q:
-        like = f"%{q.strip()}%"
+        like = ilike_contains(q)
         query = query.filter(
-            (User.display_name.ilike(like)) | (User.email.ilike(like)) | (User.phone.ilike(like))
+            (User.display_name.ilike(like, escape=_LIKE_ESCAPE))
+            | (User.email.ilike(like, escape=_LIKE_ESCAPE))
+            | (User.phone.ilike(like, escape=_LIKE_ESCAPE))
         )
     return [private_user_dict(u) for u in query.all()]
 
@@ -96,10 +101,14 @@ def search_users(
     db: Session = Depends(get_db),
     q: str = Query(min_length=1),
 ):
-    like = f"%{q.strip()}%"
+    like = ilike_contains(q)
     rows = (
         db.query(User)
-        .filter((User.display_name.ilike(like)) | (User.email.ilike(like)) | (User.phone.ilike(like)))
+        .filter(
+            (User.display_name.ilike(like, escape=_LIKE_ESCAPE))
+            | (User.email.ilike(like, escape=_LIKE_ESCAPE))
+            | (User.phone.ilike(like, escape=_LIKE_ESCAPE))
+        )
         .order_by(User.display_name.asc())
         .limit(30)
         .all()
@@ -114,11 +123,11 @@ def public_player_search(
     limit: int = Query(default=12, ge=1, le=30),
 ):
     """Public search by display name only (no email/phone). Includes incomplete accounts."""
-    like = f"%{q.strip()}%"
+    like = ilike_contains(q)
     rows = (
         db.query(User)
         .filter(
-            User.display_name.ilike(like),
+            User.display_name.ilike(like, escape=_LIKE_ESCAPE),
             User.status.in_([UserStatus.active.value, UserStatus.incomplete.value]),
         )
         .order_by(User.display_name.asc())

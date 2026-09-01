@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api.deps import RequireStaff, get_optional_user
+from app.api.v1.event_visibility import filter_calendar_tournaments
 from app.db.session import get_db
 from app.models import CalendarAnnouncement, User
 from app.services.torneio_service import TorneioService
@@ -68,7 +69,7 @@ def calendar_month(
     month: int,
     svc: TorneioService = Depends(get_torneio_service),
     db: Session = Depends(get_db),
-    _: User | None = Depends(get_optional_user),
+    viewer: User | None = Depends(get_optional_user),
 ):
     if month < 1 or month > 12:
         raise HTTPException(status_code=422, detail="Mês inválido.")
@@ -82,8 +83,13 @@ def calendar_month(
         .order_by(CalendarAnnouncement.event_date.asc(), CalendarAnnouncement.id.asc())
         .all()
     )
+    tournaments = filter_calendar_tournaments(
+        svc.list_calendar_events(year, month),
+        viewer,
+        db,
+    )
     return {
-        "tournaments": svc.list_calendar_events(year, month),
+        "tournaments": tournaments,
         "announcements": [_announcement_dict(a) for a in announcements],
     }
 

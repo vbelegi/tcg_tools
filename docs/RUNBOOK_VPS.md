@@ -143,6 +143,8 @@ Teste login e um torneio na UI.
 
 Após configurar cron local + offsite, execute um **restore de teste** em horário de baixo movimento (pode ser em clone do dump, não em produção). Confirme login, torneios e avatares. Anote data e dump usado nesta seção para referência da equipe.
 
+**Deploy v1.9+:** a migration `010` invalida sessões ativas — usuários precisam fazer login novamente após o deploy.
+
 ## Senha do admin
 
 Conta bootstrap: **admin@local**.

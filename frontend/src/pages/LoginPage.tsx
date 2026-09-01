@@ -2,6 +2,7 @@ import { Navigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
 import { api } from "../api/client";
+import { safeRedirectPath } from "../utils/safeRedirect";
 
 /** Legacy /login URL → home with auth modal. */
 export function LoginPage() {
@@ -15,7 +16,7 @@ export function LoginPage() {
   if (isLoading) return <p>Carregando...</p>;
   if (me) return <Navigate to="/" replace />;
 
-  const next = params.get("next");
+  const next = safeRedirectPath(params.get("next"));
   const q = new URLSearchParams();
   q.set("auth", "login");
   if (next) q.set("next", next);

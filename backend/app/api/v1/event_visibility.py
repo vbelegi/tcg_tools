@@ -1,0 +1,42 @@
+"""Shared tournament visibility rules for list and calendar endpoints."""
+
+from __future__ import annotations
+
+from sqlalchemy.orm import Session
+
+from app.models import Player, User, UserRole
+
+
+def role_value(user: User) -> str:
+    return user.role.value if hasattr(user.role, "value") else str(user.role)
+
+
+def is_staff_user(user: User | None) -> bool:
+    return user is not None and role_value(user) in {UserRole.admin.value, UserRole.staff.value}
+
+
+def is_public_list_event(event: dict) -> bool:
+    status = event.get("status")
+    if status == "finished":
+        return True
+    return status == "draft" and bool(event.get("registration_open"))
+
+
+def registered_event_ids(db: Session, user_id: int) -> set[int]:
+    rows = db.query(Player.event_id).filter(Player.user_id == user_id).all()
+    return {int(r[0]) for r in rows}
+
+
+def filter_calendar_tournaments(
+    events: list[dict],
+    viewer: User | None,
+    db: Session,
+) -> list[dict]:
+    if is_staff_user(viewer):
+        return events
+    registered = registered_event_ids(db, viewer.id) if viewer is not None else set()
+    return [
+        e
+        for e in events
+        if is_public_list_event(e) or int(e["id"]) in registered
+    ]

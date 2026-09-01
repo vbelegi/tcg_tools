@@ -22,12 +22,31 @@ from app.core.auth import (
 )
 from app.core.auth.cookies import clear_session_cookie, set_session_cookie
 from app.core.auth.service import SESSION_COOKIE
-from app.core.auth.avatars import AvatarError, encode_user_avatar
+from app.core.auth.avatars import AvatarError, encode_user_avatar, MAX_UPLOAD_BYTES
 from app.core.auth.passwords import MIN_PASSWORD_LEN
+from app.core.rate_limit import rate_limit_dependency
 from app.db.session import get_db
 from app.models import User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+_auth_login_limit = rate_limit_dependency("auth_login", limit=10, window_sec=60)
+_auth_register_limit = rate_limit_dependency("auth_register", limit=5, window_sec=300)
+_auth_claim_limit = rate_limit_dependency("auth_claim_invite", limit=10, window_sec=300)
+
+
+async def _read_upload_limited(file: UploadFile, max_bytes: int) -> bytes:
+    chunks: list[bytes] = []
+    total = 0
+    while True:
+        chunk = await file.read(65536)
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > max_bytes:
+            raise HTTPException(status_code=413, detail="Arquivo muito grande.")
+        chunks.append(chunk)
+    return b"".join(chunks)
 
 
 class LoginBody(BaseModel):
@@ -101,7 +120,7 @@ async def auth_upload_avatar(
     db: Session = Depends(get_db),
     file: UploadFile = File(...),
 ):
-    data = await file.read()
+    data = await _read_upload_limited(file, MAX_UPLOAD_BYTES)
     try:
         blob = encode_user_avatar(data, file.content_type)
     except AvatarError as exc:
@@ -114,7 +133,12 @@ async def auth_upload_avatar(
 
 
 @router.post("/login")
-def login(body: LoginBody, response: Response, db: Session = Depends(get_db)):
+def login(
+    body: LoginBody,
+    response: Response,
+    db: Session = Depends(get_db),
+    _: None = Depends(_auth_login_limit),
+):
     email = body.email or body.username or ""
     try:
         user = authenticate(db, email, body.password)
@@ -126,7 +150,12 @@ def login(body: LoginBody, response: Response, db: Session = Depends(get_db)):
 
 
 @router.post("/register", status_code=201)
-def register(body: RegisterBody, response: Response, db: Session = Depends(get_db)):
+def register(
+    body: RegisterBody,
+    response: Response,
+    db: Session = Depends(get_db),
+    _: None = Depends(_auth_register_limit),
+):
     try:
         user = register_player(
             db,
@@ -170,7 +199,12 @@ def auth_change_password(
 
 
 @router.post("/claim-invite")
-def auth_claim_invite(body: ClaimInviteBody, response: Response, db: Session = Depends(get_db)):
+def auth_claim_invite(
+    body: ClaimInviteBody,
+    response: Response,
+    db: Session = Depends(get_db),
+    _: None = Depends(_auth_claim_limit),
+):
     try:
         user = claim_invite(
             db,

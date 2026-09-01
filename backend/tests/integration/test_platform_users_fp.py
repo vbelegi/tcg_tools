@@ -26,7 +26,7 @@ def test_invite_claim_and_login(api_client: TestClient, db_session: Session):
         "/api/v1/auth/claim-invite",
         json={
             "token": invite.token,
-            "password": "abcdef",
+            "password": "abcdefgh12",
             "birth_date": "1995-03-20",
         },
     )
@@ -36,7 +36,7 @@ def test_invite_claim_and_login(api_client: TestClient, db_session: Session):
     api_client.post("/api/v1/auth/logout")
     login = api_client.post(
         "/api/v1/auth/login",
-        json={"email": "jogador.x@example.com", "password": "abcdef"},
+        json={"email": "jogador.x@example.com", "password": "abcdefgh12"},
     )
     assert login.status_code == 200
 
@@ -338,7 +338,7 @@ def test_player_sees_finished_enrolled_or_open_registration(
         display_name="Belegi",
         email="belegi.player@example.com",
         phone="+5511999990099",
-        password="abcdef",
+        password="abcdefgh12",
         birth_date=date(1990, 1, 1),
     )
 
@@ -422,7 +422,7 @@ def test_player_sees_finished_enrolled_or_open_registration(
     assert api_client.post("/api/v1/auth/logout").status_code == 200
     login = api_client.post(
         "/api/v1/auth/login",
-        json={"email": "belegi.player@example.com", "password": "abcdef"},
+        json={"email": "belegi.player@example.com", "password": "abcdefgh12"},
     )
     assert login.status_code == 200
 
