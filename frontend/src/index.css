@@ -2341,54 +2341,9 @@ th {
   min-width: 7rem;
 }
 
-.agenda-table-wrap {
-  max-width: 100%;
-}
-
-.agenda-table {
-  table-layout: fixed;
-}
-
-.agenda-table th,
-.agenda-table td {
-  vertical-align: middle;
-}
-
-.agenda-date-cell,
-.agenda-time-cell {
-  white-space: nowrap;
-  width: 6.5rem;
-}
-
-.agenda-title-cell {
-  white-space: normal;
-  word-break: break-word;
-  font-weight: 600;
-}
-
-.agenda-location-cell {
-  white-space: normal;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  word-break: break-word;
-}
-
-.agenda-actions-col,
-.agenda-actions-cell {
-  width: 1%;
-  white-space: nowrap;
-}
-
-.agenda-actions-cell.admin-row-actions {
-  flex-wrap: nowrap;
-  justify-content: flex-end;
-}
-
 .agenda-card-list {
-  display: none;
+  display: flex;
+  flex-direction: column;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -2403,6 +2358,11 @@ th {
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
+}
+
+.agenda-card-editing {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary-soft);
 }
 
 .agenda-card-top {
@@ -2431,7 +2391,8 @@ th {
 }
 
 .agenda-card-actions {
-  justify-content: flex-start;
+  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .admin-create-panel {
@@ -2563,15 +2524,6 @@ th {
 @media (max-width: 700px) {
   .admin-form-grid {
     grid-template-columns: 1fr;
-  }
-
-  .agenda-table-wrap {
-    display: none;
-  }
-
-  .agenda-card-list {
-    display: flex;
-    flex-direction: column;
   }
 
   .agenda-form-actions {

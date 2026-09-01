@@ -212,50 +212,16 @@ export function AgendaPage() {
 
         {isLoading && <p>Carregando...</p>}
 
-        <div className="resultado-table-wrap agenda-table-wrap">
-          <table className="resultado-table agenda-table">
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Título</th>
-                <th>Horário</th>
-                <th>Local</th>
-                <th className="agenda-actions-col">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((row) => (
-                <tr key={row.id}>
-                  <td className="agenda-date-cell">{row.event_date}</td>
-                  <td className="agenda-title-cell">{row.title}</td>
-                  <td className="agenda-time-cell">{row.start_time ?? "—"}</td>
-                  <td className="agenda-location-cell" title={row.location ?? undefined}>
-                    {row.location ?? "—"}
-                  </td>
-                  <td className="admin-row-actions agenda-actions-cell">
-                    <button className="secondary" type="button" onClick={() => startEdit(row)}>
-                      Editar
-                    </button>
-                    <button
-                      className="secondary danger"
-                      type="button"
-                      onClick={() => {
-                        if (window.confirm(`Excluir "${row.title}"?`)) remove.mutate(row.id);
-                      }}
-                      disabled={remove.isPending}
-                    >
-                      Excluir
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {!isLoading && data.length === 0 && (
+          <p className="muted">Nenhum evento neste mês.</p>
+        )}
 
         <ul className="agenda-card-list">
           {data.map((row) => (
-            <li key={row.id} className="agenda-card">
+            <li
+              key={row.id}
+              className={editing?.id === row.id ? "agenda-card agenda-card-editing" : "agenda-card"}
+            >
               <div className="agenda-card-top">
                 <strong>{row.title}</strong>
                 <span className="badge">{row.event_date}</span>
