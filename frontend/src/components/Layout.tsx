@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "../api/client";
 import { safeRedirectPath } from "../utils/safeRedirect";
+import { EmailVerificationBanner } from "./EmailVerificationBanner";
 import { AuthModal, type AuthModalMode } from "./AuthModal";
 
 export function Layout() {
@@ -151,6 +152,9 @@ export function Layout() {
         </footer>
       </aside>
       <main className="main-content">
+        {me && me.status === "active" && me.email_verified === false && (
+          <EmailVerificationBanner email={me.email} />
+        )}
         <Outlet />
       </main>
       <AuthModal

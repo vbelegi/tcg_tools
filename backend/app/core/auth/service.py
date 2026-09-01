@@ -18,6 +18,7 @@ from app.core.auth.passwords import (
 )
 from app.core.auth.session_tokens import generate_session_token, hash_session_token
 from app.models import (
+    EmailVerificationToken,
     InviteToken,
     PasswordResetToken,
     Session as AuthSession,
@@ -30,6 +31,7 @@ SESSION_COOKIE = "tcgtools_session"
 SESSION_DAYS = 7
 INVITE_DAYS = 7
 PASSWORD_RESET_DAYS = 2
+EMAIL_VERIFY_HOURS = 24
 
 
 def _now() -> datetime:
@@ -66,6 +68,7 @@ def upsert_admin_password(db: DbSession, password: str) -> User:
             role=UserRole.admin.value,
             status=UserStatus.active.value,
             password_hash=pwd_hash,
+            email_verified_at=now,
             created_at=now,
             updated_at=now,
         )
@@ -76,6 +79,7 @@ def upsert_admin_password(db: DbSession, password: str) -> User:
         user.role = UserRole.admin.value
         user.status = UserStatus.active.value
         user.password_hash = pwd_hash
+        user.email_verified_at = now
         user.updated_at = now
         db.query(AuthSession).filter(AuthSession.user_id == user.id).delete()
     db.commit()
@@ -271,6 +275,50 @@ def register_player(
     return user
 
 
+def is_email_verified(user: User) -> bool:
+    return user.email_verified_at is not None
+
+
+def create_email_verification(db: DbSession, user: User) -> tuple[str, EmailVerificationToken]:
+    if is_email_verified(user):
+        raise AuthError("E-mail já verificado.")
+    now = _now()
+    db.query(EmailVerificationToken).filter(
+        EmailVerificationToken.user_id == user.id,
+        EmailVerificationToken.used_at.is_(None),
+    ).delete()
+    raw = generate_session_token()
+    row = EmailVerificationToken(
+        token=hash_session_token(raw),
+        user_id=user.id,
+        created_at=now,
+        expires_at=now + timedelta(hours=EMAIL_VERIFY_HOURS),
+    )
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return raw, row
+
+
+def verify_email(db: DbSession, token: str) -> User:
+    token_hash = hash_session_token(token)
+    row = db.query(EmailVerificationToken).filter(EmailVerificationToken.token == token_hash).one_or_none()
+    if row is None or row.used_at is not None:
+        raise AuthError("Link inválido ou já utilizado.")
+    if row.expires_at < _now():
+        raise AuthError("Link expirado.")
+    user = db.query(User).filter(User.id == row.user_id).one()
+    if user.status != UserStatus.active.value:
+        raise AuthError("Conta não está ativa.")
+    now = _now()
+    user.email_verified_at = now
+    user.updated_at = now
+    row.used_at = now
+    db.commit()
+    db.refresh(user)
+    return user
+
+
 def create_invite(db: DbSession, user: User) -> InviteToken:
     if user.status == UserStatus.active.value:
         raise AuthError("Conta já está ativa.")
@@ -319,6 +367,7 @@ def claim_invite(
     if guardian_relation is not None:
         user.guardian_relation = guardian_relation.strip() or None
     require_guardian_if_minor(user.birth_date, user.guardian_name, user.guardian_phone)
+    user.email_verified_at = _now()
     user.updated_at = _now()
     row.used_at = _now()
     db.commit()
@@ -390,4 +439,6 @@ def private_user_dict(user: User) -> dict:
         "guardian_name": user.guardian_name,
         "guardian_phone": user.guardian_phone,
         "guardian_relation": user.guardian_relation,
+        "email_verified_at": user.email_verified_at.isoformat() if user.email_verified_at else None,
+        "email_verified": is_email_verified(user),
     }

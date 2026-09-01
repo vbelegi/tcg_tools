@@ -25,3 +25,14 @@ def password_reset_url(token: str) -> str | None:
     if not base:
         return None
     return f"{base}{password_reset_path(token)}"
+
+
+def email_verify_path(token: str) -> str:
+    return f"/verificar-email/{token}"
+
+
+def email_verify_url(token: str) -> str | None:
+    base = (get_settings().public_base_url or "").strip().rstrip("/")
+    if not base:
+        return None
+    return f"{base}{email_verify_path(token)}"

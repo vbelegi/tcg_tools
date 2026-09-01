@@ -87,6 +87,8 @@ export const api = {
       status: string;
       avatar_url?: string | null;
       created_at?: string | null;
+      email_verified?: boolean;
+      email_verified_at?: string | null;
     }>("/auth/me"),
 
   updateMe: (body: { display_name: string }) =>
@@ -168,6 +170,24 @@ export const api = {
     request<{ id: number; email: string; display_name: string }>("/auth/claim-password-reset", {
       method: "POST",
       body: JSON.stringify({ token, password }),
+    }),
+
+  verifyEmail: (token: string) =>
+    request<{ email_verified: boolean }>("/auth/verify-email", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    }),
+
+  resendVerification: () =>
+    request<{ ok: boolean; message: string }>("/auth/resend-verification", {
+      method: "POST",
+      body: JSON.stringify({}),
+    }),
+
+  forgotPassword: (email: string) =>
+    request<{ ok: boolean; message: string }>("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
     }),
 
   listUsers: (q?: string) =>

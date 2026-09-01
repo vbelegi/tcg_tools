@@ -21,6 +21,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/media/avatars/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get User Avatar */
+        get: operations["get_user_avatar_api_v1_media_avatars__user_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/status": {
         parameters: {
             query?: never;
@@ -49,6 +66,24 @@ export interface paths {
         get: operations["auth_me_api_v1_auth_me_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Auth Update Me */
+        patch: operations["auth_update_me_api_v1_auth_me_patch"];
+        trace?: never;
+    };
+    "/api/v1/auth/me/avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Auth Upload Avatar */
+        post: operations["auth_upload_avatar_api_v1_auth_me_avatar_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -140,6 +175,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/claim-password-reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Auth Claim Password Reset */
+        post: operations["auth_claim_password_reset_api_v1_auth_claim_password_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/verify-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Auth Verify Email */
+        post: operations["auth_verify_email_api_v1_auth_verify_email_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/resend-verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Auth Resend Verification */
+        post: operations["auth_resend_verification_api_v1_auth_resend_verification_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/forgot-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Auth Forgot Password */
+        post: operations["auth_forgot_password_api_v1_auth_forgot_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users": {
         parameters: {
             query?: never;
@@ -175,6 +278,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/{user_id}/password-reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reset User Password */
+        post: operations["reset_user_password_api_v1_users__user_id__password_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/search": {
         parameters: {
             query?: never;
@@ -184,6 +304,26 @@ export interface paths {
         };
         /** Search Users */
         get: operations["search_users_api_v1_users_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jogadores/buscar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Public Player Search
+         * @description Public search by display name only (no email/phone). Includes incomplete accounts.
+         */
+        get: operations["public_player_search_api_v1_jogadores_buscar_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -224,6 +364,112 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/{user_id}/role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update User Role */
+        patch: operations["update_user_role_api_v1_users__user_id__role_patch"];
+        trace?: never;
+    };
+    "/api/v1/calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Calendar Month */
+        get: operations["calendar_month_api_v1_calendar_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calendar/announcements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Announcements */
+        get: operations["list_announcements_api_v1_calendar_announcements_get"];
+        put?: never;
+        /** Create Announcement */
+        post: operations["create_announcement_api_v1_calendar_announcements_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calendar/announcements/{announcement_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Announcement */
+        delete: operations["delete_announcement_api_v1_calendar_announcements__announcement_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Announcement */
+        patch: operations["update_announcement_api_v1_calendar_announcements__announcement_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/tcg-games": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Tcg Games */
+        get: operations["list_tcg_games_api_v1_tcg_games_get"];
+        put?: never;
+        /** Create Tcg Game */
+        post: operations["create_tcg_game_api_v1_tcg_games_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tcg-games/{game_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Tcg Game */
+        delete: operations["delete_tcg_game_api_v1_tcg_games__game_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Tcg Game */
+        patch: operations["update_tcg_game_api_v1_tcg_games__game_id__patch"];
         trace?: never;
     };
     "/api/v1/premiacao/presets": {
@@ -341,6 +587,23 @@ export interface paths {
         put?: never;
         /** Create External */
         post: operations["create_external_api_v1_torneios_externos_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/torneios/calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Calendar Torneios */
+        get: operations["calendar_torneios_api_v1_torneios_calendar_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -570,6 +833,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/torneios/{event_id}/finalizar-colocacoes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Finalizar Colocacoes */
+        post: operations["finalizar_colocacoes_api_v1_torneios__event_id__finalizar_colocacoes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/torneios/{event_id}/finalizar": {
         parameters: {
             query?: never;
@@ -660,6 +940,40 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AnnouncementBody */
+        AnnouncementBody: {
+            /** Title */
+            title: string;
+            /**
+             * Event Date
+             * Format: date
+             */
+            event_date: string;
+            /** Description */
+            description?: string | null;
+            /** Start Time */
+            start_time?: string | null;
+            /** Location */
+            location?: string | null;
+        };
+        /** AnnouncementPatchBody */
+        AnnouncementPatchBody: {
+            /** Title */
+            title?: string | null;
+            /** Event Date */
+            event_date?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Start Time */
+            start_time?: string | null;
+            /** Location */
+            location?: string | null;
+        };
+        /** Body_auth_upload_avatar_api_v1_auth_me_avatar_post */
+        Body_auth_upload_avatar_api_v1_auth_me_avatar_post: {
+            /** File */
+            file: string;
+        };
         /** CalcularRequest */
         CalcularRequest: {
             /** Jogadores */
@@ -722,6 +1036,13 @@ export interface components {
             guardian_phone?: string | null;
             /** Guardian Relation */
             guardian_relation?: string | null;
+        };
+        /** ClaimPasswordResetBody */
+        ClaimPasswordResetBody: {
+            /** Token */
+            token: string;
+            /** Password */
+            password: string;
         };
         /** ClassificacaoPatch */
         ClassificacaoPatch: {
@@ -823,8 +1144,15 @@ export interface components {
             entry_fee: number;
             /** Notes */
             notes?: string | null;
+            /** Tcg Game Id */
+            tcg_game_id: number;
             /** Placements */
             placements: components["schemas"]["ExternalPlacement"][];
+        };
+        /** ForgotPasswordBody */
+        ForgotPasswordBody: {
+            /** Email */
+            email: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -863,6 +1191,25 @@ export interface components {
             password: string;
             /** Username */
             username?: string | null;
+        };
+        /** ManualFinalizeRequest */
+        ManualFinalizeRequest: {
+            /** Placements */
+            placements: components["schemas"]["ManualPlacement"][];
+        };
+        /** ManualPlacement */
+        ManualPlacement: {
+            /** Player Id */
+            player_id: number;
+            /** Placement */
+            placement: number;
+            /**
+             * Is Drop
+             * @default false
+             */
+            is_drop: boolean;
+            /** Decklist */
+            decklist?: string | null;
         };
         /** MatchUpdate */
         MatchUpdate: {
@@ -955,6 +1302,31 @@ export interface components {
             /** Linhas */
             linhas: components["schemas"]["TabelaLinha"][];
         };
+        /** TcgGameCreate */
+        TcgGameCreate: {
+            /** Name */
+            name: string;
+            /** Color Hex */
+            color_hex: string;
+            /** Slug */
+            slug?: string | null;
+            /**
+             * Active
+             * @default true
+             */
+            active: boolean;
+        };
+        /** TcgGameUpdate */
+        TcgGameUpdate: {
+            /** Name */
+            name?: string | null;
+            /** Color Hex */
+            color_hex?: string | null;
+            /** Slug */
+            slug?: string | null;
+            /** Active */
+            active?: boolean | null;
+        };
         /** TorneioCreateRequest */
         TorneioCreateRequest: {
             /** Name */
@@ -994,9 +1366,21 @@ export interface components {
             } | null;
             /**
              * Registration Open
-             * @default false
+             * @default true
              */
             registration_open: boolean;
+            /** Description */
+            description?: string | null;
+            /** Start Time */
+            start_time?: string | null;
+            /** Tcg Game Id */
+            tcg_game_id: number;
+            /**
+             * Pairing Mode
+             * @default platform
+             * @enum {string}
+             */
+            pairing_mode: "platform" | "manual";
         };
         /** TorneioUpdate */
         TorneioUpdate: {
@@ -1018,6 +1402,27 @@ export interface components {
             } | null;
             /** Registration Open */
             registration_open?: boolean | null;
+            /** Description */
+            description?: string | null;
+            /** Start Time */
+            start_time?: string | null;
+            /** Tcg Game Id */
+            tcg_game_id?: number | null;
+            /** Pairing Mode */
+            pairing_mode?: ("platform" | "manual") | null;
+        };
+        /** UpdateMeBody */
+        UpdateMeBody: {
+            /** Display Name */
+            display_name: string;
+        };
+        /** UpdateUserRoleBody */
+        UpdateUserRoleBody: {
+            /**
+             * Role
+             * @description staff or player
+             */
+            role: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -1031,6 +1436,11 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** VerifyEmailBody */
+        VerifyEmailBody: {
+            /** Token */
+            token: string;
         };
     };
     responses: never;
@@ -1059,6 +1469,37 @@ export interface operations {
                     "application/json": {
                         [key: string]: string;
                     };
+                };
+            };
+        };
+    };
+    get_user_avatar_api_v1_media_avatars__user_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -1093,6 +1534,76 @@ export interface operations {
             };
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    auth_update_me_api_v1_auth_me_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMeBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    auth_upload_avatar_api_v1_auth_me_avatar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_auth_upload_avatar_api_v1_auth_me_avatar_post"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -1268,6 +1779,136 @@ export interface operations {
             };
         };
     };
+    auth_claim_password_reset_api_v1_auth_claim_password_reset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClaimPasswordResetBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    auth_verify_email_api_v1_auth_verify_email_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyEmailBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    auth_resend_verification_api_v1_auth_resend_verification_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    auth_forgot_password_api_v1_auth_forgot_password_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForgotPasswordBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_users_api_v1_users_get: {
         parameters: {
             query?: {
@@ -1369,6 +2010,39 @@ export interface operations {
             };
         };
     };
+    reset_user_password_api_v1_users__user_id__password_reset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     search_users_api_v1_users_search_get: {
         parameters: {
             query: {
@@ -1379,6 +2053,38 @@ export interface operations {
             cookie?: {
                 tcgtools_session?: string | null;
             };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    public_player_search_api_v1_jogadores_buscar_get: {
+        parameters: {
+            query: {
+                q: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
         requestBody?: never;
         responses: {
@@ -1445,6 +2151,348 @@ export interface operations {
             };
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_user_role_api_v1_users__user_id__role_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateUserRoleBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    calendar_month_api_v1_calendar_get: {
+        parameters: {
+            query: {
+                year: number;
+                month: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_announcements_api_v1_calendar_announcements_get: {
+        parameters: {
+            query?: {
+                year?: number | null;
+                month?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_announcement_api_v1_calendar_announcements_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnnouncementBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_announcement_api_v1_calendar_announcements__announcement_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                announcement_id: number;
+            };
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_announcement_api_v1_calendar_announcements__announcement_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                announcement_id: number;
+            };
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnnouncementPatchBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_tcg_games_api_v1_tcg_games_get: {
+        parameters: {
+            query?: {
+                include_inactive?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_tcg_game_api_v1_tcg_games_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TcgGameCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_tcg_game_api_v1_tcg_games__game_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                game_id: number;
+            };
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_tcg_game_api_v1_tcg_games__game_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                game_id: number;
+            };
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TcgGameUpdate"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -1753,6 +2801,40 @@ export interface operations {
                 "application/json": components["schemas"]["ExternalTorneioCreate"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    calendar_torneios_api_v1_torneios_calendar_get: {
+        parameters: {
+            query: {
+                year: number;
+                month: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -2272,6 +3354,43 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    finalizar_colocacoes_api_v1_torneios__event_id__finalizar_colocacoes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: number;
+            };
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualFinalizeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
             };
             /** @description Validation Error */
             422: {

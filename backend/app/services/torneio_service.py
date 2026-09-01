@@ -369,6 +369,7 @@ class TorneioService:
         create_account: bool = False,
     ) -> Player:
         from app.core.auth import AuthError, create_incomplete_user, get_user_by_email
+        from app.core.auth.invite_delivery import provision_invite_and_email
         from app.models import Attendance, RegistrationSource, User
 
         event = self._require_event(event_id)
@@ -395,6 +396,7 @@ class TorneioService:
                     email=email,
                     phone=phone,
                 )
+                provision_invite_and_email(self._db, user)
             except AuthError as exc:
                 raise TorneioError(str(exc)) from exc
             resolved_user_id = user.id
@@ -1192,6 +1194,7 @@ class TorneioService:
     ) -> Event:
         """Admin import of an external tournament for FP + public history."""
         from app.core.auth import AuthError, create_incomplete_user
+        from app.core.auth.invite_delivery import provision_invite_and_email
         from app.core.auth.fourse_points import compute_fp_awards, replace_event_fp_ledger
         from app.models import Attendance, EventSource, RegistrationSource, User
 
@@ -1240,6 +1243,7 @@ class TorneioService:
                         email=row["email"],
                         phone=row["phone"],
                     )
+                    provision_invite_and_email(self._db, user)
                 except AuthError as exc:
                     raise TorneioError(str(exc)) from exc
                 user_id = user.id

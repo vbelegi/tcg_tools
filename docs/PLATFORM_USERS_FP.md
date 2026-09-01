@@ -17,7 +17,7 @@ Contrato de produto (web v2). Moeda: **Fourse Points (FP)**. Hospedagem: `docs/V
 - Email e celular: **únicos**; erro se já existirem.
 - **Auto-cadastro (player):** nome + e-mail + celular + senha + **data de nascimento** → status `active` (conta completa).
 - **Menor de 18:** data de nascimento obrigatória para todos os players; se &lt; 18 anos, exige também `guardian_name` + `guardian_phone` (register e claim-invite).
-- **Conta rápida incomplete (só staff/admin):** na ficha do torneio (ou painel Usuários) → nome + celular + email, sem senha; finalização via **link de convite** (7 dias, uso único). Admin **copia o link** (`claim_url` com `TCGTOOLS_PUBLIC_BASE_URL` em produção) e encaminha manualmente (sem e-mail automático).
+- **Conta rápida incomplete (só staff/admin):** na ficha do torneio (ou painel Usuários) → nome + celular + email, sem senha; finalização via **link de convite** (7 dias, uso único). O sistema **envia o convite por e-mail** automaticamente; admin pode **reenviar** (botão Convite) e ainda copiar o `claim_url`.
 - Admin pode **excluir torneio** (qualquer status) com confirmação pelo nome.
 - Staff pode **buscar conta existente** e inscrever na ficha do draft.
 - Preset opcional **`fp_k`** (default 10) para Fourse Points.

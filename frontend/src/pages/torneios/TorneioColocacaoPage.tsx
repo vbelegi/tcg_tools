@@ -3,14 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 
 import { api } from "../../api/client";
-
-type PlacementRow = {
-  player_id: number;
-  name: string;
-  placement: string;
-  is_drop: boolean;
-  decklist: string;
-};
+import type { PlacementRow } from "./colocacaoOrder";
+import { PlacementSortableTableBody } from "./PlacementSortableTable";
 
 export function TorneioColocacaoPage() {
   const { id } = useParams<{ id: string }>();
@@ -100,7 +94,8 @@ export function TorneioColocacaoPage() {
           </Link>
           <h1>Registrar colocações</h1>
           <p className="torneio-manage-meta">
-            {torneio.event_date} · sem rodadas na plataforma · {rows.length} inscrito(s)
+            {torneio.event_date} · sem rodadas na plataforma · {rows.length} inscrito(s) · arraste
+            para reordenar
           </p>
         </div>
         <div className="torneio-manage-primary">
@@ -144,62 +139,7 @@ export function TorneioColocacaoPage() {
               <th>Decklist</th>
             </tr>
           </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.player_id} className={row.is_drop ? "admin-row-inactive" : undefined}>
-                <td className="externo-col-place">
-                  <input
-                    type="number"
-                    min={1}
-                    value={row.is_drop ? "" : row.placement}
-                    disabled={row.is_drop}
-                    onChange={(e) =>
-                      setRows((prev) =>
-                        prev.map((r) =>
-                          r.player_id === row.player_id ? { ...r, placement: e.target.value } : r,
-                        ),
-                      )
-                    }
-                    aria-label={`Colocação de ${row.name}`}
-                  />
-                </td>
-                <td>
-                  <strong>{row.name}</strong>
-                </td>
-                <td className="externo-col-flags">
-                  <label className="externo-flag">
-                    <input
-                      type="checkbox"
-                      checked={row.is_drop}
-                      onChange={(e) =>
-                        setRows((prev) =>
-                          prev.map((r) =>
-                            r.player_id === row.player_id
-                              ? { ...r, is_drop: e.target.checked }
-                              : r,
-                          ),
-                        )
-                      }
-                    />
-                    Drop/WO
-                  </label>
-                </td>
-                <td>
-                  <input
-                    value={row.decklist}
-                    placeholder="Nome ou URL"
-                    onChange={(e) =>
-                      setRows((prev) =>
-                        prev.map((r) =>
-                          r.player_id === row.player_id ? { ...r, decklist: e.target.value } : r,
-                        ),
-                      )
-                    }
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
+          <PlacementSortableTableBody rows={rows} setRows={setRows} />
         </table>
       </div>
 

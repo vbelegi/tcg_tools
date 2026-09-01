@@ -2762,3 +2762,74 @@ th {
     width: auto;
   }
 }
+
+/* Email verification banner */
+.email-verify-banner {
+  background: #ffe8a1;
+  color: #1a1a1a;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e6c200;
+  font-size: 0.95rem;
+}
+
+.email-verify-banner p {
+  margin: 0;
+}
+
+.email-verify-banner a {
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.email-verify-banner-btn {
+  background: transparent;
+  border: 1px solid #1a1a1a;
+  color: #1a1a1a;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  margin-left: 0.25rem;
+}
+
+.email-verify-banner-msg {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+}
+
+.auth-forgot-link {
+  margin: -0.25rem 0 0.75rem;
+  font-size: 0.9rem;
+}
+
+.auth-forgot-link a {
+  color: var(--primary);
+}
+
+/* Colocações drag-and-drop */
+.colocacao-place-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.colocacao-drag-handle {
+  cursor: grab;
+  border: none;
+  background: var(--surface-2, #eee);
+  color: var(--text-muted, #666);
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  line-height: 1;
+  touch-action: none;
+}
+
+.colocacao-drag-handle:active {
+  cursor: grabbing;
+}
+
+.colocacao-row-dragging {
+  opacity: 0.65;
+  background: var(--primary-soft);
+}

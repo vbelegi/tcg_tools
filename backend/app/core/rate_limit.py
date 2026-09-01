@@ -27,9 +27,8 @@ def _prune(hits: list[float], now: float, window_sec: int) -> list[float]:
     return [t for t in hits if t > cutoff]
 
 
-def check_rate_limit(key: str, ip: str, *, limit: int, window_sec: int) -> None:
+def _check_bucket(bucket: tuple[str, str], *, limit: int, window_sec: int) -> None:
     now = time.monotonic()
-    bucket = (ip, key)
     with _LOCK:
         hits = _prune(_HITS[bucket], now, window_sec)
         if len(hits) >= limit:
@@ -39,6 +38,15 @@ def check_rate_limit(key: str, ip: str, *, limit: int, window_sec: int) -> None:
             )
         hits.append(now)
         _HITS[bucket] = hits
+
+
+def check_rate_limit(key: str, ip: str, *, limit: int, window_sec: int) -> None:
+    _check_bucket((ip, key), limit=limit, window_sec=window_sec)
+
+
+def check_rate_limit_scope(scope: str, identifier: str, *, limit: int, window_sec: int) -> None:
+    """Rate limit by arbitrary scope (e.g. user id or normalized email)."""
+    _check_bucket((scope, identifier), limit=limit, window_sec=window_sec)
 
 
 def rate_limit_dependency(

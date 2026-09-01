@@ -12,7 +12,10 @@ import { LoginPage } from "./pages/LoginPage";
 import { PlayerProfilePage } from "./pages/PlayerProfilePage";
 import { PremiacaoPage } from "./pages/premiacao/PremiacaoPage";
 import { RankingPage } from "./pages/RankingPage";
+import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
+import { VerifyEmailPage } from "./pages/VerifyEmailPage";
+import { VerificarEmailContaPage } from "./pages/VerificarEmailContaPage";
 import { SorteadorPage } from "./pages/sorteador/SorteadorPage";
 import { TcgGamesPage } from "./pages/TcgGamesPage";
 import { TorneioDetailPage } from "./pages/torneios/TorneioDetailPage";
@@ -35,6 +38,8 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/login" element={<LoginPage />} />
           <Route path="/convite/:token" element={<ClaimInvitePage />} />
           <Route path="/redefinir-senha/:token" element={<ResetPasswordPage />} />
+          <Route path="/verificar-email/:token" element={<VerifyEmailPage />} />
+          <Route path="/esqueci-senha" element={<ForgotPasswordPage />} />
           <Route element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="calendario" element={<CalendarPage />} />
@@ -44,6 +49,7 @@ createRoot(document.getElementById("root")!).render(
             <Route path="torneios/:id" element={<TorneioDetailPage />} />
             <Route path="torneios/:id/resultado" element={<TorneioResultadoPage />} />
             <Route path="conta/senha" element={<Navigate to="/" replace />} />
+            <Route path="conta/verificar-email" element={<VerificarEmailContaPage />} />
           </Route>
           <Route element={<RequireAuth />}>
             <Route element={<Layout />}>

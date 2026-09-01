@@ -9,9 +9,12 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api.deps import RequireAdmin, RequireStaff, get_optional_user
-from app.core.auth import AuthError, create_incomplete_user, create_invite, create_password_reset, private_user_dict, public_user_dict
+from app.core.auth import AuthError, create_incomplete_user, create_password_reset, is_email_verified, private_user_dict, public_user_dict
+from app.core.auth.invite_delivery import provision_invite_and_email
 from app.core.auth.invites import invite_claim_path, invite_claim_url, password_reset_path, password_reset_url
+from app.core.email.outbound import send_password_reset_email
 from app.core.auth.fourse_points import ranking
+from app.core.rate_limit import check_rate_limit_scope, rate_limit_dependency
 from app.db.session import get_db
 from app.models import User, UserRole, UserStatus
 from app.core.search import ilike_contains
@@ -20,6 +23,8 @@ from app.services.profile_service import build_public_profile
 _LIKE_ESCAPE = "\\"
 
 router = APIRouter(tags=["users"])
+
+_users_invite_limit = rate_limit_dependency("users_invite_resend", limit=30, window_sec=300)
 
 
 class CreateUserBody(BaseModel):
@@ -74,16 +79,26 @@ def create_user(
         )
     except AuthError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    try:
+        provision_invite_and_email(db, user)
+    except Exception:
+        pass  # user created; invite email failure is non-fatal for API response
     return private_user_dict(user)
 
 
 @router.post("/users/{user_id}/invite")
-def invite_user(user_id: int, _: RequireAdmin, db: Session = Depends(get_db)):
+def invite_user(
+    user_id: int,
+    _: RequireAdmin,
+    db: Session = Depends(get_db),
+    __: None = Depends(_users_invite_limit),
+):
     user = db.query(User).filter(User.id == user_id).one_or_none()
     if user is None:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+    check_rate_limit_scope("users_invite_user", str(user_id), limit=1, window_sec=300)
     try:
-        invite = create_invite(db, user)
+        invite = provision_invite_and_email(db, user)
     except AuthError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {
@@ -92,6 +107,7 @@ def invite_user(user_id: int, _: RequireAdmin, db: Session = Depends(get_db)):
         "claim_path": invite_claim_path(invite.token),
         "claim_url": invite_claim_url(invite.token),
         "user": private_user_dict(user),
+        "email_sent": True,
     }
 
 
@@ -109,6 +125,11 @@ def reset_user_password(user_id: int, actor: RequireAdmin, db: Session = Depends
         raw_token, row = create_password_reset(db, user)
     except AuthError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if is_email_verified(user):
+        try:
+            send_password_reset_email(user, raw_token)
+        except Exception:
+            pass
     return {
         "expires_at": row.expires_at.isoformat(),
         "reset_path": password_reset_path(raw_token),

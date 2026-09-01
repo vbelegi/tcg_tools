@@ -4,6 +4,25 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-09-01
+
+### Added
+
+- **E-mail:** envio transacional via SMTP (Hostinger em produção; log no console em dev)
+- **E-mail:** verificação de endereço no cadastro (link válido 24h, banner global, reenvio com rate limit)
+- **E-mail:** convite automático por e-mail ao criar conta incomplete
+- **Auth:** “Esqueci minha senha” para contas com e-mail verificado (resposta genérica)
+- **Torneios:** drag-and-drop para reordenar colocações na página de registro manual
+
+### Changed
+
+- **Auth:** ativação por convite marca e-mail como verificado automaticamente
+- **Admin:** reset de senha envia e-mail quando a conta está verificada
+
+### Database
+
+- Migration `013`: `users.email_verified_at` + tabela `email_verification_tokens`
+
 ## [1.10.1] - 2026-09-01
 
 ### Changed

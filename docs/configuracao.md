@@ -66,6 +66,14 @@ Ao criar um evento, o preset escolhido é copiado para `events.premiacao_preset`
 | `TCGTOOLS_PRESETS_FILE` | Caminho alternativo ao JSON de presets |
 | `TCGTOOLS_EXPORTS_DIR` | Pasta de CSV exportados (default: `{data_dir}/exports`) |
 | `TCGTOOLS_DATA_DIR` | Pasta de dados (SQLite, exports, logs) |
-| `TCGTOOLS_PUBLIC_BASE_URL` | URL pública (convites, cookies Secure em HTTPS) |
+| `TCGTOOLS_PUBLIC_BASE_URL` | URL pública (convites, verificação de e-mail, cookies Secure em HTTPS) |
+| `TCGTOOLS_EMAIL_ENABLED` | `true` em produção para enviar e-mails |
+| `TCGTOOLS_EMAIL_FROM` | Remetente (ex.: `Fourse <noreply@fourse.com.br>`) |
+| `TCGTOOLS_EMAIL_REPLY_TO` | Reply-To (ex.: `contato@fourse.com.br`) |
+| `TCGTOOLS_SMTP_HOST` | SMTP (Hostinger: `smtp.hostinger.com`) |
+| `TCGTOOLS_SMTP_PORT` | Porta (465 SSL) |
+| `TCGTOOLS_SMTP_USER` / `TCGTOOLS_SMTP_PASSWORD` | Credenciais da caixa de envio |
+
+Em **development**, e-mails são apenas **logados no console** (sem SMTP).
 
 Consulte também [INSTALACAO.md](INSTALACAO.md), [V2_WEB.md](V2_WEB.md) e o [README](../README.md).
