@@ -1438,6 +1438,59 @@ th {
   color: var(--primary);
 }
 
+@media (max-width: 640px) {
+  .profile-hero {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .profile-hero-main {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .profile-hero-text {
+    width: 100%;
+  }
+
+  .profile-name-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .profile-name-row h1 {
+    font-size: 1.4rem;
+    width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .profile-name-row .secondary {
+    width: 100%;
+  }
+
+  .profile-name-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .profile-name-form input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .profile-fp-card {
+    align-self: stretch;
+    width: auto;
+    text-align: center;
+  }
+
+  .profile-badges-row {
+    justify-content: center;
+  }
+}
+
 .profile-stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
