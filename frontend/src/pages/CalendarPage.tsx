@@ -36,7 +36,7 @@ type DayItem =
   | { kind: "announcement"; data: CalendarAnnouncement };
 
 function statusLabel(status: Torneio["status"], registrationOpen?: boolean): string {
-  if (status === "draft") return registrationOpen ? "Inscrições abertas" : "Inscrições fechadas";
+  if (status === "draft") return registrationOpen ? "Inscrições abertas" : "Sem inscrição online";
   if (status === "running") return "Em andamento";
   return "Concluído";
 }
@@ -268,7 +268,9 @@ export function CalendarPage() {
                   </Link>
                 )}
                 {!cta && t.status === "draft" && !t.registration_open && (
-                  <p className="calendar-event-note">Inscrições fechadas.</p>
+                  <p className="calendar-event-note">
+                    Inscrição não disponível pelo site. Consulte a loja para participar.
+                  </p>
                 )}
                 {!cta && t.status === "running" && (
                   <p className="calendar-event-note">

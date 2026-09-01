@@ -4,9 +4,15 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Usuários:** coluna de ações centralizada na tabela admin (`/usuarios`)
+- **Perfil:** hero e card de FP empilhados em telas estreitas (≤640px)
+
 ### Changed
 
-- **Calendário:** torneios em fase de inscrição aparecem no calendário público mesmo com inscrição online fechada (`registration_open: false`); sem CTA de inscrição pelo site
+- **Calendário:** torneios em fase de inscrição aparecem no calendário público mesmo sem inscrição online (`registration_open: false`); badge **"Sem inscrição online"** e nota orientando inscrição na loja (sem CTA pelo site)
+- **Self-inscrição:** mensagem de erro deixa claro que o bloqueio é só pelo site, não do evento em si
 
 ## [1.11.0] - 2026-09-01
 

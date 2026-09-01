@@ -458,7 +458,7 @@ class TorneioService:
         if event.status != "draft":
             raise TorneioError("Inscrições só em rascunho.")
         if not event.registration_open:
-            raise TorneioError("Inscrições fechadas para este torneio.")
+            raise TorneioError("Inscrição pelo site indisponível para este torneio.")
         return self.add_player(
             event_id,
             user.display_name,

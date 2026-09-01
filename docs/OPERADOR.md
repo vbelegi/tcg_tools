@@ -44,7 +44,8 @@ Se aparecer aviso de exports desatualizados, os presets foram editados — regen
 2. Preencha nome, data, formato (Suíço ou Eliminatória), melhor de, inscrição e preset de premiação.
 3. **Eliminatória:** opcionalmente marque **Disputa de 3º–4º** e configure **melhor de por fase** (Final, Semi, Quartas…). Bronze usa o Bo da final. Opções editáveis só em rascunho.
 4. Inscreva jogadores (mínimo **4**): busca por conta → se não achar, criar incomplete (nome + e-mail + celular). Seeds em opções avançadas (all-or-nothing). Sem walk-in só com nome.
-5. Marque check-in dos inscritos e **Iniciar torneio** — confirme o número de rodadas.
+5. **Inscrições abertas para jogadores** (checkbox na ficha): quando desligado, jogadores não se inscrevem pelo site — mas o torneio continua visível no **Calendário** (inscrição na loja ou por outros canais). Quando ligado, aparece também na lista pública com botão de inscrição.
+6. Marque check-in dos inscritos e **Iniciar torneio** — confirme o número de rodadas.
 
 ### 2. Durante cada rodada
 

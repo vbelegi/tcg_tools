@@ -317,6 +317,13 @@ def test_guest_sees_finished_and_open_registration(api_client: TestClient):
     assert open_id in ids
     assert closed_id not in ids
 
+    cal = api_client.get(f"/api/v1/calendar?year={date.today().year}&month={date.today().month}")
+    assert cal.status_code == 200
+    cal_ids = {t["id"] for t in cal.json()["tournaments"]}
+    assert closed_id in cal_ids
+    closed_row = next(t for t in cal.json()["tournaments"] if t["id"] == closed_id)
+    assert closed_row["registration_open"] is False
+
     assert api_client.get(f"/api/v1/torneios/{closed_id}").status_code == 404
     assert api_client.get(f"/api/v1/torneios/{open_id}").status_code == 200
     assert api_client.get(f"/api/v1/torneios/{finished_id}").status_code == 200
