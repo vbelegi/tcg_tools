@@ -4,6 +4,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.10.1] - 2026-09-01
+
 ### Changed
 
 - **Agenda:** lista de eventos apenas em cards (desktop e mobile); destaque visual do card em edição
