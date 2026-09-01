@@ -24,10 +24,26 @@ class Settings(BaseSettings):
     cookie_secure: bool | None = None
     environment: str = "development"
     max_request_body_bytes: int = 1_048_576
+    email_enabled: bool = True
+    email_from: str = "Fourse <noreply@fourse.com.br>"
+    email_reply_to: str | None = "contato@fourse.com.br"
+    smtp_host: str | None = None
+    smtp_port: int = 465
+    smtp_user: str | None = None
+    smtp_password: str | None = None
+    smtp_tls: bool = True
 
     @property
     def is_production(self) -> bool:
         return self.environment.strip().lower() == "production"
+
+    @property
+    def use_console_email(self) -> bool:
+        return not self.is_production
+
+    @property
+    def resolved_email_from(self) -> str:
+        return (self.email_from or "Fourse <noreply@fourse.com.br>").strip()
 
     @property
     def resolved_cookie_secure(self) -> bool:

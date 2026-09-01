@@ -60,10 +60,10 @@ export function UsuariosPage() {
       try {
         await navigator.clipboard.writeText(url);
         setInviteMsg(
-          `Link copiado. Encaminhe manualmente (WhatsApp/e-mail). Válido até ${res.expires_at}: ${url}`,
+          `Convite enviado por e-mail. Link também copiado (válido até ${res.expires_at}): ${url}`,
         );
       } catch {
-        setInviteMsg(`Copie e encaminhe o link (válido até ${res.expires_at}): ${url}`);
+        setInviteMsg(`Convite enviado por e-mail. Link (válido até ${res.expires_at}): ${url}`);
       }
     },
     onError: (e) => setError((e as Error).message),

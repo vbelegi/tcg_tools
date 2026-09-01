@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import date
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, Response, UploadFile
@@ -15,19 +16,31 @@ from app.core.auth import (
     change_password,
     claim_invite,
     claim_password_reset,
+    create_email_verification,
+    create_password_reset,
     create_session,
     get_admin,
+    get_user_by_email,
+    is_email_verified,
     private_user_dict,
     register_player,
     revoke_session,
+    verify_email,
 )
 from app.core.auth.cookies import clear_session_cookie, set_session_cookie
+from app.core.auth.passwords import MIN_PASSWORD_LEN, normalize_email
 from app.core.auth.service import SESSION_COOKIE
 from app.core.auth.avatars import AvatarError, encode_user_avatar, MAX_UPLOAD_BYTES
-from app.core.auth.passwords import MIN_PASSWORD_LEN
-from app.core.rate_limit import rate_limit_dependency
+from app.core.email.outbound import (
+    forgot_password_generic_message,
+    send_password_reset_email,
+    send_verification_email,
+)
+from app.core.rate_limit import check_rate_limit_scope, rate_limit_dependency
 from app.db.session import get_db
 from app.models import User
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -35,6 +48,8 @@ _auth_login_limit = rate_limit_dependency("auth_login", limit=10, window_sec=60)
 _auth_register_limit = rate_limit_dependency("auth_register", limit=5, window_sec=300)
 _auth_claim_limit = rate_limit_dependency("auth_claim_invite", limit=10, window_sec=300)
 _auth_reset_claim_limit = rate_limit_dependency("auth_claim_password_reset", limit=10, window_sec=300)
+_auth_resend_verify_ip_limit = rate_limit_dependency("auth_resend_verification_ip", limit=3, window_sec=3600)
+_auth_forgot_limit = rate_limit_dependency("auth_forgot_password", limit=10, window_sec=60)
 
 
 async def _read_upload_limited(file: UploadFile, max_bytes: int) -> bytes:
@@ -88,8 +103,17 @@ class ClaimPasswordResetBody(BaseModel):
     password: str
 
 
+class VerifyEmailBody(BaseModel):
+    token: str
+
+
+class ForgotPasswordBody(BaseModel):
+    email: str
+
+
 class UpdateMeBody(BaseModel):
     display_name: str = Field(min_length=1, max_length=120)
+
 
 @router.get("/status")
 def auth_status(db: Session = Depends(get_db)):
@@ -176,6 +200,11 @@ def register(
             guardian_relation=body.guardian_relation,
         )
         token = create_session(db, user)
+        raw_verify, _ = create_email_verification(db, user)
+        try:
+            send_verification_email(user, raw_verify)
+        except Exception:
+            logger.exception("Failed to send verification email on register user_id=%s", user.id)
     except AuthError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     set_session_cookie(response, token)
@@ -243,3 +272,60 @@ def auth_claim_password_reset(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     set_session_cookie(response, token)
     return private_user_dict(user)
+
+
+@router.post("/verify-email")
+def auth_verify_email(body: VerifyEmailBody, db: Session = Depends(get_db)):
+    try:
+        user = verify_email(db, body.token)
+    except AuthError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return private_user_dict(user)
+
+
+@router.post("/resend-verification")
+def auth_resend_verification(
+    request: Request,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+    _: None = Depends(_auth_resend_verify_ip_limit),
+):
+    if is_email_verified(user):
+        raise HTTPException(status_code=400, detail="E-mail já verificado.")
+    check_rate_limit_scope(
+        "auth_resend_verification_user",
+        str(user.id),
+        limit=1,
+        window_sec=600,
+    )
+    try:
+        raw, _ = create_email_verification(db, user)
+        send_verification_email(user, raw)
+    except AuthError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception:
+        logger.exception("Failed to resend verification email user_id=%s", user.id)
+        raise HTTPException(status_code=500, detail="Não foi possível enviar o e-mail. Tente mais tarde.") from None
+    return {"ok": True, "message": "E-mail de verificação enviado."}
+
+
+@router.post("/forgot-password")
+def auth_forgot_password(
+    body: ForgotPasswordBody,
+    db: Session = Depends(get_db),
+    _: None = Depends(_auth_forgot_limit),
+):
+    msg = forgot_password_generic_message()
+    try:
+        email_n = normalize_email(body.email)
+    except AuthError:
+        return {"ok": True, "message": msg}
+    check_rate_limit_scope("auth_forgot_password_email", email_n, limit=1, window_sec=1800)
+    user = get_user_by_email(db, email_n)
+    if user and is_email_verified(user):
+        try:
+            raw, _ = create_password_reset(db, user)
+            send_password_reset_email(user, raw)
+        except Exception:
+            logger.exception("Failed to send forgot-password email for user_id=%s", user.id)
+    return {"ok": True, "message": msg}

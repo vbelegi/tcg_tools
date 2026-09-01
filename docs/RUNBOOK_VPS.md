@@ -184,6 +184,7 @@ Detalhes: [V2_WEB.md — chaves SSH](V2_WEB.md#vps--chaves-ssh-deploy-automátic
 | Disco cheio | `df -h`, limpar `backups/` antigos, `docker system prune` (cuidado) |
 | Favicon antigo no browser | Purge cache Cloudflare em `/favicon.ico` |
 | Convites com URL errada | `TCGTOOLS_PUBLIC_BASE_URL` no `.env` + `docker compose up -d` |
+| E-mails não chegam | Conferir `TCGTOOLS_SMTP_*` no `.env`, logs `docker compose logs app`, SPF/DKIM no domínio |
 
 Mais cenários: [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 

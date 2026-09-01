@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.core.auth import upsert_admin_password
-from app.core.auth.invites import invite_claim_path, invite_claim_url
+from app.core.auth.invites import email_verify_path, email_verify_url, invite_claim_path, invite_claim_url
 from app.core.auth.passwords import ADMIN_EMAIL
 from app.db.session import get_db
 from app.main import app
@@ -52,6 +52,14 @@ def test_invite_claim_url_uses_public_base(monkeypatch):
     get_settings.cache_clear()
     assert invite_claim_path("abc123") == "/convite/abc123"
     assert invite_claim_url("abc123") == "https://torneios.fourse.com.br/convite/abc123"
+    get_settings.cache_clear()
+
+
+def test_email_verify_url_uses_public_base(monkeypatch):
+    monkeypatch.setenv("TCGTOOLS_PUBLIC_BASE_URL", "https://torneios.fourse.com.br")
+    get_settings.cache_clear()
+    assert email_verify_path("tok") == "/verificar-email/tok"
+    assert email_verify_url("tok") == "https://torneios.fourse.com.br/verificar-email/tok"
     get_settings.cache_clear()
 
 

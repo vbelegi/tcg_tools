@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 import { api } from "../api/client";
 import { safeRedirectPath } from "../utils/safeRedirect";
@@ -240,6 +240,13 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
             autoFocus
           />
         </div>
+        {mode === "login" && (
+          <p className="auth-forgot-link">
+            <Link to="/esqueci-senha" onClick={onClose}>
+              Esqueci minha senha
+            </Link>
+          </p>
+        )}
         {mode === "register" && (
           <div className="form-row">
             <label htmlFor="auth-pass2">Confirmar senha</label>
