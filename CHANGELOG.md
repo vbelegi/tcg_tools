@@ -4,6 +4,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.11.1] - 2026-09-01
+
 ### Fixed
 
 - **Usuários:** coluna de ações centralizada na tabela admin (`/usuarios`)
