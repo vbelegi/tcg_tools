@@ -17,13 +17,19 @@ type Props = {
   searchId?: string;
   toggles?: FilterToggle[];
   resultCount?: number;
+  dateFrom?: string;
+  dateTo?: string;
+  onDateFromChange?: (value: string) => void;
+  onDateToChange?: (value: string) => void;
+  dateFromLabel?: string;
+  dateToLabel?: string;
 };
 
 const DEBOUNCE_MS = 300;
 
 /**
- * Search box plus toggles. Typing is debounced locally so every keystroke does
- * not become a request; the parent owns the committed value.
+ * Search box plus optional date range and toggles. Typing is debounced locally so
+ * every keystroke does not become a request; the parent owns the committed value.
  */
 export function ListFilterBar({
   searchValue,
@@ -33,8 +39,15 @@ export function ListFilterBar({
   searchId = "list-filter-q",
   toggles = [],
   resultCount,
+  dateFrom,
+  dateTo,
+  onDateFromChange,
+  onDateToChange,
+  dateFromLabel = "De",
+  dateToLabel = "Até",
 }: Props) {
   const [draft, setDraft] = useState(searchValue);
+  const showDates = onDateFromChange != null && onDateToChange != null;
 
   useEffect(() => {
     setDraft(searchValue);
@@ -58,6 +71,28 @@ export function ListFilterBar({
           onChange={(e) => setDraft(e.target.value)}
         />
       </div>
+      {showDates && (
+        <div className="list-filter-dates">
+          <div className="form-row list-filter-date">
+            <label htmlFor={`${searchId}-from`}>{dateFromLabel}</label>
+            <input
+              id={`${searchId}-from`}
+              type="date"
+              value={dateFrom ?? ""}
+              onChange={(e) => onDateFromChange(e.target.value)}
+            />
+          </div>
+          <div className="form-row list-filter-date">
+            <label htmlFor={`${searchId}-to`}>{dateToLabel}</label>
+            <input
+              id={`${searchId}-to`}
+              type="date"
+              value={dateTo ?? ""}
+              onChange={(e) => onDateToChange(e.target.value)}
+            />
+          </div>
+        </div>
+      )}
       {toggles.length > 0 && (
         <div className="list-filter-toggles">
           {toggles.map((toggle) => (

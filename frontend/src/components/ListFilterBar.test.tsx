@@ -57,4 +57,26 @@ describe("ListFilterBar", () => {
     expect(onChange).toHaveBeenCalledWith(true);
     expect(screen.getByText("1 resultado")).toBeInTheDocument();
   });
+
+  it("reports date range changes immediately", () => {
+    const onFrom = vi.fn();
+    const onTo = vi.fn();
+    render(
+      <ListFilterBar
+        searchLabel="Buscar por nome"
+        searchValue=""
+        onSearchChange={vi.fn()}
+        dateFrom="2026-09-01"
+        dateTo="2026-09-30"
+        onDateFromChange={onFrom}
+        onDateToChange={onTo}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText("De"), { target: { value: "2026-09-10" } });
+    fireEvent.change(screen.getByLabelText("Até"), { target: { value: "2026-09-20" } });
+
+    expect(onFrom).toHaveBeenCalledWith("2026-09-10");
+    expect(onTo).toHaveBeenCalledWith("2026-09-20");
+  });
 });

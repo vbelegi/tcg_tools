@@ -1,7 +1,9 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useCallback, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "../api/client";
+import { ListFilterBar } from "../components/ListFilterBar";
 
 type Announcement = {
   id: number;
@@ -12,11 +14,28 @@ type Announcement = {
   location: string | null;
 };
 
+function monthBounds(year: number, month: number): { from: string; to: string } {
+  const last = new Date(year, month, 0).getDate();
+  const mm = String(month).padStart(2, "0");
+  return {
+    from: `${year}-${mm}-01`,
+    to: `${year}-${mm}-${String(last).padStart(2, "0")}`,
+  };
+}
+
 export function AgendaPage() {
   const qc = useQueryClient();
-  const today = new Date();
-  const [year, setYear] = useState(today.getFullYear());
-  const [month, setMonth] = useState(today.getMonth() + 1);
+  const today = useMemo(() => new Date(), []);
+  const defaultBounds = useMemo(
+    () => monthBounds(today.getFullYear(), today.getMonth() + 1),
+    [today],
+  );
+
+  const [params, setParams] = useSearchParams();
+  const q = params.get("q") ?? "";
+  const dateFrom = params.get("from") ?? defaultBounds.from;
+  const dateTo = params.get("to") ?? defaultBounds.to;
+
   const [title, setTitle] = useState("");
   const [eventDate, setEventDate] = useState(today.toISOString().slice(0, 10));
   const [startTime, setStartTime] = useState("");
@@ -26,9 +45,44 @@ export function AgendaPage() {
   const [error, setError] = useState("");
 
   const { data = [], isLoading } = useQuery({
-    queryKey: ["calendar-announcements", year, month],
-    queryFn: () => api.listCalendarAnnouncements(year, month),
+    queryKey: ["calendar-announcements", q, dateFrom, dateTo],
+    queryFn: () =>
+      api.listCalendarAnnouncements({
+        q: q || undefined,
+        from: dateFrom || undefined,
+        to: dateTo || undefined,
+      }),
   });
+
+  const updateFilters = useCallback(
+    (changes: { q?: string; from?: string; to?: string }) => {
+      setParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (changes.q !== undefined) {
+            if (changes.q) next.set("q", changes.q);
+            else next.delete("q");
+          }
+          if (changes.from !== undefined) {
+            if (changes.from) next.set("from", changes.from);
+            else next.delete("from");
+          }
+          if (changes.to !== undefined) {
+            if (changes.to) next.set("to", changes.to);
+            else next.delete("to");
+          }
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setParams],
+  );
+
+  const onSearchChange = useCallback(
+    (value: string) => updateFilters({ q: value }),
+    [updateFilters],
+  );
 
   const resetForm = () => {
     setTitle("");
@@ -107,13 +161,15 @@ export function AgendaPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const hasFilters = Boolean(q) || dateFrom !== defaultBounds.from || dateTo !== defaultBounds.to;
+
   return (
     <div className="admin-page agenda-page">
       <header className="torneio-manage-header">
         <div>
           <h1>Agenda</h1>
           <p className="torneio-manage-meta">
-            Eventos no calendário (sem inscrição) · {data.length} no mês
+            Eventos no calendário (sem inscrição) · {data.length} no período
           </p>
         </div>
       </header>
@@ -194,26 +250,25 @@ export function AgendaPage() {
       </details>
 
       <section className="resultado-section">
-        <div className="admin-inline-add">
-          <div className="form-row admin-inline-add-field">
-            <label htmlFor="agenda-month">Mês</label>
-            <input
-              id="agenda-month"
-              type="month"
-              value={`${year}-${String(month).padStart(2, "0")}`}
-              onChange={(e) => {
-                const [y, m] = e.target.value.split("-").map(Number);
-                setYear(y);
-                setMonth(m);
-              }}
-            />
-          </div>
-        </div>
+        <ListFilterBar
+          searchId="agenda-filter-q"
+          searchLabel="Buscar por título"
+          searchPlaceholder="Ex.: pré-release"
+          searchValue={q}
+          onSearchChange={onSearchChange}
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          onDateFromChange={(value) => updateFilters({ from: value })}
+          onDateToChange={(value) => updateFilters({ to: value })}
+          resultCount={data.length}
+        />
 
         {isLoading && <p>Carregando...</p>}
 
         {!isLoading && data.length === 0 && (
-          <p className="muted">Nenhum evento neste mês.</p>
+          <p className="muted">
+            {hasFilters ? "Nenhum evento encontrado com esses filtros." : "Nenhum evento neste período."}
+          </p>
         )}
 
         <ul className="agenda-card-list">

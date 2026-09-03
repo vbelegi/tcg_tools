@@ -405,7 +405,20 @@ export const api = {
 
 
 
-  listTorneios: () => request<Torneio[]>("/torneios"),
+  listTorneios: (opts?: {
+    q?: string;
+    active?: boolean;
+    from?: string;
+    to?: string;
+  }) => {
+    const params = new URLSearchParams();
+    if (opts?.q) params.set("q", opts.q);
+    if (opts?.active) params.set("active", "true");
+    if (opts?.from) params.set("from", opts.from);
+    if (opts?.to) params.set("to", opts.to);
+    const qs = params.toString();
+    return request<Torneio[]>(`/torneios${qs ? `?${qs}` : ""}`);
+  },
 
   listCalendarTorneios: (year: number, month: number) =>
     request<Torneio[]>(`/torneios/calendar?year=${year}&month=${month}`),
@@ -431,10 +444,19 @@ export const api = {
       }>;
     }>(`/calendar?year=${year}&month=${month}`),
 
-  listCalendarAnnouncements: (year?: number, month?: number) => {
+  listCalendarAnnouncements: (opts?: {
+    year?: number;
+    month?: number;
+    q?: string;
+    from?: string;
+    to?: string;
+  }) => {
     const params = new URLSearchParams();
-    if (year != null) params.set("year", String(year));
-    if (month != null) params.set("month", String(month));
+    if (opts?.year != null) params.set("year", String(opts.year));
+    if (opts?.month != null) params.set("month", String(opts.month));
+    if (opts?.q) params.set("q", opts.q);
+    if (opts?.from) params.set("from", opts.from);
+    if (opts?.to) params.set("to", opts.to);
     const qs = params.toString();
     return request<
       Array<{
