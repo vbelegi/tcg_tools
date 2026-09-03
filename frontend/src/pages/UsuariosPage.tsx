@@ -145,7 +145,16 @@ export function UsuariosPage() {
             </div>
             <div className="form-row">
               <label>Celular</label>
-              <input value={phone} onChange={(e) => setPhone(e.target.value)} required />
+              <input
+                type="tel"
+                inputMode="numeric"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+                placeholder="11987654321"
+                autoComplete="tel"
+              />
+              <p className="field-hint">DDD + número (10 a 13 dígitos), ex.: 11987654321</p>
             </div>
             <div className="form-row">
               <label>Papel</label>

@@ -172,11 +172,18 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
               <label htmlFor="auth-phone">Celular</label>
               <input
                 id="auth-phone"
+                type="tel"
+                inputMode="numeric"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 required
                 autoComplete="tel"
+                placeholder="11987654321"
+                aria-describedby="auth-phone-hint"
               />
+              <p id="auth-phone-hint" className="field-hint">
+                DDD + número (10 a 13 dígitos), ex.: 11987654321
+              </p>
             </div>
             <div className="form-row">
               <label htmlFor="auth-bd">Data de nascimento</label>
@@ -200,8 +207,12 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
               <label htmlFor="auth-gp">Celular do responsável</label>
               <input
                 id="auth-gp"
+                type="tel"
+                inputMode="numeric"
                 value={guardianPhone}
                 onChange={(e) => setGuardianPhone(e.target.value)}
+                placeholder="11987654321"
+                autoComplete="tel"
               />
             </div>
             <div className="form-row">

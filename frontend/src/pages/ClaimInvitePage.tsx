@@ -125,7 +125,15 @@ export function ClaimInvitePage() {
         </div>
         <div className="form-row">
           <label htmlFor="gp">Celular do responsável</label>
-          <input id="gp" value={guardianPhone} onChange={(e) => setGuardianPhone(e.target.value)} />
+          <input
+            id="gp"
+            type="tel"
+            inputMode="numeric"
+            value={guardianPhone}
+            onChange={(e) => setGuardianPhone(e.target.value)}
+            placeholder="11987654321"
+            autoComplete="tel"
+          />
         </div>
         <div className="form-row">
           <label htmlFor="gr">Parentesco</label>
