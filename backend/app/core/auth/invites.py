@@ -38,6 +38,28 @@ def email_verify_url(token: str) -> str | None:
     return f"{base}{email_verify_path(token)}"
 
 
+def email_change_confirm_path(token: str) -> str:
+    return f"/confirmar-troca-email/{token}"
+
+
+def email_change_confirm_url(token: str) -> str | None:
+    base = (get_settings().public_base_url or "").strip().rstrip("/")
+    if not base:
+        return None
+    return f"{base}{email_change_confirm_path(token)}"
+
+
+def email_change_cancel_path(token: str) -> str:
+    return f"/cancelar-troca-email/{token}"
+
+
+def email_change_cancel_url(token: str) -> str | None:
+    base = (get_settings().public_base_url or "").strip().rstrip("/")
+    if not base:
+        return None
+    return f"{base}{email_change_cancel_path(token)}"
+
+
 def promo_enroll_path(token: str) -> str:
     return f"/acoes/participar/{token}"
 

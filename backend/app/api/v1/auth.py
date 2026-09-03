@@ -14,17 +14,23 @@ from app.api.uploads import read_upload_limited
 from app.core.auth import (
     AuthError,
     authenticate,
+    cancel_email_change,
+    cancel_email_change_by_token,
     change_password,
     claim_invite,
     claim_password_reset,
+    confirm_email_change,
     create_email_verification,
     create_password_reset,
     create_session,
     get_admin,
+    get_pending_email_change,
     get_user_by_email,
     is_email_verified,
+    mask_email,
     private_user_dict,
     register_player,
+    request_email_change,
     revoke_session,
     verify_email,
 )
@@ -33,8 +39,11 @@ from app.core.auth.cookies import clear_session_cookie, set_session_cookie
 from app.core.auth.passwords import MIN_PASSWORD_LEN, normalize_email
 from app.core.auth.service import SESSION_COOKIE, ensure_unique_email_phone, require_guardian_if_minor
 from app.core.auth.avatars import AvatarError, encode_user_avatar, MAX_UPLOAD_BYTES
+from app.core.audit import log_staff_action
 from app.core.email.outbound import (
     forgot_password_generic_message,
+    send_email_change_confirm,
+    send_email_change_notice,
     send_password_reset_email,
     send_verification_email,
 )
@@ -53,6 +62,8 @@ _auth_claim_limit = rate_limit_dependency("auth_claim_invite", limit=10, window_
 _auth_reset_claim_limit = rate_limit_dependency("auth_claim_password_reset", limit=10, window_sec=300)
 _auth_resend_verify_ip_limit = rate_limit_dependency("auth_resend_verification_ip", limit=3, window_sec=3600)
 _auth_forgot_limit = rate_limit_dependency("auth_forgot_password", limit=10, window_sec=60)
+_auth_email_change_ip_limit = rate_limit_dependency("auth_email_change_ip", limit=10, window_sec=3600)
+_auth_email_change_confirm_limit = rate_limit_dependency("auth_email_change_confirm", limit=20, window_sec=3600)
 
 
 class LoginBody(BaseModel):
@@ -101,6 +112,15 @@ class ForgotPasswordBody(BaseModel):
     email: str
 
 
+class EmailChangeBody(BaseModel):
+    current_password: str
+    new_email: str
+
+
+class EmailChangeTokenBody(BaseModel):
+    token: str
+
+
 class UpdateMeBody(BaseModel):
     display_name: str | None = Field(default=None, min_length=1, max_length=120)
     phone: str | None = None
@@ -116,6 +136,11 @@ class DeleteMeBody(BaseModel):
     confirm: str = Field(description='Must be "EXCLUIR"')
 
 
+def _me_dict(db: Session, user: User) -> dict:
+    pending = get_pending_email_change(db, user.id)
+    return private_user_dict(user, pending_email=pending.new_email if pending else None)
+
+
 @router.get("/status")
 def auth_status(db: Session = Depends(get_db)):
     admin = get_admin(db)
@@ -128,8 +153,8 @@ def auth_status(db: Session = Depends(get_db)):
 
 
 @router.get("/me")
-def auth_me(user: User = Depends(get_current_user)):
-    return private_user_dict(user)
+def auth_me(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return _me_dict(db, user)
 
 
 @router.patch("/me")
@@ -150,7 +175,10 @@ def auth_update_me(
             _, phone_n = ensure_unique_email_phone(
                 db, email=user.email, phone=body.phone, exclude_user_id=user.id
             )
-            user.phone = phone_n
+            if phone_n != user.phone:
+                user.phone = phone_n
+                user.phone_verified_at = None
+                user.pending_phone = None
         if body.birth_date is not None:
             user.birth_date = body.birth_date
         if body.guardian_name is not None:
@@ -179,7 +207,7 @@ def auth_update_me(
     db.add(user)
     db.commit()
     db.refresh(user)
-    return private_user_dict(user)
+    return _me_dict(db, user)
 
 
 @router.get("/me/export")
@@ -444,3 +472,152 @@ def auth_forgot_password(
         except Exception:
             logger.exception("Failed to send forgot-password email for user_id=%s", user.id)
     return {"ok": True, "message": msg}
+
+
+@router.post("/me/email-change")
+def auth_request_email_change(
+    body: EmailChangeBody,
+    request: Request,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+    _: None = Depends(_auth_email_change_ip_limit),
+):
+    if user.status == UserStatus.deleted.value:
+        raise HTTPException(status_code=404, detail="Conta não encontrada.")
+    check_rate_limit_scope("auth_email_change_user", str(user.id), limit=3, window_sec=3600)
+    old_email = user.email
+    try:
+        raw, row, pending = request_email_change(
+            db,
+            user,
+            current_password=body.current_password,
+            new_email=body.new_email,
+        )
+    except AuthError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    if pending and raw and row:
+        try:
+            send_email_change_confirm(row.new_email, raw)
+            send_email_change_notice(user, raw, row.new_email)
+        except Exception:
+            logger.exception("Failed to send email-change mails user_id=%s", user.id)
+            raise HTTPException(
+                status_code=500, detail="Não foi possível enviar o e-mail. Tente mais tarde."
+            ) from None
+        log_staff_action(
+            db,
+            actor=user,
+            action="account.email_change",
+            target_user_id=user.id,
+            meta={
+                "status": "pending",
+                "from": mask_email(old_email),
+                "to": mask_email(row.new_email),
+            },
+            request=request,
+        )
+        db.refresh(user)
+        return {
+            "ok": True,
+            "pending": True,
+            "message": "Enviamos um link de confirmação ao novo e-mail.",
+            "user": _me_dict(db, user),
+        }
+
+    try:
+        raw_verify, _ = create_email_verification(db, user)
+        send_verification_email(user, raw_verify)
+    except AuthError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception:
+        logger.exception("Failed to send verification after email swap user_id=%s", user.id)
+        raise HTTPException(
+            status_code=500, detail="E-mail atualizado, mas não foi possível reenviar a verificação."
+        ) from None
+    log_staff_action(
+        db,
+        actor=user,
+        action="account.email_change",
+        target_user_id=user.id,
+        meta={
+            "status": "direct",
+            "from": mask_email(old_email),
+            "to": mask_email(user.email),
+        },
+        request=request,
+    )
+    db.refresh(user)
+    return {
+        "ok": True,
+        "pending": False,
+        "message": "E-mail atualizado. Enviamos um novo link de verificação.",
+        "user": _me_dict(db, user),
+    }
+
+
+@router.post("/me/email-change/cancel")
+def auth_cancel_email_change_me(
+    request: Request,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    pending = get_pending_email_change(db, user.id)
+    cancel_email_change(db, user)
+    if pending is not None:
+        log_staff_action(
+            db,
+            actor=user,
+            action="account.email_change",
+            target_user_id=user.id,
+            meta={"status": "cancelled", "to": mask_email(pending.new_email)},
+            request=request,
+        )
+    db.refresh(user)
+    return {"ok": True, "user": _me_dict(db, user)}
+
+
+@router.post("/email-change/confirm")
+def auth_confirm_email_change(
+    body: EmailChangeTokenBody,
+    request: Request,
+    db: Session = Depends(get_db),
+    _: None = Depends(_auth_email_change_confirm_limit),
+):
+    keep = request.cookies.get(SESSION_COOKIE)
+    try:
+        user = confirm_email_change(db, body.token, keep_session_token=keep)
+    except AuthError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    log_staff_action(
+        db,
+        actor=user,
+        action="account.email_change",
+        target_user_id=user.id,
+        meta={"status": "confirmed", "to": mask_email(user.email)},
+        request=request,
+    )
+    return private_user_dict(user, pending_email=None)
+
+
+@router.post("/email-change/cancel")
+def auth_cancel_email_change_token(
+    body: EmailChangeTokenBody,
+    request: Request,
+    db: Session = Depends(get_db),
+    _: None = Depends(_auth_email_change_confirm_limit),
+):
+    try:
+        user = cancel_email_change_by_token(db, body.token)
+    except AuthError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    log_staff_action(
+        db,
+        actor=user,
+        action="account.email_change",
+        target_user_id=user.id,
+        meta={"status": "cancelled_via_link"},
+        request=request,
+    )
+    return {"ok": True, "message": "Troca de e-mail cancelada."}
+

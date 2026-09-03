@@ -4,6 +4,15 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- **Conta:** troca de e-mail em dois passos (senha + confirmação no novo endereço; aviso/cancelamento no antigo); contas não verificadas trocam direto e reenviam verificação
+- **Conta:** campos `phone_verified_at` e `pending_phone` (preparação para SMS); alterar celular limpa a verificação
+
+### Database
+
+- Migration `016`: tabela `email_change_tokens`; colunas de telefone em `users`
+
 ## [1.14.0] - 2026-09-03
 
 ### Added

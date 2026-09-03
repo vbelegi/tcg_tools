@@ -19,6 +19,8 @@ import { PremiacaoPage } from "./pages/premiacao/PremiacaoPage";
 import { RankingPage } from "./pages/RankingPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
+import { CancelEmailChangePage } from "./pages/CancelEmailChangePage";
+import { ConfirmEmailChangePage } from "./pages/ConfirmEmailChangePage";
 import { TermosPage } from "./pages/TermosPage";
 import { VerifyEmailPage } from "./pages/VerifyEmailPage";
 import { VerificarEmailContaPage } from "./pages/VerificarEmailContaPage";
@@ -45,6 +47,8 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/convite/:token" element={<ClaimInvitePage />} />
           <Route path="/redefinir-senha/:token" element={<ResetPasswordPage />} />
           <Route path="/verificar-email/:token" element={<VerifyEmailPage />} />
+          <Route path="/confirmar-troca-email/:token" element={<ConfirmEmailChangePage />} />
+          <Route path="/cancelar-troca-email/:token" element={<CancelEmailChangePage />} />
           <Route path="/esqueci-senha" element={<ForgotPasswordPage />} />
           <Route element={<Layout />}>
             <Route index element={<Home />} />

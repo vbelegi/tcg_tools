@@ -69,6 +69,46 @@ def password_reset_email(*, reset_url: str, days: int) -> tuple[str, str, str]:
     return subject, text, html
 
 
+def email_change_confirm_email(*, confirm_url: str, hours: int) -> tuple[str, str, str]:
+    subject = "Confirme o novo e-mail — Fourse"
+    text = (
+        "Olá,\n\n"
+        "Recebemos um pedido para alterar o e-mail da sua conta.\n\n"
+        "Confirme o novo endereço clicando no link abaixo:\n\n"
+        f"{confirm_url}\n\n"
+        f"O link é válido por {hours} horas.\n\n"
+        "Se você não solicitou essa alteração, ignore este e-mail.\n"
+    )
+    html = _html_wrapper(
+        "<p>Olá,</p>"
+        "<p>Recebemos um pedido para alterar o e-mail da sua conta.</p>"
+        f'<p><a href="{confirm_url}">Confirmar novo e-mail</a></p>'
+        f"<p>O link é válido por <strong>{hours} horas</strong>.</p>"
+        "<p>Se você não solicitou essa alteração, ignore este e-mail.</p>"
+    )
+    return subject, text, html
+
+
+def email_change_notice_email(*, cancel_url: str, new_email_masked: str, hours: int) -> tuple[str, str, str]:
+    subject = "Pedido de troca de e-mail — Fourse"
+    text = (
+        "Olá,\n\n"
+        f"Foi solicitado alterar o e-mail da sua conta para {new_email_masked}.\n\n"
+        "Se foi você, confirme pelo link enviado ao novo endereço.\n"
+        "Se não foi você, cancele pelo link abaixo:\n\n"
+        f"{cancel_url}\n\n"
+        f"O pedido expira em {hours} horas.\n"
+    )
+    html = _html_wrapper(
+        "<p>Olá,</p>"
+        f"<p>Foi solicitado alterar o e-mail da sua conta para <strong>{_escape(new_email_masked)}</strong>.</p>"
+        "<p>Se foi você, confirme pelo link enviado ao novo endereço.</p>"
+        f'<p><a href="{cancel_url}">Cancelar troca de e-mail</a></p>'
+        f"<p>O pedido expira em <strong>{hours} horas</strong>.</p>"
+    )
+    return subject, text, html
+
+
 def promo_update_email(
     *,
     display_name: str,

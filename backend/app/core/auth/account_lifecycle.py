@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session as DbSession
 from app.core.auth.passwords import AuthError, hash_password
 from app.core.privacy import ANONYMOUS_DISPLAY_NAME, INCOMPLETE_PURGE_DAYS
 from app.models import (
+    EmailChangeToken,
     EmailVerificationToken,
     InviteToken,
     PasswordResetToken,
@@ -45,10 +46,12 @@ def delete_user_account(db: DbSession, user: User) -> User:
     db.query(InviteToken).filter(InviteToken.user_id == uid).delete()
     db.query(PasswordResetToken).filter(PasswordResetToken.user_id == uid).delete()
     db.query(EmailVerificationToken).filter(EmailVerificationToken.user_id == uid).delete()
+    db.query(EmailChangeToken).filter(EmailChangeToken.user_id == uid).delete()
 
     now = _now()
     user.email = f"deleted-{uid}@invalid.local"
     user.phone = None
+    user.pending_phone = None
     user.display_name = ANONYMOUS_DISPLAY_NAME
     user.birth_date = None
     user.guardian_name = None
@@ -58,6 +61,7 @@ def delete_user_account(db: DbSession, user: User) -> User:
     user.password_hash = hash_password(f"deleted-{uid}-{now.timestamp()}")
     user.status = UserStatus.deleted.value
     user.email_verified_at = None
+    user.phone_verified_at = None
     user.marketing_opt_out = True
     user.marketing_opt_out_at = now
     user.marketing_opt_out_source = "account_delete"

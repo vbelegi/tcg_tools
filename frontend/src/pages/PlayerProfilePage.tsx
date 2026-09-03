@@ -49,6 +49,11 @@ export function PlayerProfilePage() {
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [showDelete, setShowDelete] = useState(false);
+  const [showEmailChange, setShowEmailChange] = useState(false);
+  const [emailPassword, setEmailPassword] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [phoneDraft, setPhoneDraft] = useState("");
+  const [contactMsg, setContactMsg] = useState("");
 
   useEffect(() => {
     const t = window.setTimeout(() => setDebouncedQ(searchQ.trim()), 250);
@@ -66,6 +71,10 @@ export function PlayerProfilePage() {
     queryFn: () => api.authMe(),
     retry: false,
   });
+
+  useEffect(() => {
+    if (me?.phone != null) setPhoneDraft(me.phone);
+  }, [me?.phone]);
 
   const { data: searchHits = [], isFetching: searching } = useQuery({
     queryKey: ["player-search", debouncedQ],
@@ -98,6 +107,52 @@ export function PlayerProfilePage() {
       await qc.invalidateQueries({ queryKey: ["auth-me"] });
     },
     onError: (e) => setError((e as Error).message),
+  });
+
+  const savePhone = useMutation({
+    mutationFn: () => api.updateMe({ phone: phoneDraft.trim() }),
+    onSuccess: async () => {
+      setContactMsg("Celular atualizado.");
+      setError("");
+      await qc.invalidateQueries({ queryKey: ["auth-me"] });
+    },
+    onError: (e) => {
+      setContactMsg("");
+      setError((e as Error).message);
+    },
+  });
+
+  const requestEmailChange = useMutation({
+    mutationFn: () =>
+      api.requestEmailChange({
+        current_password: emailPassword,
+        new_email: newEmail.trim(),
+      }),
+    onSuccess: async (res) => {
+      setContactMsg(res.message);
+      setError("");
+      setEmailPassword("");
+      setNewEmail("");
+      setShowEmailChange(false);
+      await qc.invalidateQueries({ queryKey: ["auth-me"] });
+    },
+    onError: (e) => {
+      setContactMsg("");
+      setError((e as Error).message);
+    },
+  });
+
+  const cancelEmailChange = useMutation({
+    mutationFn: () => api.cancelEmailChange(),
+    onSuccess: async () => {
+      setContactMsg("Troca de e-mail cancelada.");
+      setError("");
+      await qc.invalidateQueries({ queryKey: ["auth-me"] });
+    },
+    onError: (e) => {
+      setContactMsg("");
+      setError((e as Error).message);
+    },
   });
 
   const exportMyData = useMutation({
@@ -558,6 +613,115 @@ export function PlayerProfilePage() {
             Preferências discretas de contato e direitos sobre seus dados.{" "}
             <Link to="/privacidade">Política de privacidade</Link>
           </p>
+
+          <div className="admin-form-dense" style={{ marginBottom: "1.25rem" }}>
+            <div className="form-row">
+              <label>E-mail</label>
+              <input type="email" value={me.email} readOnly disabled />
+            </div>
+            {me.pending_email ? (
+              <p className="field-hint">
+                Aguardando confirmação em <strong>{me.pending_email}</strong>.{" "}
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={() => cancelEmailChange.mutate()}
+                  disabled={cancelEmailChange.isPending}
+                >
+                  Cancelar troca
+                </button>
+              </p>
+            ) : null}
+            {!showEmailChange ? (
+              <button
+                type="button"
+                className="secondary"
+                onClick={() => {
+                  setShowEmailChange(true);
+                  setContactMsg("");
+                }}
+              >
+                Alterar e-mail
+              </button>
+            ) : (
+              <form
+                onSubmit={(e: FormEvent) => {
+                  e.preventDefault();
+                  requestEmailChange.mutate();
+                }}
+              >
+                <div className="form-row">
+                  <label htmlFor="profile-new-email">Novo e-mail</label>
+                  <input
+                    id="profile-new-email"
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    required
+                    autoComplete="email"
+                  />
+                </div>
+                <div className="form-row">
+                  <label htmlFor="profile-email-password">Senha atual</label>
+                  <input
+                    id="profile-email-password"
+                    type="password"
+                    value={emailPassword}
+                    onChange={(e) => setEmailPassword(e.target.value)}
+                    required
+                    autoComplete="current-password"
+                  />
+                </div>
+                <p className="field-hint">
+                  {me.email_verified
+                    ? "Enviaremos um link ao novo endereço; o atual recebe um aviso para cancelar."
+                    : "Como o e-mail ainda não foi verificado, a troca é imediata e reenviamos a verificação."}
+                </p>
+                <div className="profile-privacy-actions">
+                  <button className="primary" type="submit" disabled={requestEmailChange.isPending}>
+                    {requestEmailChange.isPending ? "Enviando…" : "Solicitar troca"}
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary"
+                    onClick={() => {
+                      setShowEmailChange(false);
+                      setEmailPassword("");
+                      setNewEmail("");
+                    }}
+                  >
+                    Fechar
+                  </button>
+                </div>
+              </form>
+            )}
+
+            <form
+              style={{ marginTop: "1.25rem" }}
+              onSubmit={(e: FormEvent) => {
+                e.preventDefault();
+                savePhone.mutate();
+              }}
+            >
+              <div className="form-row">
+                <label htmlFor="profile-phone">Celular</label>
+                <input
+                  id="profile-phone"
+                  type="tel"
+                  value={phoneDraft}
+                  onChange={(e) => setPhoneDraft(e.target.value)}
+                  placeholder="11987654321"
+                  required
+                />
+              </div>
+              <p className="field-hint">DDD + número (10 a 13 dígitos). Sem SMS por enquanto — a troca é imediata.</p>
+              <button className="secondary" type="submit" disabled={savePhone.isPending}>
+                {savePhone.isPending ? "Salvando…" : "Salvar celular"}
+              </button>
+            </form>
+            {contactMsg ? <p className="success">{contactMsg}</p> : null}
+          </div>
+
           <Switch
             className="auth-privacy-check"
             checked={!Boolean(me.marketing_opt_out)}

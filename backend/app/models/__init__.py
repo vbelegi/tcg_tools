@@ -219,6 +219,8 @@ class User(Base):
     password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     avatar_blob: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
     email_verified_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    phone_verified_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    pending_phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
     privacy_accepted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     privacy_policy_version: Mapped[str | None] = mapped_column(String(16), nullable=True)
     terms_version: Mapped[str | None] = mapped_column(String(16), nullable=True)
@@ -234,6 +236,9 @@ class User(Base):
         back_populates="user", cascade="all, delete-orphan"
     )
     email_verifications: Mapped[list[EmailVerificationToken]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    email_changes: Mapped[list[EmailChangeToken]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
     fp_entries: Mapped[list[FoursePointsLedger]] = relationship(back_populates="user")
@@ -291,6 +296,23 @@ class EmailVerificationToken(Base):
     used_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     user: Mapped[User] = relationship(back_populates="email_verifications")
+
+
+class EmailChangeToken(Base):
+    __tablename__ = "email_change_tokens"
+    __table_args__ = (
+        Index("ix_email_change_tokens_user_id", "user_id"),
+        Index("ix_email_change_tokens_new_email", "new_email"),
+    )
+
+    token: Mapped[str] = mapped_column(String(64), primary_key=True)  # SHA-256 hex
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    new_email: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    user: Mapped[User] = relationship(back_populates="email_changes")
 
 
 class StaffAuditLog(Base):
