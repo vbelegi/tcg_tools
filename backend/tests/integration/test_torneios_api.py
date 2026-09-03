@@ -148,3 +148,54 @@ def test_finalize_rejected_with_active_round(api_client: TestClient):
     api_client.post(f"/api/v1/torneios/{eid}/iniciar")
     r = api_client.post(f"/api/v1/torneios/{eid}/finalizar")
     assert r.status_code == 422
+
+
+def test_list_torneios_filters_by_name_date_and_active(api_client: TestClient, db_session):
+    from app.models import Event
+
+    early = api_client.post(
+        "/api/v1/torneios",
+        json={
+            "name": "Aberto Alpha",
+            "event_date": "2026-09-05",
+            "format": "swiss",
+            "max_rounds": 2,
+            "entry_fee": 10,
+            "best_of": 3,
+            "premiacao_preset_id": "standard",
+            "tcg_game_id": 1,
+        },
+    )
+    assert early.status_code == 200
+    late = api_client.post(
+        "/api/v1/torneios",
+        json={
+            "name": "Encerrado Beta",
+            "event_date": "2026-09-20",
+            "format": "swiss",
+            "max_rounds": 2,
+            "entry_fee": 10,
+            "best_of": 3,
+            "premiacao_preset_id": "standard",
+            "tcg_game_id": 1,
+        },
+    )
+    assert late.status_code == 200
+    late_id = late.json()["id"]
+    row = db_session.query(Event).filter(Event.id == late_id).one()
+    row.status = "finished"
+    db_session.commit()
+
+    by_name = api_client.get("/api/v1/torneios", params={"q": "alpha"}).json()
+    assert [t["id"] for t in by_name] == [early.json()["id"]]
+
+    by_range = api_client.get(
+        "/api/v1/torneios",
+        params={"from": "2026-09-01", "to": "2026-09-10"},
+    ).json()
+    assert {t["id"] for t in by_range} == {early.json()["id"]}
+
+    active_only = api_client.get("/api/v1/torneios", params={"active": "true"}).json()
+    active_ids = {t["id"] for t in active_only}
+    assert early.json()["id"] in active_ids
+    assert late_id not in active_ids

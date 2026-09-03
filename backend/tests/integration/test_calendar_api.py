@@ -82,7 +82,35 @@ def test_invalid_announcement_time(api_client: TestClient):
     assert r.status_code == 422
 
 
-def test_published_promo_spanning_months_appears_in_both_feeds(api_client: TestClient):
+def test_announcements_filter_by_title_and_date_range(api_client: TestClient):
+    a = api_client.post(
+        "/api/v1/calendar/announcements",
+        json={"title": "Pré-release Magic", "event_date": "2026-09-10"},
+    )
+    b = api_client.post(
+        "/api/v1/calendar/announcements",
+        json={"title": "Mesa aberta Pokémon", "event_date": "2026-09-25"},
+    )
+    assert a.status_code == 201
+    assert b.status_code == 201
+    a_id = a.json()["id"]
+    b_id = b.json()["id"]
+
+    by_title = api_client.get("/api/v1/calendar/announcements", params={"q": "magic"}).json()
+    assert [row["id"] for row in by_title] == [a_id]
+
+    by_range = api_client.get(
+        "/api/v1/calendar/announcements",
+        params={"from": "2026-09-20", "to": "2026-09-30"},
+    ).json()
+    assert [row["id"] for row in by_range] == [b_id]
+
+    both = api_client.get(
+        "/api/v1/calendar/announcements",
+        params={"from": "2026-09-01", "to": "2026-09-30", "q": "pré"},
+    ).json()
+    assert [row["id"] for row in both] == [a_id]
+
     today = date.today()
     last = monthrange(today.year, today.month)[1]
     start = date(today.year, today.month, last)

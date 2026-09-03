@@ -4,6 +4,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- **Torneios / Agenda:** busca por nome, intervalo de datas e (em Torneios) filtro “somente não encerrados”, com estado na query string
+
 ## [1.13.0] - 2026-09-03
 
 ### Added

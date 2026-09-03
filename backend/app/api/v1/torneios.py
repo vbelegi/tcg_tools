@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+from datetime import date
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
@@ -179,18 +181,35 @@ def list_torneios(
     svc: TorneioService = Depends(get_torneio_service),
     viewer: User | None = Depends(get_optional_user),
     db: Session = Depends(get_db),
+    q: str | None = None,
+    active: bool | None = None,
+    from_date: date | None = Query(default=None, alias="from"),
+    to_date: date | None = Query(default=None, alias="to"),
 ):
+    """List tournaments. Visibility first; search/date/active never surface hidden drafts."""
     events = svc.list_events()
     if viewer is None:
-        return [e for e in events if _is_public_list_event(e)]
-    if _is_staff_user(viewer):
-        return events
-    registered = _registered_event_ids(db, viewer.id)
-    return [
-        e
-        for e in events
-        if _is_public_list_event(e) or int(e["id"]) in registered
-    ]
+        events = [e for e in events if _is_public_list_event(e)]
+    elif not _is_staff_user(viewer):
+        registered = _registered_event_ids(db, viewer.id)
+        events = [
+            e
+            for e in events
+            if _is_public_list_event(e) or int(e["id"]) in registered
+        ]
+
+    term = (q or "").strip().casefold()
+    if term:
+        events = [e for e in events if term in (e.get("name") or "").casefold()]
+    if active:
+        events = [e for e in events if e.get("status") != "finished"]
+    if from_date is not None:
+        start = from_date.isoformat()
+        events = [e for e in events if (e.get("event_date") or "") >= start]
+    if to_date is not None:
+        end = to_date.isoformat()
+        events = [e for e in events if (e.get("event_date") or "") <= end]
+    return events
 
 
 @router.get("/calendar")

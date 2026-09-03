@@ -6,7 +6,7 @@ import re
 from calendar import monthrange
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -126,6 +126,9 @@ def calendar_month(
 def list_announcements(
     _: RequireStaff,
     db: Session = Depends(get_db),
+    q: str | None = None,
+    from_date: date | None = Query(default=None, alias="from"),
+    to_date: date | None = Query(default=None, alias="to"),
     year: int | None = None,
     month: int | None = None,
 ):
@@ -133,7 +136,16 @@ def list_announcements(
         CalendarAnnouncement.event_date.desc(),
         CalendarAnnouncement.id.desc(),
     )
-    if year is not None and month is not None:
+    term = (q or "").strip()
+    if term:
+        escaped = term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        query = query.filter(CalendarAnnouncement.title.ilike(f"%{escaped}%", escape="\\"))
+    if from_date is not None or to_date is not None:
+        if from_date is not None:
+            query = query.filter(CalendarAnnouncement.event_date >= from_date)
+        if to_date is not None:
+            query = query.filter(CalendarAnnouncement.event_date <= to_date)
+    elif year is not None and month is not None:
         if month < 1 or month > 12:
             raise HTTPException(status_code=422, detail="Mês inválido.")
         start = date(year, month, 1)

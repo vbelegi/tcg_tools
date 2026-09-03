@@ -3179,6 +3179,21 @@ th {
   padding-bottom: 0.5rem;
 }
 
+.list-filter-dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.list-filter-date {
+  margin-bottom: 0;
+}
+
+.list-filter-date input {
+  max-width: 11rem;
+}
+
 .list-filter-count {
   margin: 0 0 0.5rem;
   font-size: 0.85rem;

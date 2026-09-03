@@ -1,9 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { useCallback } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 
 import { api } from "../../api/client";
+import { ListFilterBar } from "../../components/ListFilterBar";
 
 export function TorneiosListPage() {
+  const [params, setParams] = useSearchParams();
+  const q = params.get("q") ?? "";
+  const onlyActive = params.get("active") === "1";
+  const dateFrom = params.get("from") ?? "";
+  const dateTo = params.get("to") ?? "";
+
   const { data: me, isFetched: meFetched } = useQuery({
     queryKey: ["auth-me"],
     queryFn: () => api.authMe(),
@@ -11,11 +19,50 @@ export function TorneiosListPage() {
   });
   const canManage = me && (me.role === "admin" || me.role === "staff");
   const isGuest = meFetched && !me;
+
   const { data, isLoading } = useQuery({
-    queryKey: ["torneios", me?.id ?? "guest"],
-    queryFn: api.listTorneios,
+    queryKey: ["torneios", me?.id ?? "guest", q, onlyActive, dateFrom, dateTo],
+    queryFn: () =>
+      api.listTorneios({
+        q: q || undefined,
+        active: onlyActive || undefined,
+        from: dateFrom || undefined,
+        to: dateTo || undefined,
+      }),
     enabled: meFetched,
   });
+
+  const update = useCallback(
+    (changes: { q?: string; active?: boolean; from?: string; to?: string }) => {
+      setParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (changes.q !== undefined) {
+            if (changes.q) next.set("q", changes.q);
+            else next.delete("q");
+          }
+          if (changes.active !== undefined) {
+            if (changes.active) next.set("active", "1");
+            else next.delete("active");
+          }
+          if (changes.from !== undefined) {
+            if (changes.from) next.set("from", changes.from);
+            else next.delete("from");
+          }
+          if (changes.to !== undefined) {
+            if (changes.to) next.set("to", changes.to);
+            else next.delete("to");
+          }
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setParams],
+  );
+
+  const onSearchChange = useCallback((value: string) => update({ q: value }), [update]);
+  const hasFilters = Boolean(q) || onlyActive || Boolean(dateFrom) || Boolean(dateTo);
 
   return (
     <div>
@@ -42,12 +89,36 @@ export function TorneiosListPage() {
           </div>
         )}
       </div>
+
+      <ListFilterBar
+        searchId="torneios-filter-q"
+        searchLabel="Buscar por nome"
+        searchPlaceholder="Ex.: liga semanal"
+        searchValue={q}
+        onSearchChange={onSearchChange}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        onDateFromChange={(value) => update({ from: value })}
+        onDateToChange={(value) => update({ to: value })}
+        toggles={[
+          {
+            id: "active",
+            label: "Somente não encerrados",
+            checked: onlyActive,
+            onChange: (checked) => update({ active: checked }),
+          },
+        ]}
+        resultCount={data?.length}
+      />
+
       {isLoading && <p>Carregando...</p>}
       {data && data.length === 0 && (
-        <p>
-          {isGuest
-            ? "Nenhum torneio aberto ou finalizado no momento."
-            : "Nenhum torneio cadastrado."}
+        <p className="muted">
+          {hasFilters
+            ? "Nenhum torneio encontrado com esses filtros."
+            : isGuest
+              ? "Nenhum torneio aberto ou finalizado no momento."
+              : "Nenhum torneio cadastrado."}
         </p>
       )}
       <div className="card-grid" style={{ marginTop: "1rem" }}>
