@@ -12,8 +12,10 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import RequireStaff, get_optional_user
 from app.api.v1.event_visibility import filter_calendar_tournaments
+from app.api.v1.promo_visibility import promo_public_cutoff
+from app.core.promo.types import get_handler
 from app.db.session import get_db
-from app.models import CalendarAnnouncement, User
+from app.models import CalendarAnnouncement, PromoAction, User
 from app.services.torneio_service import TorneioService
 
 router = APIRouter(tags=["calendar"])
@@ -35,6 +37,18 @@ def _announcement_dict(row: CalendarAnnouncement) -> dict:
         "location": row.location,
         "created_at": row.created_at.isoformat() if row.created_at else None,
         "created_by_user_id": row.created_by_user_id,
+    }
+
+
+def _promo_calendar_dict(row: PromoAction) -> dict:
+    handler = get_handler(row.type)
+    return {
+        "id": row.id,
+        "name": row.name,
+        "start_date": row.start_date.isoformat(),
+        "end_date": row.end_date.isoformat(),
+        "description": row.description,
+        "type_label": handler.label if handler else row.type,
     }
 
 
@@ -88,9 +102,23 @@ def calendar_month(
         viewer,
         db,
     )
+    cutoff = promo_public_cutoff()
+    promos = (
+        db.query(PromoAction)
+        .filter(
+            PromoAction.published.is_(True),
+            PromoAction.show_in_calendar.is_(True),
+            PromoAction.end_date >= cutoff,
+            PromoAction.start_date <= end,
+            PromoAction.end_date >= start,
+        )
+        .order_by(PromoAction.start_date.asc(), PromoAction.id.asc())
+        .all()
+    )
     return {
         "tournaments": tournaments,
         "announcements": [_announcement_dict(a) for a in announcements],
+        "promo_actions": [_promo_calendar_dict(row) for row in promos],
     }
 
 

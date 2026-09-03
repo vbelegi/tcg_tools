@@ -34,6 +34,7 @@ describe("Layout", () => {
       </QueryClientProvider>,
     );
     expect(screen.getByText("Torneios")).toBeInTheDocument();
+    expect(screen.getByText("Ações Promocionais")).toBeInTheDocument();
     expect(screen.getByText("Ranking Fourse Points")).toBeInTheDocument();
     expect(screen.queryByText("Premiação")).not.toBeInTheDocument();
     expect(screen.queryByText("Alterar senha")).not.toBeInTheDocument();

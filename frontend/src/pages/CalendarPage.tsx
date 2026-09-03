@@ -4,6 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 
 import { api } from "../api/client";
 import type { Torneio } from "../api/types";
+import { formatPeriod } from "./acoes/promoFormat";
+import {
+  promoBandsByDay,
+  promosOnDay,
+  type CalendarPromoAction,
+} from "../utils/promoCalendar";
 
 const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
@@ -33,7 +39,8 @@ type CalendarAnnouncement = {
 
 type DayItem =
   | { kind: "tournament"; data: Torneio }
-  | { kind: "announcement"; data: CalendarAnnouncement };
+  | { kind: "announcement"; data: CalendarAnnouncement }
+  | { kind: "promo"; data: CalendarPromoAction };
 
 function statusLabel(status: Torneio["status"], registrationOpen?: boolean): string {
   if (status === "draft") return registrationOpen ? "Inscrições abertas" : "Sem inscrição online";
@@ -66,6 +73,7 @@ export function CalendarPage() {
   });
   const tournaments = data?.tournaments ?? [];
   const announcements = data?.announcements ?? [];
+  const promoActions = data?.promo_actions ?? [];
 
   const byDay = useMemo(() => {
     const map = new Map<number, DayItem[]>();
@@ -83,6 +91,11 @@ export function CalendarPage() {
     return map;
   }, [tournaments, announcements]);
 
+  const promoBands = useMemo(
+    () => promoBandsByDay(promoActions, cursor.year, cursor.month),
+    [promoActions, cursor.year, cursor.month],
+  );
+
   const firstWeekday = new Date(cursor.year, cursor.month - 1, 1).getDay();
   const daysInMonth = new Date(cursor.year, cursor.month, 0).getDate();
   const cells: Array<number | null> = [
@@ -91,7 +104,13 @@ export function CalendarPage() {
   ];
   while (cells.length % 7 !== 0) cells.push(null);
 
-  const selectedItems = selectedDay != null ? (byDay.get(selectedDay) ?? []) : [];
+  const pointItems = selectedDay != null ? (byDay.get(selectedDay) ?? []) : [];
+  const selectedPromos =
+    selectedDay != null ? promosOnDay(promoActions, cursor.year, cursor.month, selectedDay) : [];
+  const selectedItems: DayItem[] = [
+    ...pointItems,
+    ...selectedPromos.map((data) => ({ kind: "promo" as const, data })),
+  ];
 
   const shiftMonth = (delta: number) => {
     const d = new Date(cursor.year, cursor.month - 1 + delta, 1);
@@ -161,6 +180,7 @@ export function CalendarPage() {
           <div className="calendar-grid">
             {cells.map((day, idx) => {
               const dayItems = day != null ? (byDay.get(day) ?? []) : [];
+              const bands = day != null ? (promoBands.get(day) ?? []) : [];
               const selected = day != null && day === selectedDay;
               return (
                 <button
@@ -169,6 +189,7 @@ export function CalendarPage() {
                   className={`calendar-day${day == null ? " empty" : ""}${selected ? " selected" : ""}`}
                   disabled={day == null}
                   onClick={() => day != null && setSelectedDay(day)}
+                  data-testid={day != null ? `calendar-day-${day}` : undefined}
                 >
                   {day != null && <span className="calendar-day-num">{day}</span>}
                   <div className="calendar-chips">
@@ -185,7 +206,7 @@ export function CalendarPage() {
                         >
                           {item.data.name}
                         </span>
-                      ) : (
+                      ) : item.kind === "announcement" ? (
                         <span
                           key={`a-${item.data.id}`}
                           className="calendar-chip calendar-chip-announcement"
@@ -193,12 +214,42 @@ export function CalendarPage() {
                         >
                           {item.data.title}
                         </span>
-                      ),
+                      ) : null,
                     )}
                     {dayItems.length > 2 && (
                       <span className="calendar-chip-more">+{dayItems.length - 2}</span>
                     )}
                   </div>
+                  {bands.length > 0 && (
+                    <div className="calendar-promo-bands">
+                      {bands.map((cell, lane) =>
+                        cell ? (
+                          <span
+                            key={`p-${cell.promo.id}`}
+                            data-testid={`promo-band-${cell.promo.id}-${day}`}
+                            className={[
+                              "calendar-promo-band",
+                              cell.extendLeft ? "extend-left" : "",
+                              cell.extendRight ? "extend-right" : "",
+                              cell.isStart && !cell.openLeft ? "round-left" : "",
+                              cell.isEnd && !cell.openRight ? "round-right" : "",
+                              cell.openLeft ? "open-left" : "",
+                              cell.openRight ? "open-right" : "",
+                            ]
+                              .filter(Boolean)
+                              .join(" ")}
+                            title={cell.promo.name}
+                          >
+                            {cell.showLabel && (
+                              <span className="calendar-promo-band-label">{cell.promo.name}</span>
+                            )}
+                          </span>
+                        ) : (
+                          <span key={`lane-${lane}`} className="calendar-promo-band-spacer" />
+                        ),
+                      )}
+                    </div>
+                  )}
                 </button>
               );
             })}
@@ -234,6 +285,30 @@ export function CalendarPage() {
                     {ann.start_time && <li>Horário: {ann.start_time}</li>}
                     {ann.location && <li>Local: {ann.location}</li>}
                   </ul>
+                </article>
+              );
+            }
+
+            if (item.kind === "promo") {
+              const promo = item.data;
+              return (
+                <article key={`p-${promo.id}`} className="calendar-event-card calendar-promo-card">
+                  <div className="calendar-event-top">
+                    <h3>{promo.name}</h3>
+                    <span className="badge">Ação promocional</span>
+                  </div>
+                  <p className="calendar-event-desc">{promo.type_label}</p>
+                  {promo.description && <p className="calendar-event-desc">{promo.description}</p>}
+                  <ul className="calendar-event-meta">
+                    <li>Período: {formatPeriod(promo.start_date, promo.end_date)}</li>
+                  </ul>
+                  <Link
+                    className="primary"
+                    to={`/acoes/${promo.id}`}
+                    style={{ display: "inline-block", marginTop: "0.75rem" }}
+                  >
+                    Ver ação
+                  </Link>
                 </article>
               );
             }

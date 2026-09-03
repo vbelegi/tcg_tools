@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { api } from "../api/client";
 import { SiteFooter } from "../components/SiteFooter";
+import { Switch } from "../components/Switch";
 
 export function ClaimInvitePage() {
   const { token = "" } = useParams();
@@ -143,18 +144,15 @@ export function ClaimInvitePage() {
             onChange={(e) => setGuardianRelation(e.target.value)}
           />
         </div>
-        <label className="auth-privacy-check">
-          <input
-            type="checkbox"
-            checked={acceptPrivacy}
-            onChange={(e) => setAcceptPrivacy(e.target.checked)}
-            required
-          />
-          <span>
-            Li e aceito os <Link to="/termos">Termos de uso</Link> e a{" "}
-            <Link to="/privacidade">Política de privacidade</Link>
-          </span>
-        </label>
+        <Switch
+          className="auth-privacy-check"
+          checked={acceptPrivacy}
+          onChange={setAcceptPrivacy}
+          required
+        >
+          Li e aceito os <Link to="/termos">Termos de uso</Link> e a{" "}
+          <Link to="/privacidade">Política de privacidade</Link>
+        </Switch>
         <button className="primary" type="submit" disabled={claim.isPending || !password}>
           {claim.isPending ? "Salvando…" : "Ativar conta"}
         </button>

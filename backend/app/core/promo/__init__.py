@@ -1,0 +1,1 @@
+"""Promotional actions domain logic."""

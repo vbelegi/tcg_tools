@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { api } from "../api/client";
 import type { Torneio } from "../api/types";
+import { Switch } from "./Switch";
 
 type Props = {
   eventId: number;
@@ -198,14 +199,12 @@ export function TorneioDraftEditPanel({ eventId, torneio }: Props) {
             </select>
           </div>
           <div className="form-row torneio-edit-field-full">
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={pairingMode === "manual"}
-                onChange={(e) => setPairingMode(e.target.checked ? "manual" : "platform")}
-              />
+            <Switch
+              checked={pairingMode === "manual"}
+              onChange={(checked) => setPairingMode(checked ? "manual" : "platform")}
+            >
               Sem rodadas na plataforma (operação externa — colocações manuais)
-            </label>
+            </Switch>
           </div>
           {error && (
             <p className="error torneio-edit-field-full" role="alert">

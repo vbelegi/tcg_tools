@@ -91,11 +91,16 @@ class Settings(BaseSettings):
     def resolved_avatars_dir(self) -> Path:
         return self.resolved_media_dir / "avatars"
 
+    @property
+    def resolved_promo_regulations_dir(self) -> Path:
+        return self.resolved_media_dir / "promo-regulations"
+
     def ensure_dirs(self) -> None:
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.resolved_exports_dir.mkdir(parents=True, exist_ok=True)
         self.resolved_logs_dir.mkdir(parents=True, exist_ok=True)
         self.resolved_avatars_dir.mkdir(parents=True, exist_ok=True)
+        self.resolved_promo_regulations_dir.mkdir(parents=True, exist_ok=True)
         presets = self.resolved_presets_file
         if not presets.exists():
             bundled = paths.bundled_presets_file()

@@ -1,5 +1,7 @@
 import { useMemo } from "react";
 
+import { Switch } from "./Switch";
+
 const BO_OPTIONS = [1, 3, 5] as const;
 
 export type SeBoConfig = Record<string, number>;
@@ -51,15 +53,13 @@ export function SeFormatOptions({
     <div className="card" style={{ marginTop: "1rem" }}>
       <h3>Opcões — eliminatória</h3>
       <div className="form-row">
-        <label className="checkbox-label">
-          <input
-            type="checkbox"
-            checked={thirdPlaceMatch}
-            onChange={(e) => onThirdPlaceMatchChange(e.target.checked)}
-            disabled={disabled}
-          />
+        <Switch
+          checked={thirdPlaceMatch}
+          onChange={onThirdPlaceMatchChange}
+          disabled={disabled}
+        >
           Disputa de 3º–4º lugar (bronze)
-        </label>
+        </Switch>
       </div>
       <p style={{ fontSize: "0.9rem", opacity: 0.85 }}>
         Melhor de por fase (vazio = herda fase seguinte ou Bo global: {defaultBestOf}). Bronze usa o

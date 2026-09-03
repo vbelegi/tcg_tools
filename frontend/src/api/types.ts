@@ -169,6 +169,104 @@ export interface ProfileHistoryRow {
   fp_earned: number;
 }
 
+export interface PromoRegulation {
+  version: number;
+  display_name: string;
+  url: string;
+  uploaded_at?: string | null;
+  uploaded_by_user_id?: number | null;
+}
+
+export interface PromoActionType {
+  key: string;
+  label: string;
+}
+
+export interface PromoAction {
+  id: number;
+  name: string;
+  type: string;
+  type_label: string;
+  start_date: string;
+  end_date: string;
+  description: string | null;
+  published: boolean;
+  show_in_calendar: boolean;
+  max_participants: number | null;
+  regulation: PromoRegulation | null;
+  created_at: string | null;
+  /** Detail only. */
+  how_to_participate?: string | null;
+  management_panel_key?: string | null;
+  /** Staff only — never sent to players or guests. */
+  participant_count?: number;
+  regulation_versions?: PromoRegulation[];
+  /** Logged-in viewer only. */
+  my_participation?: { status: "pending_verification" | "confirmed" } | null;
+  /** Logged-in viewer only. */
+  draw_done?: boolean;
+  /** Logged-in viewer only. null if there is no draw or the viewer did not enroll. */
+  i_won?: boolean | null;
+  /** Staff detail only — never includes winner names. */
+  draw?: { mode: "direct" | "chained"; winner_count: number; drawn_at: string | null } | null;
+}
+
+export type PromoEnrollReason =
+  | "ok"
+  | "needs_auth"
+  | "needs_verification"
+  | "already_enrolled"
+  | "full"
+  | "ended"
+  | "expired"
+  | "used"
+  | "invalid";
+
+export interface PromoEnrollResult {
+  reason: PromoEnrollReason;
+  message: string;
+  action_id: number | null;
+  action_name: string | null;
+  participation_status: "pending_verification" | "confirmed" | null;
+}
+
+export interface PromoEnrollmentToken {
+  path: string;
+  url: string | null;
+  expires_at: string | null;
+  expires_in_seconds: number;
+}
+
+export interface PromoParticipant {
+  id: number;
+  user_id: number;
+  display_name: string;
+  status: "pending_verification" | "confirmed";
+  registered_at: string | null;
+}
+
+export interface PromoWinner {
+  user_id: number;
+  display_name: string;
+}
+
+export interface PromoDrawResult {
+  mode: "direct" | "chained";
+  winner_count: number;
+  drawn_at: string | null;
+  winners: PromoWinner[];
+}
+
+export interface PromoActionLog {
+  id: number;
+  action: string;
+  actor_user_id: number | null;
+  actor_display_name: string | null;
+  created_at: string | null;
+  ip: string | null;
+  meta: Record<string, unknown> | null;
+}
+
 export interface PlayerProfile {
   id: number;
   display_name: string;

@@ -74,6 +74,20 @@ class RegistrationSource(str, enum.Enum):
     self = "self"
 
 
+class PromoActionType(str, enum.Enum):
+    raffle_purchase_right = "raffle_purchase_right"
+
+
+class PromoParticipantStatus(str, enum.Enum):
+    pending_verification = "pending_verification"
+    confirmed = "confirmed"
+
+
+class PromoDrawMode(str, enum.Enum):
+    direct = "direct"
+    chained = "chained"
+
+
 class TcgGame(Base):
     __tablename__ = "tcg_games"
 
@@ -330,3 +344,131 @@ class CalendarAnnouncement(Base):
     location: Mapped[str | None] = mapped_column(String(200), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     created_by_user_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+
+class PromoAction(Base):
+    __tablename__ = "promo_actions"
+    __table_args__ = (
+        Index("ix_promo_actions_published", "published"),
+        Index("ix_promo_actions_end_date", "end_date"),
+        Index("ix_promo_actions_type", "type"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    type: Mapped[str] = mapped_column(String(32), nullable=False)
+    start_date: Mapped[date] = mapped_column(Date, nullable=False)
+    end_date: Mapped[date] = mapped_column(Date, nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    published: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    max_participants: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    show_in_calendar: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    regulation_version: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    created_by_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+    regulations: Mapped[list[PromoRegulationVersion]] = relationship(
+        back_populates="action", cascade="all, delete-orphan"
+    )
+    participants: Mapped[list[PromoParticipant]] = relationship(
+        back_populates="action", cascade="all, delete-orphan"
+    )
+    draw_result: Mapped[PromoDrawResult | None] = relationship(
+        back_populates="action", cascade="all, delete-orphan", uselist=False
+    )
+
+
+class PromoRegulationVersion(Base):
+    """Every uploaded regulation PDF is kept for audit; the highest version is current."""
+
+    __tablename__ = "promo_regulation_versions"
+    __table_args__ = (
+        UniqueConstraint("promo_id", "version", name="uq_promo_regulation_version"),
+        Index("ix_promo_regulation_versions_promo_id", "promo_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    promo_id: Mapped[int] = mapped_column(
+        ForeignKey("promo_actions.id", ondelete="CASCADE"), nullable=False
+    )
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
+    stored_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    uploaded_by_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    uploaded_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    action: Mapped[PromoAction] = relationship(back_populates="regulations")
+
+
+class PromoEnrollmentToken(Base):
+    """Single-use QR token: dies on first access so the link cannot be shared."""
+
+    __tablename__ = "promo_enrollment_tokens"
+    __table_args__ = (
+        Index("ix_promo_enrollment_tokens_promo_id", "promo_id"),
+        Index("ix_promo_enrollment_tokens_expires_at", "expires_at"),
+        Index("ix_promo_enrollment_tokens_pending_session", "pending_session_hash"),
+    )
+
+    token: Mapped[str] = mapped_column(String(64), primary_key=True)  # SHA-256 hex
+    promo_id: Mapped[int] = mapped_column(
+        ForeignKey("promo_actions.id", ondelete="CASCADE"), nullable=False
+    )
+    created_by_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    pending_session_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
+    action: Mapped[PromoAction] = relationship()
+
+
+class PromoParticipant(Base):
+    __tablename__ = "promo_participants"
+    __table_args__ = (
+        UniqueConstraint("promo_id", "user_id", name="uq_promo_participant"),
+        Index("ix_promo_participants_promo_id", "promo_id"),
+        Index("ix_promo_participants_user_id", "user_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    promo_id: Mapped[int] = mapped_column(
+        ForeignKey("promo_actions.id", ondelete="CASCADE"), nullable=False
+    )
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    status: Mapped[str] = mapped_column(
+        String(32), nullable=False, default=PromoParticipantStatus.pending_verification.value
+    )
+    registered_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    action: Mapped[PromoAction] = relationship(back_populates="participants")
+    user: Mapped[User] = relationship()
+
+
+class PromoDrawResult(Base):
+    __tablename__ = "promo_draw_results"
+    __table_args__ = (UniqueConstraint("promo_id", name="uq_promo_draw_result_promo"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    promo_id: Mapped[int] = mapped_column(
+        ForeignKey("promo_actions.id", ondelete="CASCADE"), nullable=False
+    )
+    drawn_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    drawn_by_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    mode: Mapped[str] = mapped_column(String(16), nullable=False)
+    winner_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    winner_user_ids: Mapped[list[int]] = mapped_column(JSON, nullable=False)
+
+    action: Mapped[PromoAction] = relationship(back_populates="draw_result")

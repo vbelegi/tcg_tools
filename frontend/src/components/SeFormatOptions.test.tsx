@@ -31,7 +31,7 @@ describe("SeFormatOptions", () => {
         maxRounds={2}
       />,
     );
-    fireEvent.click(screen.getByRole("checkbox"));
+    fireEvent.click(screen.getByRole("switch"));
     expect(onThird).toHaveBeenCalledWith(true);
   });
 

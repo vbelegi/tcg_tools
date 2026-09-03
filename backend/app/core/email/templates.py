@@ -67,3 +67,37 @@ def password_reset_email(*, reset_url: str, days: int) -> tuple[str, str, str]:
         "<p>Se você não solicitou isso, ignore este e-mail.</p>"
     )
     return subject, text, html
+
+
+def promo_update_email(
+    *,
+    display_name: str,
+    action_name: str,
+    action_url: str,
+    change_lines: list[str],
+) -> tuple[str, str, str]:
+    subject = f"Atualização: {action_name}"
+    bullets_text = "\n".join(f"- {line}" for line in change_lines)
+    text = (
+        f"Olá, {display_name},\n\n"
+        f"A ação promocional “{action_name}” foi atualizada:\n\n"
+        f"{bullets_text}\n\n"
+        f"Veja os detalhes: {action_url}\n"
+    )
+    items = "".join(f"<li>{_escape(line)}</li>" for line in change_lines)
+    html = _html_wrapper(
+        f"<p>Olá, <strong>{_escape(display_name)}</strong>,</p>"
+        f"<p>A ação promocional <strong>{_escape(action_name)}</strong> foi atualizada:</p>"
+        f"<ul>{items}</ul>"
+        f'<p><a href="{_escape(action_url)}">Ver ação promocional</a></p>'
+    )
+    return subject, text, html
+
+
+def _escape(value: str) -> str:
+    return (
+        value.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace('"', "&quot;")
+    )

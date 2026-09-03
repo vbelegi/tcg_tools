@@ -16,6 +16,7 @@ import {
 import { api } from "../api/client";
 import type { ProfileHistoryRow } from "../api/types";
 import { ChangePasswordModal } from "../components/ChangePasswordModal";
+import { Switch } from "../components/Switch";
 import { resolveAvatarUrl, tcgIconUrl } from "../utils/tcgIcons";
 
 function formatFinish(rank: number | null | undefined): string {
@@ -557,15 +558,14 @@ export function PlayerProfilePage() {
             Preferências discretas de contato e direitos sobre seus dados.{" "}
             <Link to="/privacidade">Política de privacidade</Link>
           </p>
-          <label className="auth-privacy-check">
-            <input
-              type="checkbox"
-              checked={!Boolean(me.marketing_opt_out)}
-              onChange={(e) => marketingToggle.mutate(!e.target.checked)}
-              disabled={marketingToggle.isPending}
-            />
-            <span>Receber novidades e avisos da loja por WhatsApp/e-mail</span>
-          </label>
+          <Switch
+            className="auth-privacy-check"
+            checked={!Boolean(me.marketing_opt_out)}
+            onChange={(checked) => marketingToggle.mutate(!checked)}
+            disabled={marketingToggle.isPending}
+          >
+            Receber novidades e avisos da loja por WhatsApp/e-mail
+          </Switch>
           <div className="profile-privacy-actions">
             <button
               type="button"

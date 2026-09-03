@@ -1,8 +1,9 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../../api/client";
 import { SeFormatOptions, type SeBoConfig } from "../../components/SeFormatOptions";
+import { Switch } from "../../components/Switch";
 
 export function TorneioNovoPage() {
   const navigate = useNavigate();
@@ -76,6 +77,9 @@ export function TorneioNovoPage() {
 
   return (
     <div>
+      <Link to="/torneios" className="torneio-back">
+        ← Torneios
+      </Link>
       <h1>Novo torneio</h1>
       <div className="form-row">
         <label htmlFor="torneio-name">Nome</label>
@@ -192,24 +196,17 @@ export function TorneioNovoPage() {
         </select>
       </div>
       <div className="form-row">
-        <label className="checkbox-label">
-          <input
-            type="checkbox"
-            checked={pairingMode === "manual"}
-            onChange={(e) => setPairingMode(e.target.checked ? "manual" : "platform")}
-          />
+        <Switch
+          checked={pairingMode === "manual"}
+          onChange={(checked) => setPairingMode(checked ? "manual" : "platform")}
+        >
           Sem rodadas na plataforma (operação externa — colocações manuais)
-        </label>
+        </Switch>
       </div>
       <div className="form-row">
-        <label className="checkbox-label">
-          <input
-            type="checkbox"
-            checked={registrationOpen}
-            onChange={(e) => setRegistrationOpen(e.target.checked)}
-          />
+        <Switch checked={registrationOpen} onChange={setRegistrationOpen}>
           Inscrições abertas (self-inscrição)
-        </label>
+        </Switch>
       </div>
       {error && <p className="error">{error}</p>}
       <button

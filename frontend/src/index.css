@@ -167,8 +167,12 @@ a:hover {
   color: var(--text);
 }
 
-.auth-privacy-check input {
-  margin-top: 0.2rem;
+.ui-switch.auth-privacy-check {
+  align-items: flex-start;
+}
+
+.ui-switch.auth-privacy-check .ui-switch-track {
+  margin-top: 0.15rem;
 }
 
 .profile-privacy-section {
@@ -419,6 +423,90 @@ input[type="radio"] {
   margin-bottom: 0;
   color: var(--text);
   cursor: pointer;
+}
+
+.form-submit {
+  margin-top: 1.5rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+label.ui-switch,
+.form-row label.ui-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0;
+  cursor: pointer;
+  user-select: none;
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.ui-switch-track {
+  display: block;
+  position: relative;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 1.4rem;
+  border-radius: 999px;
+  background: #5a4a68;
+  transition: background 0.15s ease;
+}
+
+.ui-switch-track::after {
+  content: "";
+  position: absolute;
+  top: 0.15rem;
+  left: 0.15rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.15s ease;
+}
+
+.ui-switch input:checked + .ui-switch-track {
+  background: var(--primary);
+}
+
+.ui-switch input:checked + .ui-switch-track::after {
+  transform: translateX(1.1rem);
+}
+
+.ui-switch input:focus-visible + .ui-switch-track {
+  box-shadow: 0 0 0 2px var(--primary-soft);
+}
+
+.ui-switch:has(input:disabled) {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.file-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.file-picker-name {
+  color: var(--muted);
+  font-size: 0.875rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 button.primary,
@@ -864,7 +952,8 @@ th {
   font-weight: 600;
 }
 
-.torneio-manage-header {
+.torneio-manage-header,
+.page-header {
   display: flex;
   justify-content: space-between;
   gap: 1.25rem;
@@ -890,7 +979,8 @@ th {
   margin: 0;
 }
 
-.torneio-manage-meta {
+.torneio-manage-meta,
+.page-header-meta {
   margin: 0.45rem 0 0;
   color: var(--muted);
 }
@@ -906,10 +996,15 @@ th {
 
 .torneio-manage-primary {
   min-width: 11rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .torneio-manage-primary .field-hint {
-  margin-top: 0.35rem;
+  margin-top: 0;
+  flex: 1 0 100%;
   max-width: 14rem;
 }
 
@@ -1250,9 +1345,10 @@ th {
 }
 
 .calendar-day {
+  position: relative;
   height: 100%;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -1263,6 +1359,7 @@ th {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  z-index: 0;
 }
 
 .calendar-day.empty {
@@ -1314,6 +1411,74 @@ th {
 .calendar-chip-announcement {
   color: var(--warning);
   border-color: rgba(251, 191, 36, 0.45);
+}
+
+.calendar-promo-bands {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  margin-top: auto;
+  width: 100%;
+}
+
+.calendar-promo-band,
+.calendar-promo-band-spacer {
+  height: 0.7rem;
+  flex-shrink: 0;
+}
+
+.calendar-promo-band {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  background: rgba(255, 107, 0, 0.85);
+  color: #12081a;
+  font-size: 0.58rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0 0.35rem;
+  box-sizing: border-box;
+}
+
+.calendar-promo-band.extend-left {
+  margin-left: calc(-0.35rem / 2);
+  width: calc(100% + 0.35rem / 2);
+}
+
+.calendar-promo-band.extend-right {
+  margin-right: calc(-0.35rem / 2);
+  width: calc(100% + 0.35rem / 2);
+}
+
+.calendar-promo-band.extend-left.extend-right {
+  width: calc(100% + 0.35rem);
+}
+
+.calendar-promo-band.round-left {
+  border-top-left-radius: 999px;
+  border-bottom-left-radius: 999px;
+}
+
+.calendar-promo-band.round-right {
+  border-top-right-radius: 999px;
+  border-bottom-right-radius: 999px;
+}
+
+.calendar-promo-band.open-left,
+.calendar-promo-band.open-right {
+  border-radius: 0;
+}
+
+.calendar-promo-band-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calendar-promo-card {
+  border-left: 3px solid var(--brand);
 }
 
 .badge-announcement {
@@ -2823,7 +2988,7 @@ th {
 }
 
 .externo-col-flags {
-  width: 8.5rem;
+  width: 12rem;
 }
 
 .externo-col-actions {
@@ -2887,6 +3052,13 @@ th {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.45rem;
+}
+
+.externo-col-flags .ui-switch {
+  display: flex;
+  margin: 0 0 0.4rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
 }
 
 .externo-flag {
@@ -2983,4 +3155,239 @@ th {
 .colocacao-row-dragging {
   opacity: 0.65;
   background: var(--primary-soft);
+}
+
+/* Ações Promocionais */
+.list-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.list-filter-search {
+  flex: 1 1 260px;
+  margin-bottom: 0;
+}
+
+.list-filter-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: 0.5rem;
+}
+
+.list-filter-count {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+}
+
+.promo-card h2 {
+  margin-bottom: 0.35rem;
+}
+
+.promo-card h2 a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.promo-card h2 a:hover {
+  color: var(--primary);
+}
+
+.promo-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 0.5rem;
+}
+
+.promo-card-period {
+  margin: 0 0 0.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.promo-card-desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0 0 0.5rem;
+}
+
+.promo-detail-desc {
+  white-space: pre-wrap;
+}
+
+.promo-participation,
+.promo-manage {
+  margin-top: 2rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1.25rem;
+}
+
+.promo-guest-notice {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.promo-guest-notice p {
+  margin-top: 0;
+}
+
+.promo-guest-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.promo-enrolled-notice {
+  margin: 0 0 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--success);
+  background: rgba(0, 186, 124, 0.14);
+}
+
+.promo-enrolled-notice p {
+  margin: 0;
+}
+
+.promo-draw-missed {
+  margin: 0 0 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.promo-draw-missed p {
+  margin: 0;
+}
+
+.promo-raffle,
+.promo-winners {
+  margin: 1.5rem 0;
+}
+
+.promo-enroll-box {
+  margin: 1rem 0;
+  padding: 1rem;
+  border-radius: 12px;
+}
+
+.promo-enroll-box p:first-child {
+  margin-top: 0;
+}
+
+.promo-enroll-box p:last-child {
+  margin-bottom: 0;
+}
+
+.promo-enroll-box--ok {
+  border: 1px solid var(--success);
+  background: rgba(0, 186, 124, 0.14);
+}
+
+.promo-enroll-box--warn {
+  border: 1px solid var(--warning);
+  background: rgba(251, 191, 36, 0.12);
+}
+
+.promo-enroll-box--error {
+  border: 1px solid var(--danger);
+  background: rgba(244, 33, 46, 0.12);
+}
+
+.promo-staff-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.promo-manage .promo-staff-actions {
+  margin-bottom: 1rem;
+}
+
+.promo-qr {
+  display: flex;
+  justify-content: center;
+  padding: 0.75rem;
+  background: #fff;
+  border-radius: 12px;
+}
+
+.promo-qr--expired {
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+
+.promo-qr-svg svg {
+  display: block;
+  width: 240px;
+  height: 240px;
+}
+
+.promo-qr-timer {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  text-align: center;
+}
+
+.promo-participants-list,
+.promo-log-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.promo-participants-list li,
+.promo-log-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.promo-log-list li {
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.promo-log-list p {
+  margin: 0;
+}
+
+.regulation-field-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+}
+
+.regulation-progress {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  margin-top: 0.5rem;
+}
+
+.regulation-history {
+  margin-top: 0.75rem;
+}
+
+.regulation-history ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
 }
