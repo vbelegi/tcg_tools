@@ -7,6 +7,8 @@ import type {
   PresetsResponse,
   PromoAction,
   PromoActionType,
+  PromoEnrollResult,
+  PromoEnrollmentToken,
   Round,
   Standing,
   TabelaLinha,
@@ -683,6 +685,35 @@ export const api = {
       xhr.send(form);
     }),
 
+  createPromoEnrollmentToken: (id: number) =>
+    request<PromoEnrollmentToken>(`/acoes/${id}/enrollment-token`, { method: "POST" }),
+
+  /** Always returns a named `reason`; does not throw on 4xx with a reason body. */
+  enrollPromo: (token: string) => enrollRequest(`/acoes/enroll/${encodeURIComponent(token)}`),
+
+  completePromoEnroll: () =>
+    enrollRequest("/acoes/enroll/complete", { method: "POST" }),
+
 };
+
+async function enrollRequest(url: string, init?: RequestInit): Promise<PromoEnrollResult> {
+  const res = await fetch(`${BASE}${url}`, {
+    ...init,
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      ...init?.headers,
+    },
+  });
+  const body = (await res.json().catch(() => ({}))) as PromoEnrollResult & { detail?: unknown };
+  if (body && typeof body.reason === "string") {
+    return body;
+  }
+  if (body && body.detail && typeof body.detail === "object" && body.detail !== null && "reason" in body.detail) {
+    const nested = body.detail as PromoEnrollResult;
+    if (nested.reason) return nested;
+  }
+  throw new Error(formatApiError(body.detail, res.statusText || "Erro na inscrição"));
+}
 
 

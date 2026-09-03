@@ -4262,6 +4262,197 @@
         }
       }
     },
+    "/api/v1/acoes/{action_id}/enrollment-token": {
+      "post": {
+        "tags": [
+          "acoes"
+        ],
+        "summary": "Create Action Enrollment Token",
+        "operationId": "create_action_enrollment_token_api_v1_acoes__action_id__enrollment_token_post",
+        "parameters": [
+          {
+            "name": "action_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Action Id"
+            }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/acoes/enroll/{raw_token}": {
+      "get": {
+        "tags": [
+          "acoes"
+        ],
+        "summary": "Consume Enrollment Token",
+        "operationId": "consume_enrollment_token_api_v1_acoes_enroll__raw_token__get",
+        "parameters": [
+          {
+            "name": "raw_token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Raw Token"
+            }
+          },
+          {
+            "name": "promo_enroll",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Promo Enroll"
+            }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/acoes/enroll/complete": {
+      "post": {
+        "tags": [
+          "acoes"
+        ],
+        "summary": "Complete Enrollment Endpoint",
+        "operationId": "complete_enrollment_endpoint_api_v1_acoes_enroll_complete_post",
+        "parameters": [
+          {
+            "name": "promo_enroll",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Promo Enroll"
+            }
+          },
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/{full_path}": {
       "get": {
         "summary": "Spa Fallback",

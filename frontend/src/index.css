@@ -3077,6 +3077,47 @@ th {
   gap: 0.5rem;
 }
 
+.promo-enrolled-notice {
+  margin: 0 0 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--success);
+  background: rgba(0, 186, 124, 0.14);
+}
+
+.promo-enrolled-notice p {
+  margin: 0;
+}
+
+.promo-enroll-box {
+  margin: 1rem 0;
+  padding: 1rem;
+  border-radius: 12px;
+}
+
+.promo-enroll-box p:first-child {
+  margin-top: 0;
+}
+
+.promo-enroll-box p:last-child {
+  margin-bottom: 0;
+}
+
+.promo-enroll-box--ok {
+  border: 1px solid var(--success);
+  background: rgba(0, 186, 124, 0.14);
+}
+
+.promo-enroll-box--warn {
+  border: 1px solid var(--warning);
+  background: rgba(251, 191, 36, 0.12);
+}
+
+.promo-enroll-box--error {
+  border: 1px solid var(--danger);
+  background: rgba(244, 33, 46, 0.12);
+}
+
 .regulation-field-actions {
   display: flex;
   flex-wrap: wrap;

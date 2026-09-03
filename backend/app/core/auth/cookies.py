@@ -31,3 +31,29 @@ def clear_session_cookie(response: Response) -> None:
         httponly=kwargs["httponly"],
         samesite=kwargs["samesite"],
     )
+
+
+def set_promo_enroll_cookie(response: Response, token: str, *, max_age: int) -> None:
+    from app.core.promo.enrollment import ENROLL_COOKIE
+
+    response.set_cookie(
+        key=ENROLL_COOKIE,
+        value=token,
+        httponly=True,
+        samesite="lax",
+        max_age=max(max_age, 1),
+        path="/",
+        secure=get_settings().resolved_cookie_secure,
+    )
+
+
+def clear_promo_enroll_cookie(response: Response) -> None:
+    from app.core.promo.enrollment import ENROLL_COOKIE
+
+    response.delete_cookie(
+        key=ENROLL_COOKIE,
+        path="/",
+        secure=get_settings().resolved_cookie_secure,
+        httponly=True,
+        samesite="lax",
+    )

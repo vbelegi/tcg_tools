@@ -201,6 +201,34 @@ export interface PromoAction {
   /** Staff only — never sent to players or guests. */
   participant_count?: number;
   regulation_versions?: PromoRegulation[];
+  /** Logged-in viewer only. */
+  my_participation?: { status: "pending_verification" | "confirmed" } | null;
+}
+
+export type PromoEnrollReason =
+  | "ok"
+  | "needs_auth"
+  | "needs_verification"
+  | "already_enrolled"
+  | "full"
+  | "ended"
+  | "expired"
+  | "used"
+  | "invalid";
+
+export interface PromoEnrollResult {
+  reason: PromoEnrollReason;
+  message: string;
+  action_id: number | null;
+  action_name: string | null;
+  participation_status: "pending_verification" | "confirmed" | null;
+}
+
+export interface PromoEnrollmentToken {
+  path: string;
+  url: string | null;
+  expires_at: string | null;
+  expires_in_seconds: number;
 }
 
 export interface PlayerProfile {

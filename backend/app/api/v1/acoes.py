@@ -5,7 +5,8 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
+from fastapi import APIRouter, Cookie, Depends, File, HTTPException, Query, Request, UploadFile
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -15,17 +16,30 @@ from app.api.uploads import read_upload_limited
 from app.api.v1.event_visibility import is_staff_user
 from app.api.v1.promo_visibility import can_view_promo, visible_promo_query
 from app.core.audit import log_staff_action
+from app.core.auth.cookies import clear_promo_enroll_cookie, set_promo_enroll_cookie
+from app.core.auth.invites import promo_enroll_path, promo_enroll_url
 from app.core.promo import regulations
+from app.core.promo.enrollment import (
+    ENROLL_COOKIE,
+    ENROLL_TTL,
+    EnrollmentError,
+    complete_enrollment,
+    consume_token,
+    create_enrollment_token,
+    get_participation,
+)
 from app.core.promo.regulations import (
     MAX_REGULATION_BYTES,
     RegulationError,
     store_regulation,
 )
 from app.core.promo.types import get_handler, is_known_type, known_types
+from app.core.rate_limit import rate_limit_dependency
 from app.db.session import get_db
 from app.models import PromoAction, PromoParticipant, User
 
 router = APIRouter(prefix="/acoes", tags=["acoes"])
+_enroll_limit = rate_limit_dependency("promo_enroll", limit=30, window_sec=60)
 
 
 class PromoActionCreate(BaseModel):
@@ -113,6 +127,9 @@ def _action_dict(
     if detail:
         data["how_to_participate"] = handler.how_to_participate_text() if handler else None
         data["management_panel_key"] = handler.management_panel_key if handler else None
+        if viewer is not None:
+            mine = get_participation(db, action.id, viewer.id)
+            data["my_participation"] = {"status": mine.status} if mine else None
     if is_staff_user(viewer):
         # Participant numbers are staff-only; players never see who or how many.
         data["participant_count"] = (
@@ -348,3 +365,72 @@ async def upload_regulation(
         request=request,
     )
     return _action_dict(db, action, actor, detail=True)
+
+
+def _enroll_response(result) -> JSONResponse:
+    response = JSONResponse(status_code=result.http_status, content=result.as_dict())
+    if result.set_cookie:
+        set_promo_enroll_cookie(
+            response,
+            result.set_cookie,
+            max_age=result.cookie_max_age or int(ENROLL_TTL.total_seconds()),
+        )
+    if result.clear_cookie:
+        clear_promo_enroll_cookie(response)
+    return response
+
+
+@router.post("/{action_id}/enrollment-token")
+def create_action_enrollment_token(
+    action_id: int,
+    actor: RequireStaff,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    action = _get_action(db, action_id)
+    try:
+        raw, row = create_enrollment_token(db, action, actor)
+    except EnrollmentError as exc:
+        from app.core.promo.enrollment import HTTP_STATUS
+
+        raise HTTPException(
+            status_code=HTTP_STATUS[exc.reason],
+            detail={"reason": exc.reason, "message": str(exc)},
+        ) from exc
+    log_staff_action(
+        db,
+        actor=actor,
+        action="promo.enroll_token",
+        meta={"promo_id": action.id},
+        request=request,
+    )
+    return {
+        "path": promo_enroll_path(raw),
+        "url": promo_enroll_url(raw),
+        "expires_at": row.expires_at.isoformat() if row.expires_at else None,
+        "expires_in_seconds": int(ENROLL_TTL.total_seconds()),
+    }
+
+
+@router.get("/enroll/{raw_token}")
+def consume_enrollment_token(
+    raw_token: str,
+    request: Request,
+    db: Session = Depends(get_db),
+    viewer: User | None = Depends(get_optional_user),
+    promo_enroll: str | None = Cookie(default=None, alias=ENROLL_COOKIE),
+    _: None = Depends(_enroll_limit),
+):
+    result = consume_token(db, raw_token, viewer, promo_enroll)
+    return _enroll_response(result)
+
+
+@router.post("/enroll/complete")
+def complete_enrollment_endpoint(
+    db: Session = Depends(get_db),
+    viewer: User | None = Depends(get_optional_user),
+    promo_enroll: str | None = Cookie(default=None, alias=ENROLL_COOKIE),
+    _: None = Depends(_enroll_limit),
+):
+    result = complete_enrollment(db, viewer, promo_enroll)
+    return _enroll_response(result)

@@ -392,6 +392,9 @@ def auth_verify_email(body: VerifyEmailBody, db: Session = Depends(get_db)):
         user = verify_email(db, body.token)
     except AuthError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    from app.core.promo.enrollment import promote_pending_on_verify
+
+    promote_pending_on_verify(db, user)
     return private_user_dict(user)
 
 

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-import { formatApiError } from "./client";
+import { api, formatApiError } from "./client";
 
 const BASE = "/api/v1";
 
@@ -105,5 +105,29 @@ describe("reabrirRodada URL", () => {
     const without = `/torneios/${id}/rodadas/reabrir`;
     expect(withNumber).toContain("number=2");
     expect(without).not.toContain("?");
+  });
+});
+
+describe("api.enrollPromo", () => {
+  beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn());
+  });
+
+  it("returns a named 409 reason without throwing", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          reason: "already_enrolled",
+          message: "Você já está inscrito nesta ação.",
+          action_id: 1,
+          action_name: "Pré-venda",
+          participation_status: "confirmed",
+        }),
+        { status: 409, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+    const body = await api.enrollPromo("tok");
+    expect(body.reason).toBe("already_enrolled");
+    expect(body.message).toContain("já está inscrito");
   });
 });

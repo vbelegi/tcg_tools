@@ -6,6 +6,7 @@ import { Layout } from "./components/Layout";
 import { RequireAdmin, RequireAuth, RequireStaff } from "./components/RequireAuth";
 import { AcaoDetailPage } from "./pages/acoes/AcaoDetailPage";
 import { AcaoNovaPage } from "./pages/acoes/AcaoNovaPage";
+import { AcaoParticipacaoPage } from "./pages/acoes/AcaoParticipacaoPage";
 import { AcoesListPage } from "./pages/acoes/AcoesListPage";
 import { AgendaPage } from "./pages/AgendaPage";
 import { CalendarPage } from "./pages/CalendarPage";
@@ -54,6 +55,7 @@ createRoot(document.getElementById("root")!).render(
             <Route element={<RequireStaff />}>
               <Route path="acoes/nova" element={<AcaoNovaPage />} />
             </Route>
+            <Route path="acoes/participar/:token" element={<AcaoParticipacaoPage />} />
             <Route path="acoes/:id" element={<AcaoDetailPage />} />
             <Route path="torneios" element={<TorneiosListPage />} />
             <Route path="torneios/:id" element={<TorneioDetailPage />} />

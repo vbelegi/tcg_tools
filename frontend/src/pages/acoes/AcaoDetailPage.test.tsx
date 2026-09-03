@@ -84,6 +84,49 @@ describe("AcaoDetailPage", () => {
     expect(screen.queryByText(/necessário ter uma conta/)).not.toBeInTheDocument();
   });
 
+  it("shows a green participation box when the player is confirmed", async () => {
+    vi.mocked(api.authMe).mockResolvedValue({
+      id: 5,
+      email: "player@local",
+      display_name: "Player",
+      role: "player",
+      status: "active",
+    });
+    vi.mocked(api.getPromoAction).mockResolvedValue({
+      ...action,
+      my_participation: { status: "confirmed" },
+    });
+
+    renderPage();
+
+    expect(
+      await screen.findByText("Você já está participando desta Ação Promocional."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/necessário ter uma conta/)).not.toBeInTheDocument();
+  });
+
+  it("tells a pending player to confirm e-mail", async () => {
+    vi.mocked(api.authMe).mockResolvedValue({
+      id: 5,
+      email: "player@local",
+      display_name: "Player",
+      role: "player",
+      status: "active",
+    });
+    vi.mocked(api.getPromoAction).mockResolvedValue({
+      ...action,
+      my_participation: { status: "pending_verification" },
+    });
+
+    renderPage();
+
+    expect(await screen.findByText(/Inscrição pendente; confirme seu e-mail/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Reenviar link de verificação" })).toHaveAttribute(
+      "href",
+      "/conta/verificar-email",
+    );
+  });
+
   it("offers publishing and regulation upload to staff on a draft", async () => {
     vi.mocked(api.authMe).mockResolvedValue({
       id: 9,

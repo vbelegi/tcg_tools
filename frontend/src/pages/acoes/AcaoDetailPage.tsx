@@ -113,6 +113,18 @@ export function AcaoDetailPage() {
 
       <section className="promo-participation">
         <h2>Como participar</h2>
+        {action.my_participation && (
+          <div className="promo-enrolled-notice" role="status">
+            {action.my_participation.status === "confirmed" ? (
+              <p>Você já está participando desta Ação Promocional.</p>
+            ) : (
+              <p>
+                Inscrição pendente; confirme seu e-mail.{" "}
+                <Link to="/conta/verificar-email">Reenviar link de verificação</Link>
+              </p>
+            )}
+          </div>
+        )}
         {action.how_to_participate && <p>{action.how_to_participate}</p>}
 
         {meFetched && !me && (
