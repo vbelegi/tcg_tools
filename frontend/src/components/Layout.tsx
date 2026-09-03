@@ -6,6 +6,7 @@ import { api } from "../api/client";
 import { safeRedirectPath } from "../utils/safeRedirect";
 import { EmailVerificationBanner } from "./EmailVerificationBanner";
 import { AuthModal, type AuthModalMode } from "./AuthModal";
+import { SiteFooter } from "./SiteFooter";
 
 export function Layout() {
   const navigate = useNavigate();
@@ -139,24 +140,16 @@ export function Layout() {
             </>
           )}
         </nav>
-        <footer className="sidebar-footer">
-          <a
-            className="powered-by"
-            href="https://fourse.com.br"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <span>Powered by</span>
-            <span className="fourse-logo">FOURSE</span>
-          </a>
-        </footer>
       </aside>
-      <main className="main-content">
-        {me && me.status === "active" && me.email_verified === false && (
-          <EmailVerificationBanner email={me.email} />
-        )}
-        <Outlet />
-      </main>
+      <div className="app-body">
+        <main className="main-content">
+          {me && me.status === "active" && me.email_verified === false && (
+            <EmailVerificationBanner email={me.email} />
+          )}
+          <Outlet />
+        </main>
+        <SiteFooter />
+      </div>
       <AuthModal
         open={authOpen && !me}
         mode={authMode}

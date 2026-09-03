@@ -86,6 +86,21 @@ export function UsuariosPage() {
     onError: (e) => setError((e as Error).message),
   });
 
+  const exportContacts = useMutation({
+    mutationFn: () => api.exportContactsCsv(),
+    onError: (e) => setError((e as Error).message),
+    onSuccess: () => setInviteMsg("CSV de contatos baixado."),
+  });
+
+  const deleteUser = useMutation({
+    mutationFn: (id: number) => api.deleteUser(id),
+    onSuccess: async () => {
+      setError("");
+      await qc.invalidateQueries({ queryKey: ["users"] });
+    },
+    onError: (e) => setError((e as Error).message),
+  });
+
   const onCreate = (e: FormEvent) => {
     e.preventDefault();
     create.mutate();
@@ -99,6 +114,17 @@ export function UsuariosPage() {
           <p className="torneio-manage-meta">
             Contas incomplete · convite manual · {data.length} listado(s)
           </p>
+        </div>
+        <div className="torneio-manage-primary">
+          <button
+            type="button"
+            className="secondary"
+            disabled={exportContacts.isPending}
+            onClick={() => exportContacts.mutate()}
+            title="Nome e telefone de contas ativas sem opt-out"
+          >
+            {exportContacts.isPending ? "Exportando…" : "Aptos a contato (CSV)"}
+          </button>
         </div>
       </header>
 
@@ -119,7 +145,16 @@ export function UsuariosPage() {
             </div>
             <div className="form-row">
               <label>Celular</label>
-              <input value={phone} onChange={(e) => setPhone(e.target.value)} required />
+              <input
+                type="tel"
+                inputMode="numeric"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+                placeholder="11987654321"
+                autoComplete="tel"
+              />
+              <p className="field-hint">DDD + número (10 a 13 dígitos), ex.: 11987654321</p>
             </div>
             <div className="form-row">
               <label>Papel</label>
@@ -223,6 +258,24 @@ export function UsuariosPage() {
                         disabled={passwordReset.isPending}
                       >
                         Reset senha
+                      </button>
+                    )}
+                    {u.role !== "admin" && u.id !== me?.id && (
+                      <button
+                        className="secondary"
+                        type="button"
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              `Excluir conta de ${u.display_name}? Histórico de torneios ficará como Anônimo.`,
+                            )
+                          ) {
+                            deleteUser.mutate(u.id);
+                          }
+                        }}
+                        disabled={deleteUser.isPending}
+                      >
+                        Excluir
                       </button>
                     )}
                   </td>

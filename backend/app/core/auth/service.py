@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import secrets
 from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy.orm import Session as DbSession
@@ -97,6 +96,8 @@ def authenticate(db: DbSession, email: str, password: str) -> User:
     if user is None and normalized == ADMIN_EMAIL:
         user = db.query(User).filter(User.username == "admin").one_or_none() or get_admin(db)
     if user is None:
+        raise AuthError("E-mail ou senha inválidos.")
+    if user.status == UserStatus.deleted.value:
         raise AuthError("E-mail ou senha inválidos.")
     if user.status != UserStatus.active.value:
         raise AuthError("Conta ainda não finalizada. Use o link de convite.")
@@ -244,11 +245,16 @@ def register_player(
     guardian_name: str | None = None,
     guardian_phone: str | None = None,
     guardian_relation: str | None = None,
+    accept_privacy: bool = True,
 ) -> User:
     """Public self-signup: creates an active player with password."""
+    from app.core.privacy import PRIVACY_POLICY_VERSION, TERMS_VERSION
+
     name = (display_name or "").strip()
     if not name:
         raise AuthError("Nome de exibição é obrigatório.")
+    if not accept_privacy:
+        raise AuthError("É necessário aceitar os Termos de uso e a Política de privacidade.")
     validate_password_plain(password)
     email_n, phone_n = ensure_unique_email_phone(db, email=email, phone=phone)
     if not phone_n:
@@ -266,6 +272,10 @@ def register_player(
         guardian_name=(guardian_name or "").strip() or None,
         guardian_phone=(guardian_phone or "").strip() or None,
         guardian_relation=(guardian_relation or "").strip() or None,
+        privacy_accepted_at=now,
+        privacy_policy_version=PRIVACY_POLICY_VERSION,
+        terms_version=TERMS_VERSION,
+        marketing_opt_out=False,
         created_at=now,
         updated_at=now,
     )
@@ -319,17 +329,19 @@ def verify_email(db: DbSession, token: str) -> User:
     return user
 
 
-def create_invite(db: DbSession, user: User) -> InviteToken:
+def create_invite(db: DbSession, user: User) -> tuple[str, InviteToken]:
     if user.status == UserStatus.active.value:
         raise AuthError("Conta já está ativa.")
+    if user.status == UserStatus.deleted.value:
+        raise AuthError("Conta excluída.")
     now = _now()
     db.query(InviteToken).filter(
         InviteToken.user_id == user.id,
         InviteToken.used_at.is_(None),
     ).delete()
-    token = secrets.token_urlsafe(32)
+    raw = generate_session_token()
     row = InviteToken(
-        token=token,
+        token=hash_session_token(raw),
         user_id=user.id,
         created_at=now,
         expires_at=now + timedelta(days=INVITE_DAYS),
@@ -337,7 +349,7 @@ def create_invite(db: DbSession, user: User) -> InviteToken:
     db.add(row)
     db.commit()
     db.refresh(row)
-    return row
+    return raw, row
 
 
 def claim_invite(
@@ -349,13 +361,21 @@ def claim_invite(
     guardian_name: str | None = None,
     guardian_phone: str | None = None,
     guardian_relation: str | None = None,
+    accept_privacy: bool = False,
 ) -> User:
-    row = db.query(InviteToken).filter(InviteToken.token == token).one_or_none()
+    from app.core.privacy import PRIVACY_POLICY_VERSION, TERMS_VERSION
+
+    if not accept_privacy:
+        raise AuthError("É necessário aceitar os Termos de uso e a Política de privacidade.")
+    token_hash = hash_session_token(token)
+    row = db.query(InviteToken).filter(InviteToken.token == token_hash).one_or_none()
     if row is None or row.used_at is not None:
         raise AuthError("Convite inválido ou já utilizado.")
     if row.expires_at < _now():
         raise AuthError("Convite expirado.")
     user = db.query(User).filter(User.id == row.user_id).one()
+    if user.status == UserStatus.deleted.value:
+        raise AuthError("Conta excluída.")
     validate_password_plain(password)
     user.password_hash = hash_password(password)
     user.status = UserStatus.active.value
@@ -367,9 +387,13 @@ def claim_invite(
     if guardian_relation is not None:
         user.guardian_relation = guardian_relation.strip() or None
     require_guardian_if_minor(user.birth_date, user.guardian_name, user.guardian_phone)
-    user.email_verified_at = _now()
-    user.updated_at = _now()
-    row.used_at = _now()
+    now = _now()
+    user.email_verified_at = now
+    user.privacy_accepted_at = now
+    user.privacy_policy_version = PRIVACY_POLICY_VERSION
+    user.terms_version = TERMS_VERSION
+    user.updated_at = now
+    row.used_at = now
     db.commit()
     db.refresh(user)
     return user
@@ -441,4 +465,11 @@ def private_user_dict(user: User) -> dict:
         "guardian_relation": user.guardian_relation,
         "email_verified_at": user.email_verified_at.isoformat() if user.email_verified_at else None,
         "email_verified": is_email_verified(user),
+        "privacy_accepted_at": user.privacy_accepted_at.isoformat() if user.privacy_accepted_at else None,
+        "privacy_policy_version": user.privacy_policy_version,
+        "terms_version": user.terms_version,
+        "marketing_opt_out": bool(getattr(user, "marketing_opt_out", False)),
+        "marketing_opt_out_at": (
+            user.marketing_opt_out_at.isoformat() if user.marketing_opt_out_at else None
+        ),
     }

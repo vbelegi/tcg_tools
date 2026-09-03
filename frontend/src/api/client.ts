@@ -85,13 +85,25 @@ export const api = {
       display_name: string;
       role: string;
       status: string;
+      phone?: string | null;
+      birth_date?: string | null;
       avatar_url?: string | null;
       created_at?: string | null;
       email_verified?: boolean;
       email_verified_at?: string | null;
+      marketing_opt_out?: boolean;
+      privacy_accepted_at?: string | null;
     }>("/auth/me"),
 
-  updateMe: (body: { display_name: string }) =>
+  updateMe: (body: {
+    display_name?: string;
+    phone?: string;
+    birth_date?: string;
+    guardian_name?: string | null;
+    guardian_phone?: string | null;
+    guardian_relation?: string | null;
+    marketing_opt_out?: boolean;
+  }) =>
     request<{
       id: number;
       email: string;
@@ -99,7 +111,17 @@ export const api = {
       role: string;
       status: string;
       avatar_url?: string | null;
+      marketing_opt_out?: boolean;
     }>("/auth/me", { method: "PATCH", body: JSON.stringify(body) }),
+
+  exportMe: () =>
+    request<Record<string, unknown>>("/auth/me/export"),
+
+  deleteMe: (body: { password: string; confirm: string }) =>
+    request<{ ok: boolean }>("/auth/me/delete", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
 
   uploadAvatar: async (file: File) => {
     const form = new FormData();
@@ -140,6 +162,7 @@ export const api = {
     guardian_name?: string;
     guardian_phone?: string;
     guardian_relation?: string;
+    accept_privacy: boolean;
   }) =>
     request<{
       id: number;
@@ -160,6 +183,7 @@ export const api = {
     guardian_name?: string;
     guardian_phone?: string;
     guardian_relation?: string;
+    accept_privacy: boolean;
   }) =>
     request<{ id: number; email: string; display_name: string }>("/auth/claim-invite", {
       method: "POST",
@@ -201,6 +225,27 @@ export const api = {
         status: string;
       }>
     >(`/users${q ? `?q=${encodeURIComponent(q)}` : ""}`),
+
+  exportContactsCsv: async () => {
+    const res = await fetch(`${BASE}/users/export-contacts`, { credentials: "include" });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(formatApiError(err.detail, res.statusText || "Erro no export"));
+    }
+    const blob = await res.blob();
+    const dispo = res.headers.get("Content-Disposition") || "";
+    const match = /filename="?([^"]+)"?/.exec(dispo);
+    const filename = match?.[1] || "fourse-contatos.csv";
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  },
+
+  deleteUser: (userId: number) =>
+    request<{ ok: boolean }>(`/users/${userId}/delete`, { method: "POST" }),
 
   searchUsers: (q: string) =>
     request<

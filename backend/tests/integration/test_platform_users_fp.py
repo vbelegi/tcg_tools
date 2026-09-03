@@ -21,13 +21,14 @@ def test_invite_claim_and_login(api_client: TestClient, db_session: Session):
         phone="+5511999990001",
         role=UserRole.player.value,
     )
-    invite = create_invite(db_session, user)
+    raw, _invite = create_invite(db_session, user)
     r = api_client.post(
         "/api/v1/auth/claim-invite",
         json={
-            "token": invite.token,
+            "token": raw,
             "password": "abcdefgh12",
             "birth_date": "1995-03-20",
+            "accept_privacy": True,
         },
     )
     assert r.status_code == 200

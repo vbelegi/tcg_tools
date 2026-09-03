@@ -4,6 +4,33 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-09-03
+
+### Added
+
+- **LGPD:** páginas Termos de uso e Política de privacidade; aceite obrigatório no cadastro e no claim de convite
+- **LGPD:** preferência de marketing (opt-out) no perfil; default apto a contato WhatsApp/e-mail
+- **LGPD:** exclusão de conta (self + admin); histórico de torneios permanece como **Anônimo**
+- **LGPD:** exportação dos próprios dados (`GET /auth/me/export`)
+- **Admin:** export CSV “Aptos a contato” (nome + telefone) em `/usuarios`
+- **Admin:** trilha `staff_audit_logs` (listagem, busca, criações, invites, reset, export, exclusão, papel)
+- **Ops:** script `purge_incomplete_users` (incomplete sem claim após 180 dias)
+
+### Changed
+
+- **Layout:** área principal preenche telas médias/grandes (até 1440px) e centraliza em ultrawide; mobile (≤900px) inalterado
+- **Layout:** rodapé global do site (Termos · Privacidade · Powered by FOURSE) fora do menu — visível no mobile
+- **Convites:** tokens armazenados com hash (como reset/verify); API deixa de devolver o token cru
+
+### Fixed
+
+- **Auth modal:** checkbox de termos não estica mais à largura total do modal
+- **Cadastro:** placeholder/hint de celular com exemplo DDD (`11987654321`)
+
+### Database
+
+- Migration `014`: campos de privacidade/marketing em `users`, status `deleted`, tabela `staff_audit_logs`, hash de invites existentes
+
 ## [1.11.1] - 2026-09-01
 
 ### Fixed

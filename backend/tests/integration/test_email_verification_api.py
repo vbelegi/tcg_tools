@@ -22,6 +22,7 @@ def test_register_sends_verification_and_me_shows_unverified(api_client: TestCli
             "phone": "+5511999887701",
             "password": "password1234",
             "birth_date": "1995-05-05",
+            "accept_privacy": True,
         },
     )
     assert r.status_code == 201, r.text
@@ -121,15 +122,16 @@ def test_claim_invite_sets_email_verified(api_client: TestClient, db_session: Se
         email="invite.verified@example.com",
         phone="+5511999887705",
     )
-    invite = create_invite(db_session, user)
+    raw, _invite = create_invite(db_session, user)
     api_client.post("/api/v1/auth/logout")
 
     r = api_client.post(
         "/api/v1/auth/claim-invite",
         json={
-            "token": invite.token,
+            "token": raw,
             "password": "password1234",
             "birth_date": "1990-01-01",
+            "accept_privacy": True,
         },
     )
     assert r.status_code == 200, r.text

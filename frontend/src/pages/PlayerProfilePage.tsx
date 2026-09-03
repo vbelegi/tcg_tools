@@ -45,6 +45,9 @@ export function PlayerProfilePage() {
   const [error, setError] = useState("");
   const [searchQ, setSearchQ] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [showDelete, setShowDelete] = useState(false);
 
   useEffect(() => {
     const t = window.setTimeout(() => setDebouncedQ(searchQ.trim()), 250);
@@ -84,6 +87,38 @@ export function PlayerProfilePage() {
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["profile", userId] });
       await qc.invalidateQueries({ queryKey: ["auth-me"] });
+    },
+    onError: (e) => setError((e as Error).message),
+  });
+
+  const marketingToggle = useMutation({
+    mutationFn: (optOut: boolean) => api.updateMe({ marketing_opt_out: optOut }),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["auth-me"] });
+    },
+    onError: (e) => setError((e as Error).message),
+  });
+
+  const exportMyData = useMutation({
+    mutationFn: async () => {
+      const data = await api.exportMe();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `meus-dados-fourse.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    },
+    onError: (e) => setError((e as Error).message),
+  });
+
+  const deleteAccount = useMutation({
+    mutationFn: () =>
+      api.deleteMe({ password: deletePassword, confirm: deleteConfirm }),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["auth-me"] });
+      navigate("/", { replace: true });
     },
     onError: (e) => setError((e as Error).message),
   });
@@ -514,6 +549,77 @@ export function PlayerProfilePage() {
           </>
         )}
       </section>
+
+      {canEdit && me && me.id === data.id && (
+        <section className="profile-privacy-section resultado-section">
+          <h2>Conta e comunicações</h2>
+          <p className="field-hint">
+            Preferências discretas de contato e direitos sobre seus dados.{" "}
+            <Link to="/privacidade">Política de privacidade</Link>
+          </p>
+          <label className="auth-privacy-check">
+            <input
+              type="checkbox"
+              checked={!Boolean(me.marketing_opt_out)}
+              onChange={(e) => marketingToggle.mutate(!e.target.checked)}
+              disabled={marketingToggle.isPending}
+            />
+            <span>Receber novidades e avisos da loja por WhatsApp/e-mail</span>
+          </label>
+          <div className="profile-privacy-actions">
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => exportMyData.mutate()}
+              disabled={exportMyData.isPending}
+            >
+              Baixar meus dados
+            </button>
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => setShowDelete((v) => !v)}
+            >
+              Excluir minha conta
+            </button>
+          </div>
+          {showDelete && (
+            <form
+              className="admin-form-dense"
+              onSubmit={(e) => {
+                e.preventDefault();
+                deleteAccount.mutate();
+              }}
+            >
+              <p className="field-hint">
+                Histórico de torneios permanecerá como &quot;Anônimo&quot;. Digite sua senha e confirme com
+                EXCLUIR.
+              </p>
+              <div className="form-row">
+                <label>Senha</label>
+                <input
+                  type="password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="form-row">
+                <label>Confirmação</label>
+                <input
+                  value={deleteConfirm}
+                  onChange={(e) => setDeleteConfirm(e.target.value)}
+                  placeholder="EXCLUIR"
+                  required
+                />
+              </div>
+              <button className="primary" type="submit" disabled={deleteAccount.isPending}>
+                {deleteAccount.isPending ? "Excluindo…" : "Confirmar exclusão"}
+              </button>
+            </form>
+          )}
+        </section>
+      )}
 
       <ChangePasswordModal open={passwordOpen} onClose={() => setPasswordOpen(false)} />
     </div>

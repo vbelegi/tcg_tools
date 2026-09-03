@@ -67,6 +67,7 @@ def test_register_player_api(db_session: Session):
             "phone": "+5511988776655",
             "password": "abcdefgh12",
             "birth_date": "1990-05-15",
+            "accept_privacy": True,
         },
     )
     assert r.status_code == 201, r.text
@@ -89,6 +90,7 @@ def test_register_minor_requires_guardian(db_session: Session):
             "phone": "+5511988776611",
             "password": "abcdefgh12",
             "birth_date": "2015-01-01",
+            "accept_privacy": True,
         },
     )
     assert r.status_code == 400
@@ -102,6 +104,7 @@ def test_register_minor_requires_guardian(db_session: Session):
             "birth_date": "2015-01-01",
             "guardian_name": "Pai",
             "guardian_phone": "+5511988776622",
+            "accept_privacy": True,
         },
     )
     assert r2.status_code == 201, r2.text

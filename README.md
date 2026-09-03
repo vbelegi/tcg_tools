@@ -93,6 +93,7 @@ tcg_tools/
 | [docs/INSTALACAO.md](docs/INSTALACAO.md) | Checklist pós-deploy |
 | [docs/BUILD_RELEASE.md](docs/BUILD_RELEASE.md) | Tags, CI, release |
 | [docs/PLATFORM_USERS_FP.md](docs/PLATFORM_USERS_FP.md) | Usuários e FP |
+| [docs/PRIVACIDADE.md](docs/PRIVACIDADE.md) | LGPD / marketing / exclusão |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Problemas comuns |
 | [docs/configuracao.md](docs/configuracao.md) | Presets, env vars |
 | [CHANGELOG.md](CHANGELOG.md) | Histórico de versões |
