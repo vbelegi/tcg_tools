@@ -126,6 +126,7 @@ export function Layout() {
           <NavLink to="/calendario">Calendário</NavLink>
           <NavLink to="/ranking">Ranking Fourse Points</NavLink>
           <NavLink to="/torneios">Torneios</NavLink>
+          <NavLink to="/acoes">Ações Promocionais</NavLink>
           {isStaff && (
             <>
               <NavLink to="/agenda">Agenda</NavLink>

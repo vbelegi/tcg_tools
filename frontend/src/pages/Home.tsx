@@ -30,6 +30,11 @@ export function Home() {
     { to: "/calendario", title: "Calendário", hint: "Agenda mensal de eventos" },
     { to: "/torneios", title: "Torneios", hint: "Eventos, resultados e inscrições" },
     {
+      to: "/acoes",
+      title: "Ações Promocionais",
+      hint: "Sorteios e ações da loja",
+    },
+    {
       to: "/ranking",
       title: "Ranking Fourse Points",
       hint: "Pontos acumulados pelos jogadores",

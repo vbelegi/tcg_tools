@@ -169,6 +169,40 @@ export interface ProfileHistoryRow {
   fp_earned: number;
 }
 
+export interface PromoRegulation {
+  version: number;
+  display_name: string;
+  url: string;
+  uploaded_at?: string | null;
+  uploaded_by_user_id?: number | null;
+}
+
+export interface PromoActionType {
+  key: string;
+  label: string;
+}
+
+export interface PromoAction {
+  id: number;
+  name: string;
+  type: string;
+  type_label: string;
+  start_date: string;
+  end_date: string;
+  description: string | null;
+  published: boolean;
+  show_in_calendar: boolean;
+  max_participants: number | null;
+  regulation: PromoRegulation | null;
+  created_at: string | null;
+  /** Detail only. */
+  how_to_participate?: string | null;
+  management_panel_key?: string | null;
+  /** Staff only — never sent to players or guests. */
+  participant_count?: number;
+  regulation_versions?: PromoRegulation[];
+}
+
 export interface PlayerProfile {
   id: number;
   display_name: string;

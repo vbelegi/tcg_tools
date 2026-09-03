@@ -5,6 +5,8 @@ import type {
   PlayerProfile,
   Preset,
   PresetsResponse,
+  PromoAction,
+  PromoActionType,
   Round,
   Standing,
   TabelaLinha,
@@ -608,6 +610,78 @@ export const api = {
     URL.revokeObjectURL(url);
 
   },
+
+  listPromoActions: (params?: { q?: string; active?: boolean }) => {
+    const search = new URLSearchParams();
+    if (params?.q) search.set("q", params.q);
+    if (params?.active) search.set("active", "true");
+    const qs = search.toString();
+    return request<PromoAction[]>(`/acoes${qs ? `?${qs}` : ""}`);
+  },
+
+  getPromoAction: (id: number) => request<PromoAction>(`/acoes/${id}`),
+
+  listPromoActionTypes: () => request<PromoActionType[]>("/acoes/tipos"),
+
+  createPromoAction: (body: {
+    name: string;
+    type: string;
+    start_date: string;
+    end_date: string;
+    description?: string | null;
+    published?: boolean;
+    show_in_calendar?: boolean;
+    max_participants?: number | null;
+  }) => request<PromoAction>("/acoes", { method: "POST", body: JSON.stringify(body) }),
+
+  updatePromoAction: (
+    id: number,
+    body: {
+      name?: string;
+      start_date?: string;
+      end_date?: string;
+      description?: string | null;
+      show_in_calendar?: boolean;
+      max_participants?: number | null;
+    },
+  ) => request<PromoAction>(`/acoes/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
+
+  publishPromoAction: (id: number) =>
+    request<PromoAction>(`/acoes/${id}/publish`, { method: "POST" }),
+
+  /** XHR instead of fetch so the PDF upload can report progress. */
+  uploadPromoRegulation: (
+    id: number,
+    file: File,
+    onProgress?: (percent: number) => void,
+  ) =>
+    new Promise<PromoAction>((resolve, reject) => {
+      const form = new FormData();
+      form.append("file", file);
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `${BASE}/acoes/${id}/regulamento`);
+      xhr.withCredentials = true;
+      xhr.upload.onprogress = (event) => {
+        if (onProgress && event.lengthComputable) {
+          onProgress(Math.round((event.loaded / event.total) * 100));
+        }
+      };
+      xhr.onload = () => {
+        let body: { detail?: unknown } = {};
+        try {
+          body = JSON.parse(xhr.responseText);
+        } catch {
+          body = {};
+        }
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(body as unknown as PromoAction);
+        } else {
+          reject(new Error(formatApiError(body.detail, "Erro no upload do regulamento")));
+        }
+      };
+      xhr.onerror = () => reject(new Error("Erro de rede no upload do regulamento."));
+      xhr.send(form);
+    }),
 
 };
 

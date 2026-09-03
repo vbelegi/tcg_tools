@@ -4,6 +4,9 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { RequireAdmin, RequireAuth, RequireStaff } from "./components/RequireAuth";
+import { AcaoDetailPage } from "./pages/acoes/AcaoDetailPage";
+import { AcaoNovaPage } from "./pages/acoes/AcaoNovaPage";
+import { AcoesListPage } from "./pages/acoes/AcoesListPage";
 import { AgendaPage } from "./pages/AgendaPage";
 import { CalendarPage } from "./pages/CalendarPage";
 import { ClaimInvitePage } from "./pages/ClaimInvitePage";
@@ -47,6 +50,11 @@ createRoot(document.getElementById("root")!).render(
             <Route path="calendario" element={<CalendarPage />} />
             <Route path="ranking" element={<RankingPage />} />
             <Route path="jogadores/:id" element={<PlayerProfilePage />} />
+            <Route path="acoes" element={<AcoesListPage />} />
+            <Route element={<RequireStaff />}>
+              <Route path="acoes/nova" element={<AcaoNovaPage />} />
+            </Route>
+            <Route path="acoes/:id" element={<AcaoDetailPage />} />
             <Route path="torneios" element={<TorneiosListPage />} />
             <Route path="torneios/:id" element={<TorneioDetailPage />} />
             <Route path="torneios/:id/resultado" element={<TorneioResultadoPage />} />

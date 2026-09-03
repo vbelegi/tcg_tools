@@ -864,7 +864,8 @@ th {
   font-weight: 600;
 }
 
-.torneio-manage-header {
+.torneio-manage-header,
+.page-header {
   display: flex;
   justify-content: space-between;
   gap: 1.25rem;
@@ -890,7 +891,8 @@ th {
   margin: 0;
 }
 
-.torneio-manage-meta {
+.torneio-manage-meta,
+.page-header-meta {
   margin: 0.45rem 0 0;
   color: var(--muted);
 }
@@ -2983,4 +2985,121 @@ th {
 .colocacao-row-dragging {
   opacity: 0.65;
   background: var(--primary-soft);
+}
+
+/* Ações Promocionais */
+.list-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.list-filter-search {
+  flex: 1 1 260px;
+  margin-bottom: 0;
+}
+
+.list-filter-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding-bottom: 0.5rem;
+}
+
+.list-filter-count {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+}
+
+.promo-card h2 {
+  margin-bottom: 0.35rem;
+}
+
+.promo-card h2 a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.promo-card h2 a:hover {
+  color: var(--primary);
+}
+
+.promo-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 0.5rem;
+}
+
+.promo-card-period {
+  margin: 0 0 0.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.promo-card-desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0 0 0.5rem;
+}
+
+.promo-detail-desc {
+  white-space: pre-wrap;
+}
+
+.promo-participation,
+.promo-manage {
+  margin-top: 2rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1.25rem;
+}
+
+.promo-guest-notice {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.promo-guest-notice p {
+  margin-top: 0;
+}
+
+.promo-guest-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.regulation-field-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.regulation-field input[type="file"] {
+  width: auto;
+}
+
+.regulation-progress {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  margin-top: 0.5rem;
+}
+
+.regulation-history {
+  margin-top: 0.75rem;
+}
+
+.regulation-history ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
 }
