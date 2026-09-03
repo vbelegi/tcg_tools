@@ -4,6 +4,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-09-03
+
 ### Added
 
 - **LGPD:** páginas Termos de uso e Política de privacidade; aceite obrigatório no cadastro e no claim de convite
@@ -19,6 +21,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 - **Layout:** área principal preenche telas médias/grandes (até 1440px) e centraliza em ultrawide; mobile (≤900px) inalterado
 - **Layout:** rodapé global do site (Termos · Privacidade · Powered by FOURSE) fora do menu — visível no mobile
 - **Convites:** tokens armazenados com hash (como reset/verify); API deixa de devolver o token cru
+
+### Fixed
+
+- **Auth modal:** checkbox de termos não estica mais à largura total do modal
+- **Cadastro:** placeholder/hint de celular com exemplo DDD (`11987654321`)
 
 ### Database
 
