@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
+from app.api.uploads import read_upload_limited
 from app.core.auth import (
     AuthError,
     authenticate,
@@ -52,20 +53,6 @@ _auth_claim_limit = rate_limit_dependency("auth_claim_invite", limit=10, window_
 _auth_reset_claim_limit = rate_limit_dependency("auth_claim_password_reset", limit=10, window_sec=300)
 _auth_resend_verify_ip_limit = rate_limit_dependency("auth_resend_verification_ip", limit=3, window_sec=3600)
 _auth_forgot_limit = rate_limit_dependency("auth_forgot_password", limit=10, window_sec=60)
-
-
-async def _read_upload_limited(file: UploadFile, max_bytes: int) -> bytes:
-    chunks: list[bytes] = []
-    total = 0
-    while True:
-        chunk = await file.read(65536)
-        if not chunk:
-            break
-        total += len(chunk)
-        if total > max_bytes:
-            raise HTTPException(status_code=413, detail="Arquivo muito grande.")
-        chunks.append(chunk)
-    return b"".join(chunks)
 
 
 class LoginBody(BaseModel):
@@ -274,7 +261,7 @@ async def auth_upload_avatar(
     db: Session = Depends(get_db),
     file: UploadFile = File(...),
 ):
-    data = await _read_upload_limited(file, MAX_UPLOAD_BYTES)
+    data = await read_upload_limited(file, MAX_UPLOAD_BYTES)
     try:
         blob = encode_user_avatar(data, file.content_type)
     except AvatarError as exc:
