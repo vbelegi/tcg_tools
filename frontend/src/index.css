@@ -577,7 +577,7 @@ select.score-select {
   margin-bottom: 0.85rem;
 }
 
-.modal-dialog input,
+.modal-dialog input:not([type="checkbox"]):not([type="radio"]),
 .modal-dialog select,
 .modal-dialog textarea {
   width: 100%;
