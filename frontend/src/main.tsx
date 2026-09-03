@@ -10,10 +10,12 @@ import { ClaimInvitePage } from "./pages/ClaimInvitePage";
 import { Home } from "./pages/Home";
 import { LoginPage } from "./pages/LoginPage";
 import { PlayerProfilePage } from "./pages/PlayerProfilePage";
+import { PrivacidadePage } from "./pages/PrivacidadePage";
 import { PremiacaoPage } from "./pages/premiacao/PremiacaoPage";
 import { RankingPage } from "./pages/RankingPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
+import { TermosPage } from "./pages/TermosPage";
 import { VerifyEmailPage } from "./pages/VerifyEmailPage";
 import { VerificarEmailContaPage } from "./pages/VerificarEmailContaPage";
 import { SorteadorPage } from "./pages/sorteador/SorteadorPage";
@@ -50,6 +52,8 @@ createRoot(document.getElementById("root")!).render(
             <Route path="torneios/:id/resultado" element={<TorneioResultadoPage />} />
             <Route path="conta/senha" element={<Navigate to="/" replace />} />
             <Route path="conta/verificar-email" element={<VerificarEmailContaPage />} />
+            <Route path="termos" element={<TermosPage />} />
+            <Route path="privacidade" element={<PrivacidadePage />} />
           </Route>
           <Route element={<RequireAuth />}>
             <Route element={<Layout />}>

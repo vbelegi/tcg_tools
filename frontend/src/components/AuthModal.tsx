@@ -33,6 +33,7 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
   const [error, setError] = useState("");
   const [passwordInvalid, setPasswordInvalid] = useState(false);
   const [password2Invalid, setPassword2Invalid] = useState(false);
+  const [acceptPrivacy, setAcceptPrivacy] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -41,6 +42,7 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
     setPassword2("");
     setPasswordInvalid(false);
     setPassword2Invalid(false);
+    setAcceptPrivacy(false);
   }, [open, mode]);
 
   const { data: authStatus } = useQuery({
@@ -75,6 +77,7 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
         guardian_name: guardianName || undefined,
         guardian_phone: guardianPhone || undefined,
         guardian_relation: guardianRelation || undefined,
+        accept_privacy: acceptPrivacy,
       }),
     onSuccess: () => afterAuth(),
     onError: (e) => setError((e as Error).message),
@@ -86,6 +89,10 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
     setPassword2Invalid(false);
 
     if (mode === "register") {
+      if (!acceptPrivacy) {
+        setError("Aceite os Termos de uso e a Política de privacidade.");
+        return;
+      }
       if (!birthDate) {
         setError("Data de nascimento é obrigatória.");
         return;
@@ -264,6 +271,20 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
               autoComplete="new-password"
             />
           </div>
+        )}
+        {mode === "register" && (
+          <label className="auth-privacy-check">
+            <input
+              type="checkbox"
+              checked={acceptPrivacy}
+              onChange={(e) => setAcceptPrivacy(e.target.checked)}
+              required
+            />
+            <span>
+              Li e aceito os <Link to="/termos" onClick={onClose}>Termos de uso</Link> e a{" "}
+              <Link to="/privacidade" onClick={onClose}>Política de privacidade</Link>
+            </span>
+          </label>
         )}
       </form>
     </Modal>

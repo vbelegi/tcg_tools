@@ -56,6 +56,13 @@ Em andamento (inscrito): pairings/classificação só leitura.
 
 **`registration_open`:** controla apenas self-inscrição pelo site; não impede inscrição presencial pela staff nem a exibição no calendário.
 
+## Privacidade (LGPD)
+
+- Aceite de Termos + Privacidade no register/claim; links no rodapé do site.
+- Marketing (WhatsApp/e-mail): opt-out no perfil; export admin de aptos a contato.
+- Exclusão de conta; histórico como Anônimo; incomplete purge 180d.
+- Detalhes: [PRIVACIDADE.md](PRIVACIDADE.md).
+
 **TCG:** catálogo admin (`/tcgs`) com nome + cor hex para chips do calendário. Torneio **exige** `tcg_game_id` na criação (interno e externo). Campos opcionais: `description`, `start_time`. Default de criação: **inscrição aberta**.
 
 Ícones estáticos em `frontend/public/tcg-icons/` (`magic_the_gathering.png`, …; fallback `other.png`).

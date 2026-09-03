@@ -61,6 +61,7 @@ class UserRole(str, enum.Enum):
 class UserStatus(str, enum.Enum):
     incomplete = "incomplete"
     active = "active"
+    deleted = "deleted"
 
 
 class Attendance(str, enum.Enum):
@@ -204,6 +205,12 @@ class User(Base):
     password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     avatar_blob: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
     email_verified_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    privacy_accepted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    privacy_policy_version: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    terms_version: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    marketing_opt_out: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    marketing_opt_out_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    marketing_opt_out_source: Mapped[str | None] = mapped_column(String(32), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -237,7 +244,7 @@ class InviteToken(Base):
     __tablename__ = "invite_tokens"
     __table_args__ = (Index("ix_invite_tokens_user_id", "user_id"),)
 
-    token: Mapped[str] = mapped_column(String(64), primary_key=True)
+    token: Mapped[str] = mapped_column(String(64), primary_key=True)  # SHA-256 hex
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
@@ -270,6 +277,25 @@ class EmailVerificationToken(Base):
     used_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     user: Mapped[User] = relationship(back_populates="email_verifications")
+
+
+class StaffAuditLog(Base):
+    __tablename__ = "staff_audit_logs"
+    __table_args__ = (
+        Index("ix_staff_audit_logs_actor_user_id", "actor_user_id"),
+        Index("ix_staff_audit_logs_created_at", "created_at"),
+        Index("ix_staff_audit_logs_action", "action"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    actor_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    action: Mapped[str] = mapped_column(String(64), nullable=False)
+    target_user_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    meta: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    ip: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
 class FoursePointsLedger(Base):

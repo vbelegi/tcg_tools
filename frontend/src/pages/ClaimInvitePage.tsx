@@ -1,8 +1,9 @@
 import { FormEvent, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { api } from "../api/client";
+import { SiteFooter } from "../components/SiteFooter";
 
 export function ClaimInvitePage() {
   const { token = "" } = useParams();
@@ -18,6 +19,7 @@ export function ClaimInvitePage() {
   const [error, setError] = useState("");
   const [passwordInvalid, setPasswordInvalid] = useState(false);
   const [password2Invalid, setPassword2Invalid] = useState(false);
+  const [acceptPrivacy, setAcceptPrivacy] = useState(false);
 
   const { data: authStatus } = useQuery({
     queryKey: ["auth-status"],
@@ -35,6 +37,7 @@ export function ClaimInvitePage() {
         guardian_name: guardianName || undefined,
         guardian_phone: guardianPhone || undefined,
         guardian_relation: guardianRelation || undefined,
+        accept_privacy: acceptPrivacy,
       }),
     onSuccess: () => navigate("/", { replace: true }),
     onError: (e) => setError((e as Error).message),
@@ -46,6 +49,10 @@ export function ClaimInvitePage() {
     setPassword2Invalid(false);
     if (!birthDate) {
       setError("Data de nascimento é obrigatória.");
+      return;
+    }
+    if (!acceptPrivacy) {
+      setError("Aceite os Termos de uso e a Política de privacidade.");
       return;
     }
     if (password.length < minPasswordLen) {
@@ -128,10 +135,23 @@ export function ClaimInvitePage() {
             onChange={(e) => setGuardianRelation(e.target.value)}
           />
         </div>
+        <label className="auth-privacy-check">
+          <input
+            type="checkbox"
+            checked={acceptPrivacy}
+            onChange={(e) => setAcceptPrivacy(e.target.checked)}
+            required
+          />
+          <span>
+            Li e aceito os <Link to="/termos">Termos de uso</Link> e a{" "}
+            <Link to="/privacidade">Política de privacidade</Link>
+          </span>
+        </label>
         <button className="primary" type="submit" disabled={claim.isPending || !password}>
           {claim.isPending ? "Salvando…" : "Ativar conta"}
         </button>
       </form>
+      <SiteFooter />
     </div>
   );
 }

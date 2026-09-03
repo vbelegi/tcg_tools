@@ -82,6 +82,14 @@ Cron sugerido:
 0 3 * * * /opt/tcg_tools/deploy/backup-db.sh >> /opt/tcg_tools/backups/backup.log 2>&1
 ```
 
+Incomplete sem claim (LGPD, 180 dias) — opcional semanal:
+
+```cron
+15 4 * * 0 cd /opt/tcg_tools && docker compose exec -T api python -m app.scripts.purge_incomplete_users >> /opt/tcg_tools/backups/purge-incomplete.log 2>&1
+```
+
+(Ajuste o nome do serviço `api` conforme o `docker-compose.yml`.)
+
 ### Offsite (Google Drive / rclone)
 
 Pré-requisito: remote `tcg_backup` (ou valor em `.env`).
