@@ -17,6 +17,7 @@ from app.core.auth.passwords import (
 )
 from app.core.auth.session_tokens import generate_session_token, hash_session_token
 from app.models import (
+    EmailChangeToken,
     EmailVerificationToken,
     InviteToken,
     PasswordResetToken,
@@ -31,6 +32,7 @@ SESSION_DAYS = 7
 INVITE_DAYS = 7
 PASSWORD_RESET_DAYS = 2
 EMAIL_VERIFY_HOURS = 24
+EMAIL_CHANGE_HOURS = 24
 
 
 def _now() -> datetime:
@@ -441,6 +443,161 @@ def claim_password_reset(db: DbSession, token: str, password: str) -> User:
     return user
 
 
+def mask_email(email: str) -> str:
+    local, _, domain = (email or "").partition("@")
+    if not domain:
+        return "***"
+    if len(local) <= 1:
+        return f"*@{domain}"
+    return f"{local[0]}***@{domain}"
+
+
+def get_pending_email_change(db: DbSession, user_id: int) -> EmailChangeToken | None:
+    now = _now()
+    return (
+        db.query(EmailChangeToken)
+        .filter(
+            EmailChangeToken.user_id == user_id,
+            EmailChangeToken.used_at.is_(None),
+            EmailChangeToken.expires_at >= now,
+        )
+        .order_by(EmailChangeToken.created_at.desc())
+        .first()
+    )
+
+
+def _assert_email_available_for_change(db: DbSession, email_n: str, user_id: int) -> None:
+    ensure_unique_email_phone(db, email=email_n, phone=None, exclude_user_id=user_id)
+    now = _now()
+    conflict = (
+        db.query(EmailChangeToken)
+        .filter(
+            EmailChangeToken.new_email == email_n,
+            EmailChangeToken.user_id != user_id,
+            EmailChangeToken.used_at.is_(None),
+            EmailChangeToken.expires_at >= now,
+        )
+        .first()
+    )
+    if conflict is not None:
+        raise AuthError("Já existe uma conta com este e-mail.")
+
+
+def request_email_change(
+    db: DbSession,
+    user: User,
+    *,
+    current_password: str,
+    new_email: str,
+) -> tuple[str | None, EmailChangeToken | None, bool]:
+    """Start email change. Returns (raw_token, row, pending).
+
+    Verified accounts get a pending token; unverified accounts swap immediately
+    (raw_token/row are None, pending=False) and caller should resend verification.
+    """
+    if user.status != UserStatus.active.value:
+        raise AuthError("Conta não está ativa.")
+    if not verify_password(current_password, user.password_hash):
+        raise AuthError("Senha atual incorreta.")
+    email_n = normalize_email(new_email)
+    if email_n == user.email:
+        raise AuthError("Informe um e-mail diferente do atual.")
+    _assert_email_available_for_change(db, email_n, user.id)
+
+    if not is_email_verified(user):
+        db.query(EmailChangeToken).filter(
+            EmailChangeToken.user_id == user.id,
+            EmailChangeToken.used_at.is_(None),
+        ).delete()
+        user.email = email_n
+        user.email_verified_at = None
+        user.updated_at = _now()
+        db.commit()
+        db.refresh(user)
+        return None, None, False
+
+    now = _now()
+    db.query(EmailChangeToken).filter(
+        EmailChangeToken.user_id == user.id,
+        EmailChangeToken.used_at.is_(None),
+    ).delete()
+    raw = generate_session_token()
+    row = EmailChangeToken(
+        token=hash_session_token(raw),
+        user_id=user.id,
+        new_email=email_n,
+        created_at=now,
+        expires_at=now + timedelta(hours=EMAIL_CHANGE_HOURS),
+    )
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return raw, row, True
+
+
+def cancel_email_change(db: DbSession, user: User) -> None:
+    db.query(EmailChangeToken).filter(
+        EmailChangeToken.user_id == user.id,
+        EmailChangeToken.used_at.is_(None),
+    ).delete()
+    db.commit()
+
+
+def cancel_email_change_by_token(db: DbSession, token: str) -> User:
+    token_hash = hash_session_token(token)
+    row = db.query(EmailChangeToken).filter(EmailChangeToken.token == token_hash).one_or_none()
+    if row is None or row.used_at is not None:
+        raise AuthError("Link inválido ou já utilizado.")
+    if row.expires_at < _now():
+        raise AuthError("Link expirado.")
+    user = db.query(User).filter(User.id == row.user_id).one()
+    db.query(EmailChangeToken).filter(
+        EmailChangeToken.user_id == user.id,
+        EmailChangeToken.used_at.is_(None),
+    ).delete()
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def confirm_email_change(
+    db: DbSession,
+    token: str,
+    *,
+    keep_session_token: str | None = None,
+) -> User:
+    token_hash = hash_session_token(token)
+    row = db.query(EmailChangeToken).filter(EmailChangeToken.token == token_hash).one_or_none()
+    if row is None or row.used_at is not None:
+        raise AuthError("Link inválido ou já utilizado.")
+    if row.expires_at < _now():
+        raise AuthError("Link expirado.")
+    user = db.query(User).filter(User.id == row.user_id).one()
+    if user.status != UserStatus.active.value:
+        raise AuthError("Conta não está ativa.")
+    new_email = row.new_email
+    _assert_email_available_for_change(db, new_email, user.id)
+    now = _now()
+    user.email = new_email
+    user.email_verified_at = now
+    user.updated_at = now
+    db.query(EmailChangeToken).filter(
+        EmailChangeToken.user_id == user.id,
+        EmailChangeToken.used_at.is_(None),
+    ).delete()
+    db.query(EmailVerificationToken).filter(
+        EmailVerificationToken.user_id == user.id,
+        EmailVerificationToken.used_at.is_(None),
+    ).delete()
+    q = db.query(AuthSession).filter(AuthSession.user_id == user.id)
+    if keep_session_token:
+        q = q.filter(AuthSession.token != hash_session_token(keep_session_token))
+    q.delete()
+    db.commit()
+    db.refresh(user)
+    return user
+
+
 def public_user_dict(user: User) -> dict:
     from app.core.auth.avatars import user_avatar_url
 
@@ -454,17 +611,24 @@ def public_user_dict(user: User) -> dict:
     }
 
 
-def private_user_dict(user: User) -> dict:
+def private_user_dict(user: User, *, pending_email: str | None = None) -> dict:
     return {
         **public_user_dict(user),
         "email": user.email,
         "phone": user.phone,
+        "pending_phone": getattr(user, "pending_phone", None),
         "birth_date": user.birth_date.isoformat() if user.birth_date else None,
         "guardian_name": user.guardian_name,
         "guardian_phone": user.guardian_phone,
         "guardian_relation": user.guardian_relation,
         "email_verified_at": user.email_verified_at.isoformat() if user.email_verified_at else None,
         "email_verified": is_email_verified(user),
+        "phone_verified_at": (
+            user.phone_verified_at.isoformat()
+            if getattr(user, "phone_verified_at", None)
+            else None
+        ),
+        "pending_email": pending_email,
         "privacy_accepted_at": user.privacy_accepted_at.isoformat() if user.privacy_accepted_at else None,
         "privacy_policy_version": user.privacy_policy_version,
         "terms_version": user.terms_version,

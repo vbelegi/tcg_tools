@@ -5,14 +5,24 @@ from __future__ import annotations
 import logging
 
 from app.core.auth.invites import (
+    email_change_cancel_url,
+    email_change_confirm_url,
     email_verify_url,
     invite_claim_url,
     password_reset_url,
     promo_action_url,
 )
-from app.core.auth.service import EMAIL_VERIFY_HOURS, INVITE_DAYS, PASSWORD_RESET_DAYS
+from app.core.auth.service import (
+    EMAIL_CHANGE_HOURS,
+    EMAIL_VERIFY_HOURS,
+    INVITE_DAYS,
+    PASSWORD_RESET_DAYS,
+    mask_email,
+)
 from app.core.email.service import get_email_service
 from app.core.email.templates import (
+    email_change_confirm_email,
+    email_change_notice_email,
     invite_email,
     password_reset_email,
     promo_update_email,
@@ -49,6 +59,30 @@ def send_password_reset_email(user: User, raw_token: str) -> None:
         logger.warning("TCGTOOLS_PUBLIC_BASE_URL unset; cannot send password reset email to %s", user.email)
         return
     subject, text, html = password_reset_email(reset_url=url, days=PASSWORD_RESET_DAYS)
+    get_email_service().send(to=user.email, subject=subject, text_body=text, html_body=html)
+
+
+def send_email_change_confirm(to_email: str, raw_token: str) -> None:
+    url = email_change_confirm_url(raw_token)
+    if not url:
+        logger.warning("TCGTOOLS_PUBLIC_BASE_URL unset; cannot send email-change confirm to %s", to_email)
+        return
+    subject, text, html = email_change_confirm_email(confirm_url=url, hours=EMAIL_CHANGE_HOURS)
+    get_email_service().send(to=to_email, subject=subject, text_body=text, html_body=html)
+
+
+def send_email_change_notice(user: User, raw_token: str, new_email: str) -> None:
+    url = email_change_cancel_url(raw_token)
+    if not url:
+        logger.warning(
+            "TCGTOOLS_PUBLIC_BASE_URL unset; cannot send email-change notice to %s", user.email
+        )
+        return
+    subject, text, html = email_change_notice_email(
+        cancel_url=url,
+        new_email_masked=mask_email(new_email),
+        hours=EMAIL_CHANGE_HOURS,
+    )
     get_email_service().send(to=user.email, subject=subject, text_body=text, html_body=html)
 
 

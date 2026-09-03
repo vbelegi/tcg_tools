@@ -828,6 +828,188 @@
         }
       }
     },
+    "/api/v1/auth/me/email-change": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Auth Request Email Change",
+        "operationId": "auth_request_email_change_api_v1_auth_me_email_change_post",
+        "parameters": [
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailChangeBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me/email-change/cancel": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Auth Cancel Email Change Me",
+        "operationId": "auth_cancel_email_change_me_api_v1_auth_me_email_change_cancel_post",
+        "parameters": [
+          {
+            "name": "tcgtools_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tcgtools Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/email-change/confirm": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Auth Confirm Email Change",
+        "operationId": "auth_confirm_email_change_api_v1_auth_email_change_confirm_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailChangeTokenBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/email-change/cancel": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Auth Cancel Email Change Token",
+        "operationId": "auth_cancel_email_change_token_api_v1_auth_email_change_cancel_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailChangeTokenBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/users": {
       "get": {
         "tags": [
@@ -1511,6 +1693,56 @@
         "summary": "List Announcements",
         "operationId": "list_announcements_api_v1_calendar_announcements_get",
         "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
           {
             "name": "year",
             "in": "query",
@@ -2404,8 +2636,75 @@
           "torneios"
         ],
         "summary": "List Torneios",
+        "description": "List tournaments. Visibility first; search/date/active never surface hidden drafts.",
         "operationId": "list_torneios_api_v1_torneios_get",
         "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Active"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
           {
             "name": "tcgtools_session",
             "in": "cookie",
@@ -5316,6 +5615,37 @@
         },
         "type": "object",
         "title": "DropRequest"
+      },
+      "EmailChangeBody": {
+        "properties": {
+          "current_password": {
+            "type": "string",
+            "title": "Current Password"
+          },
+          "new_email": {
+            "type": "string",
+            "title": "New Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "current_password",
+          "new_email"
+        ],
+        "title": "EmailChangeBody"
+      },
+      "EmailChangeTokenBody": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "title": "EmailChangeTokenBody"
       },
       "ExportRequest": {
         "properties": {

@@ -314,6 +314,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/me/email-change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Auth Request Email Change */
+        post: operations["auth_request_email_change_api_v1_auth_me_email_change_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/me/email-change/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Auth Cancel Email Change Me */
+        post: operations["auth_cancel_email_change_me_api_v1_auth_me_email_change_cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/email-change/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Auth Confirm Email Change */
+        post: operations["auth_confirm_email_change_api_v1_auth_email_change_confirm_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/email-change/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Auth Cancel Email Change Token */
+        post: operations["auth_cancel_email_change_token_api_v1_auth_email_change_cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users": {
         parameters: {
             query?: never;
@@ -670,7 +738,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Torneios */
+        /**
+         * List Torneios
+         * @description List tournaments. Visibility first; search/date/active never surface hidden drafts.
+         */
         get: operations["list_torneios_api_v1_torneios_get"];
         put?: never;
         /** Create Torneio */
@@ -1436,6 +1507,18 @@ export interface components {
              * @default false
              */
             mid_round: boolean;
+        };
+        /** EmailChangeBody */
+        EmailChangeBody: {
+            /** Current Password */
+            current_password: string;
+            /** New Email */
+            new_email: string;
+        };
+        /** EmailChangeTokenBody */
+        EmailChangeTokenBody: {
+            /** Token */
+            token: string;
         };
         /** ExportRequest */
         ExportRequest: {
@@ -2470,6 +2553,138 @@ export interface operations {
             };
         };
     };
+    auth_request_email_change_api_v1_auth_me_email_change_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailChangeBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    auth_cancel_email_change_me_api_v1_auth_me_email_change_cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    auth_confirm_email_change_api_v1_auth_email_change_confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailChangeTokenBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    auth_cancel_email_change_token_api_v1_auth_email_change_cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailChangeTokenBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_users_api_v1_users_get: {
         parameters: {
             query?: {
@@ -2871,6 +3086,9 @@ export interface operations {
     list_announcements_api_v1_calendar_announcements_get: {
         parameters: {
             query?: {
+                q?: string | null;
+                from?: string | null;
+                to?: string | null;
                 year?: number | null;
                 month?: number | null;
             };
@@ -3348,7 +3566,12 @@ export interface operations {
     };
     list_torneios_api_v1_torneios_get: {
         parameters: {
-            query?: never;
+            query?: {
+                q?: string | null;
+                active?: boolean | null;
+                from?: string | null;
+                to?: string | null;
+            };
             header?: never;
             path?: never;
             cookie?: {

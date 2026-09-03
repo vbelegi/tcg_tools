@@ -97,11 +97,14 @@ export const api = {
       role: string;
       status: string;
       phone?: string | null;
+      pending_phone?: string | null;
       birth_date?: string | null;
       avatar_url?: string | null;
       created_at?: string | null;
       email_verified?: boolean;
       email_verified_at?: string | null;
+      phone_verified_at?: string | null;
+      pending_email?: string | null;
       marketing_opt_out?: boolean;
       privacy_accepted_at?: string | null;
     }>("/auth/me"),
@@ -121,9 +124,46 @@ export const api = {
       display_name: string;
       role: string;
       status: string;
+      phone?: string | null;
       avatar_url?: string | null;
       marketing_opt_out?: boolean;
+      pending_email?: string | null;
+      phone_verified_at?: string | null;
     }>("/auth/me", { method: "PATCH", body: JSON.stringify(body) }),
+
+  requestEmailChange: (body: { current_password: string; new_email: string }) =>
+    request<{
+      ok: boolean;
+      pending: boolean;
+      message: string;
+      user: {
+        id: number;
+        email: string;
+        pending_email?: string | null;
+        email_verified?: boolean;
+      };
+    }>("/auth/me/email-change", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  cancelEmailChange: () =>
+    request<{ ok: boolean; user: { email: string; pending_email?: string | null } }>(
+      "/auth/me/email-change/cancel",
+      { method: "POST", body: JSON.stringify({}) },
+    ),
+
+  confirmEmailChange: (token: string) =>
+    request<{ email: string; email_verified: boolean; pending_email?: string | null }>(
+      "/auth/email-change/confirm",
+      { method: "POST", body: JSON.stringify({ token }) },
+    ),
+
+  cancelEmailChangeByToken: (token: string) =>
+    request<{ ok: boolean; message: string }>("/auth/email-change/cancel", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    }),
 
   exportMe: () =>
     request<Record<string, unknown>>("/auth/me/export"),
