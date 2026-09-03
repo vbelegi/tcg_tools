@@ -17,6 +17,9 @@ vi.mock("../../api/client", () => ({
     listPromoParticipants: vi.fn(),
     listPromoLogs: vi.fn(),
     createPromoEnrollmentToken: vi.fn(),
+    listPromoWinners: vi.fn(),
+    drawPromoAction: vi.fn(),
+    exportPromoWinnersCsv: vi.fn(),
   },
 }));
 
@@ -60,6 +63,8 @@ describe("AcaoDetailPage", () => {
   beforeEach(() => {
     vi.mocked(api.authMe).mockReset();
     vi.mocked(api.getPromoAction).mockReset();
+    vi.mocked(api.listPromoParticipants).mockReset();
+    vi.mocked(api.listPromoParticipants).mockResolvedValue([]);
   });
 
   it("tells guests they need an account to take part", async () => {
@@ -187,6 +192,51 @@ describe("AcaoDetailPage", () => {
     expect(await screen.findByRole("button", { name: "Logs da Ação" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Inscrever Novo Participante" })).toBeDisabled();
     expect(screen.getByText(/não é possível gerar um novo QR/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Sorteio" })).toBeInTheDocument();
+  });
+
+  it("tells a winner they were drawn and hides the list of names", async () => {
+    vi.mocked(api.authMe).mockResolvedValue({
+      id: 5,
+      email: "player@local",
+      display_name: "Player",
+      role: "player",
+      status: "active",
+    });
+    vi.mocked(api.getPromoAction).mockResolvedValue({
+      ...action,
+      my_participation: { status: "confirmed" },
+      draw_done: true,
+      i_won: true,
+    });
+
+    renderPage();
+
+    expect(await screen.findByText(/Você foi contemplado/)).toBeInTheDocument();
+    expect(screen.getByText(/meios informados no seu perfil/)).toBeInTheDocument();
+    expect(screen.queryByText(/necessário ter uma conta/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Contemplados" })).not.toBeInTheDocument();
+  });
+
+  it("tells a participant they did not win", async () => {
+    vi.mocked(api.authMe).mockResolvedValue({
+      id: 5,
+      email: "player@local",
+      display_name: "Player",
+      role: "player",
+      status: "active",
+    });
+    vi.mocked(api.getPromoAction).mockResolvedValue({
+      ...action,
+      my_participation: { status: "confirmed" },
+      draw_done: true,
+      i_won: false,
+    });
+
+    renderPage();
+
+    expect(await screen.findByText(/Não foi essa vez/)).toBeInTheDocument();
+    expect(screen.queryByText(/Você já está participando/)).not.toBeInTheDocument();
   });
 
   it("shows a friendly message when the action is not visible", async () => {

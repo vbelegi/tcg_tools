@@ -3089,6 +3089,23 @@ th {
   margin: 0;
 }
 
+.promo-draw-missed {
+  margin: 0 0 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.promo-draw-missed p {
+  margin: 0;
+}
+
+.promo-raffle,
+.promo-winners {
+  margin: 1.5rem 0;
+}
+
 .promo-enroll-box {
   margin: 1rem 0;
   padding: 1rem;

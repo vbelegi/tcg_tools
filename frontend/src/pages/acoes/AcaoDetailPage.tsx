@@ -7,8 +7,10 @@ import { AcaoEditModal } from "../../components/AcaoEditModal";
 import { AcaoLogsModal } from "../../components/AcaoLogsModal";
 import { EnrollmentQrModal } from "../../components/EnrollmentQrModal";
 import { ParticipantsModal } from "../../components/ParticipantsModal";
+import { PromoRafflePanel } from "../../components/PromoRafflePanel";
+import { PromoWinnersPanel } from "../../components/PromoWinnersPanel";
 import { RegulationUploadField } from "../../components/RegulationUploadField";
-import type { PromoAction } from "../../api/types";
+import type { PromoAction, PromoDrawResult } from "../../api/types";
 import { formatPeriod, phaseLabel, promoPhase } from "./promoFormat";
 
 export function AcaoDetailPage() {
@@ -50,6 +52,11 @@ export function AcaoDetailPage() {
     void qc.invalidateQueries({ queryKey: ["acoes"] });
   };
 
+  const onDrawn = (result: PromoDrawResult) => {
+    qc.setQueryData(["acao-winners", actionId], result);
+    void qc.invalidateQueries({ queryKey: ["acao", actionId] });
+  };
+
   const openAuth = (mode: "login" | "register") => {
     setParams(
       (prev) => {
@@ -81,6 +88,7 @@ export function AcaoDetailPage() {
     action.participant_count != null &&
     action.participant_count >= action.max_participants;
   const canIssueQr = canManage && !ended && !full;
+  const showDrawResult = Boolean(action.draw_done) && Boolean(action.my_participation);
 
   return (
     <div className="promo-detail">
@@ -141,7 +149,20 @@ export function AcaoDetailPage() {
 
       <section className="promo-participation">
         <h2>Como participar</h2>
-        {action.my_participation && (
+        {showDrawResult && action.i_won && (
+          <div className="promo-enrolled-notice" role="status">
+            <p>
+              Parabéns! Você foi contemplado nesta ação. Nossa equipe entrará em contato pelos
+              meios informados no seu perfil.
+            </p>
+          </div>
+        )}
+        {showDrawResult && action.i_won === false && (
+          <div className="promo-draw-missed" role="status">
+            <p>Não foi essa vez — fique de olho nas próximas ações.</p>
+          </div>
+        )}
+        {!showDrawResult && action.my_participation && (
           <div className="promo-enrolled-notice" role="status">
             {action.my_participation.status === "confirmed" ? (
               <p>Você já está participando desta Ação Promocional.</p>
@@ -153,7 +174,7 @@ export function AcaoDetailPage() {
             )}
           </div>
         )}
-        {action.how_to_participate && <p>{action.how_to_participate}</p>}
+        {!showDrawResult && action.how_to_participate && <p>{action.how_to_participate}</p>}
 
         {meFetched && !me && (
           <div className="promo-guest-notice">
@@ -194,6 +215,13 @@ export function AcaoDetailPage() {
           )}
           {!ended && full && (
             <p className="field-hint">Limite de participantes atingido.</p>
+          )}
+          {ended && action.management_panel_key === "raffle_purchase_right" && (
+            action.draw_done ? (
+              <PromoWinnersPanel actionId={action.id} />
+            ) : (
+              <PromoRafflePanel actionId={action.id} onDrawn={onDrawn} />
+            )
           )}
           <RegulationUploadField
             actionId={action.id}

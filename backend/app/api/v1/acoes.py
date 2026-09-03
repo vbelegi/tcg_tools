@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import csv
+import io
 from datetime import date, datetime
 from typing import Any
 
 from fastapi import APIRouter, Cookie, Depends, File, HTTPException, Query, Request, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
@@ -19,6 +21,14 @@ from app.core.audit import log_staff_action
 from app.core.auth.cookies import clear_promo_enroll_cookie, set_promo_enroll_cookie
 from app.core.auth.invites import promo_enroll_path, promo_enroll_url
 from app.core.promo import regulations
+from app.core.promo.draw import (
+    MSG_NOT_DONE,
+    DrawError,
+    get_draw,
+    persist_draw,
+    viewer_draw_fields,
+    winner_rows,
+)
 from app.core.promo.enrollment import (
     ENROLL_COOKIE,
     ENROLL_TTL,
@@ -63,6 +73,12 @@ class PromoActionPatch(BaseModel):
     description: str | None = None
     show_in_calendar: bool | None = None
     max_participants: int | None = Field(default=None, ge=1)
+
+
+class PromoDrawBody(BaseModel):
+    mode: str
+    winner_count: int | None = Field(default=None, ge=1)
+    winner_user_ids: list[int] | None = None
 
 
 def _current_regulation(action: PromoAction) -> dict | None:
@@ -130,6 +146,9 @@ def _action_dict(
         if viewer is not None:
             mine = get_participation(db, action.id, viewer.id)
             data["my_participation"] = {"status": mine.status} if mine else None
+            draw_done, i_won = viewer_draw_fields(db, action, viewer)
+            data["draw_done"] = draw_done
+            data["i_won"] = i_won
     if is_staff_user(viewer):
         # Participant numbers are staff-only; players never see who or how many.
         data["participant_count"] = (
@@ -141,6 +160,15 @@ def _action_dict(
         )
         if detail:
             data["regulation_versions"] = _regulation_history(db, action)
+            draw = get_draw(db, action.id)
+            if draw is not None:
+                data["draw"] = {
+                    "mode": draw.mode,
+                    "winner_count": draw.winner_count,
+                    "drawn_at": _utc_iso(draw.drawn_at),
+                }
+            else:
+                data["draw"] = None
     return data
 
 
@@ -434,6 +462,7 @@ def list_action_participants(action_id: int, _: RequireStaff, db: Session = Depe
     return [
         {
             "id": row.id,
+            "user_id": row.user_id,
             "display_name": row.user.display_name if row.user is not None else "—",
             "status": row.status,
             "registered_at": _utc_iso(row.registered_at),
@@ -477,6 +506,91 @@ def list_action_logs(
         }
         for row in rows
     ]
+
+
+def _draw_response(db: Session, draw) -> dict:
+    winners = winner_rows(db, draw)
+    return {
+        "mode": draw.mode,
+        "winner_count": draw.winner_count,
+        "drawn_at": _utc_iso(draw.drawn_at),
+        "winners": [
+            {"user_id": user.id, "display_name": user.display_name} for user in winners
+        ],
+    }
+
+
+@router.post("/{action_id}/draw")
+def draw_action(
+    action_id: int,
+    body: PromoDrawBody,
+    actor: RequireStaff,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    action = _get_action(db, action_id)
+    try:
+        row = persist_draw(
+            db,
+            action,
+            mode=body.mode,
+            winner_count=body.winner_count,
+            winner_user_ids=body.winner_user_ids,
+            actor=actor,
+        )
+    except DrawError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
+    log_staff_action(
+        db,
+        actor=actor,
+        action="promo.draw",
+        meta={"promo_id": action.id, "mode": row.mode, "winner_count": row.winner_count},
+        request=request,
+    )
+    return _draw_response(db, row)
+
+
+@router.get("/{action_id}/winners.csv")
+def export_action_winners_csv(
+    action_id: int,
+    actor: RequireStaff,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    action = _get_action(db, action_id)
+    draw = get_draw(db, action.id)
+    if draw is None:
+        raise HTTPException(status_code=404, detail=MSG_NOT_DONE)
+    winners = winner_rows(db, draw)
+    buf = io.StringIO()
+    buf.write("\ufeff")
+    writer = csv.writer(buf, delimiter=";")
+    writer.writerow(["nome_exibicao", "email", "telefone"])
+    for user in winners:
+        writer.writerow([user.display_name, user.email or "", user.phone or ""])
+    log_staff_action(
+        db,
+        actor=actor,
+        action="promo.export_winners",
+        meta={"promo_id": action.id, "count": len(winners)},
+        request=request,
+    )
+    data = buf.getvalue().encode("utf-8")
+    filename = f"acao-{action.id}-sorteados.csv"
+    return StreamingResponse(
+        io.BytesIO(data),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/{action_id}/winners")
+def list_action_winners(action_id: int, _: RequireStaff, db: Session = Depends(get_db)):
+    action = _get_action(db, action_id)
+    draw = get_draw(db, action.id)
+    if draw is None:
+        raise HTTPException(status_code=404, detail=MSG_NOT_DONE)
+    return _draw_response(db, draw)
 
 
 @router.get("/enroll/{raw_token}")

@@ -8,6 +8,7 @@ import type {
   PromoAction,
   PromoActionLog,
   PromoActionType,
+  PromoDrawResult,
   PromoEnrollResult,
   PromoEnrollmentToken,
   PromoParticipant,
@@ -704,6 +705,31 @@ export const api = {
     request<PromoParticipant[]>(`/acoes/${id}/participants`),
 
   listPromoLogs: (id: number) => request<PromoActionLog[]>(`/acoes/${id}/logs`),
+
+  drawPromoAction: (
+    id: number,
+    body: { mode: "direct" | "chained"; winner_count?: number; winner_user_ids?: number[] },
+  ) => request<PromoDrawResult>(`/acoes/${id}/draw`, { method: "POST", body: JSON.stringify(body) }),
+
+  listPromoWinners: (id: number) => request<PromoDrawResult>(`/acoes/${id}/winners`),
+
+  exportPromoWinnersCsv: async (id: number) => {
+    const res = await fetch(`${BASE}/acoes/${id}/winners.csv`, { credentials: "include" });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(formatApiError(err.detail, res.statusText || "Erro no export"));
+    }
+    const blob = await res.blob();
+    const dispo = res.headers.get("Content-Disposition") || "";
+    const match = /filename="?([^"]+)"?/.exec(dispo);
+    const filename = match?.[1] || `acao-${id}-sorteados.csv`;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  },
 
 };
 

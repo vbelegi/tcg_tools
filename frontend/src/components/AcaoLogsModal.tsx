@@ -16,6 +16,8 @@ const ACTION_LABELS: Record<string, string> = {
   "promo.publish": "Publicou a ação",
   "promo.regulation": "Atualizou o regulamento",
   "promo.enroll_token": "Gerou QR de inscrição",
+  "promo.draw": "Realizou o sorteio",
+  "promo.export_winners": "Exportou contemplados",
 };
 
 function labelFor(action: string): string {

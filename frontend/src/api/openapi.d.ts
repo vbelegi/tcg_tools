@@ -1165,6 +1165,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/acoes/{action_id}/draw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Draw Action */
+        post: operations["draw_action_api_v1_acoes__action_id__draw_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/acoes/{action_id}/winners.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Action Winners Csv */
+        get: operations["export_action_winners_csv_api_v1_acoes__action_id__winners_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/acoes/{action_id}/winners": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Action Winners */
+        get: operations["list_action_winners_api_v1_acoes__action_id__winners_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/acoes/enroll/{raw_token}": {
         parameters: {
             query?: never;
@@ -1616,6 +1667,15 @@ export interface components {
             show_in_calendar?: boolean | null;
             /** Max Participants */
             max_participants?: number | null;
+        };
+        /** PromoDrawBody */
+        PromoDrawBody: {
+            /** Mode */
+            mode: string;
+            /** Winner Count */
+            winner_count?: number | null;
+            /** Winner User Ids */
+            winner_user_ids?: number[] | null;
         };
         /** RegisterBody */
         RegisterBody: {
@@ -4449,6 +4509,109 @@ export interface operations {
             query?: {
                 limit?: number;
             };
+            header?: never;
+            path: {
+                action_id: number;
+            };
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    draw_action_api_v1_acoes__action_id__draw_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                action_id: number;
+            };
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromoDrawBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_action_winners_csv_api_v1_acoes__action_id__winners_csv_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                action_id: number;
+            };
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_action_winners_api_v1_acoes__action_id__winners_get: {
+        parameters: {
+            query?: never;
             header?: never;
             path: {
                 action_id: number;

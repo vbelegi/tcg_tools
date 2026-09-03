@@ -20,12 +20,14 @@ describe("ParticipantsModal", () => {
     vi.mocked(api.listPromoParticipants).mockResolvedValue([
       {
         id: 1,
+        user_id: 11,
         display_name: "Ana",
         status: "confirmed",
         registered_at: "2026-09-03T12:00:00Z",
       },
       {
         id: 2,
+        user_id: 12,
         display_name: "Bruno",
         status: "pending_verification",
         registered_at: "2026-09-03T12:05:00Z",

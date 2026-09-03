@@ -203,6 +203,12 @@ export interface PromoAction {
   regulation_versions?: PromoRegulation[];
   /** Logged-in viewer only. */
   my_participation?: { status: "pending_verification" | "confirmed" } | null;
+  /** Logged-in viewer only. */
+  draw_done?: boolean;
+  /** Logged-in viewer only. null if there is no draw or the viewer did not enroll. */
+  i_won?: boolean | null;
+  /** Staff detail only — never includes winner names. */
+  draw?: { mode: "direct" | "chained"; winner_count: number; drawn_at: string | null } | null;
 }
 
 export type PromoEnrollReason =
@@ -233,9 +239,22 @@ export interface PromoEnrollmentToken {
 
 export interface PromoParticipant {
   id: number;
+  user_id: number;
   display_name: string;
   status: "pending_verification" | "confirmed";
   registered_at: string | null;
+}
+
+export interface PromoWinner {
+  user_id: number;
+  display_name: string;
+}
+
+export interface PromoDrawResult {
+  mode: "direct" | "chained";
+  winner_count: number;
+  drawn_at: string | null;
+  winners: PromoWinner[];
 }
 
 export interface PromoActionLog {
