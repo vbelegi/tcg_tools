@@ -1252,9 +1252,10 @@ th {
 }
 
 .calendar-day {
+  position: relative;
   height: 100%;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -1265,6 +1266,7 @@ th {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  z-index: 0;
 }
 
 .calendar-day.empty {
@@ -1316,6 +1318,74 @@ th {
 .calendar-chip-announcement {
   color: var(--warning);
   border-color: rgba(251, 191, 36, 0.45);
+}
+
+.calendar-promo-bands {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  margin-top: auto;
+  width: 100%;
+}
+
+.calendar-promo-band,
+.calendar-promo-band-spacer {
+  height: 0.7rem;
+  flex-shrink: 0;
+}
+
+.calendar-promo-band {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  background: rgba(255, 107, 0, 0.85);
+  color: #12081a;
+  font-size: 0.58rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0 0.35rem;
+  box-sizing: border-box;
+}
+
+.calendar-promo-band.extend-left {
+  margin-left: calc(-0.35rem / 2);
+  width: calc(100% + 0.35rem / 2);
+}
+
+.calendar-promo-band.extend-right {
+  margin-right: calc(-0.35rem / 2);
+  width: calc(100% + 0.35rem / 2);
+}
+
+.calendar-promo-band.extend-left.extend-right {
+  width: calc(100% + 0.35rem);
+}
+
+.calendar-promo-band.round-left {
+  border-top-left-radius: 999px;
+  border-bottom-left-radius: 999px;
+}
+
+.calendar-promo-band.round-right {
+  border-top-right-radius: 999px;
+  border-bottom-right-radius: 999px;
+}
+
+.calendar-promo-band.open-left,
+.calendar-promo-band.open-right {
+  border-radius: 0;
+}
+
+.calendar-promo-band-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calendar-promo-card {
+  border-left: 3px solid var(--brand);
 }
 
 .badge-announcement {

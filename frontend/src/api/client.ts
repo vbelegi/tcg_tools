@@ -421,6 +421,14 @@ export const api = {
         start_time: string | null;
         location: string | null;
       }>;
+      promo_actions: Array<{
+        id: number;
+        name: string;
+        start_date: string;
+        end_date: string;
+        description: string | null;
+        type_label: string;
+      }>;
     }>(`/calendar?year=${year}&month=${month}`),
 
   listCalendarAnnouncements: (year?: number, month?: number) => {

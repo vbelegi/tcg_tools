@@ -38,6 +38,7 @@ from app.core.promo.enrollment import (
     create_enrollment_token,
     get_participation,
 )
+from app.core.promo.notify import describe_edit_changes, notify_promo_participants
 from app.core.promo.regulations import (
     MAX_REGULATION_BYTES,
     RegulationError,
@@ -351,6 +352,7 @@ def update_action(
             meta={"promo_id": action.id, "changes": changes},
             request=request,
         )
+        notify_promo_participants(db, action, describe_edit_changes(changes, action))
     return _action_dict(db, action, actor, detail=True)
 
 
@@ -375,6 +377,9 @@ def publish_action(
         meta={"promo_id": action.id},
         request=request,
     )
+    enrolled = _participant_counts(db, [action.id]).get(action.id, 0)
+    if enrolled:
+        notify_promo_participants(db, action, ["A ação foi publicada."])
     return _action_dict(db, action, actor, detail=True)
 
 
@@ -400,6 +405,7 @@ async def upload_regulation(
         meta={"promo_id": action.id, "from": previous, "to": row.version},
         request=request,
     )
+    notify_promo_participants(db, action, [f"Novo regulamento (v{row.version})."])
     return _action_dict(db, action, actor, detail=True)
 
 

@@ -47,3 +47,14 @@ def promo_enroll_url(token: str) -> str | None:
     if not base:
         return None
     return f"{base}{promo_enroll_path(token)}"
+
+
+def promo_action_path(action_id: int) -> str:
+    return f"/acoes/{action_id}"
+
+
+def promo_action_url(action_id: int) -> str | None:
+    base = (get_settings().public_base_url or "").strip().rstrip("/")
+    if not base:
+        return None
+    return f"{base}{promo_action_path(action_id)}"
