@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FormEvent, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { api } from "../../api/client";
+import { Switch } from "../../components/Switch";
 import { todayIso } from "./promoFormat";
 
 export function AcaoNovaPage() {
@@ -66,6 +67,9 @@ export function AcaoNovaPage() {
 
   return (
     <div>
+      <Link to="/acoes" className="torneio-back">
+        ← Ações Promocionais
+      </Link>
       <h1>Nova Ação Promocional</h1>
 
       <form onSubmit={onSubmit}>
@@ -133,25 +137,15 @@ export function AcaoNovaPage() {
         </div>
 
         <div className="form-row">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={showInCalendar}
-              onChange={(e) => setShowInCalendar(e.target.checked)}
-            />
+          <Switch checked={showInCalendar} onChange={setShowInCalendar}>
             Exibir no calendário
-          </label>
+          </Switch>
         </div>
 
         <div className="form-row">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={published}
-              onChange={(e) => setPublished(e.target.checked)}
-            />
+          <Switch checked={published} onChange={setPublished}>
             Pública
-          </label>
+          </Switch>
           <p className="field-hint">
             Ações não publicadas ficam visíveis apenas para staff e admin.
           </p>
@@ -163,7 +157,7 @@ export function AcaoNovaPage() {
 
         {error && <p className="error">{error}</p>}
 
-        <button className="primary" type="submit" disabled={create.isPending}>
+        <button className="primary form-submit" type="submit" disabled={create.isPending}>
           {create.isPending ? "Criando…" : "Criar"}
         </button>
       </form>

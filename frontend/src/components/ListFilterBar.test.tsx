@@ -50,7 +50,9 @@ describe("ListFilterBar", () => {
       />,
     );
 
-    fireEvent.click(screen.getByLabelText("Somente ações ativas"));
+    const toggle = screen.getByRole("switch", { name: "Somente ações ativas" });
+    expect(toggle).not.toBeChecked();
+    fireEvent.click(toggle);
 
     expect(onChange).toHaveBeenCalledWith(true);
     expect(screen.getByText("1 resultado")).toBeInTheDocument();

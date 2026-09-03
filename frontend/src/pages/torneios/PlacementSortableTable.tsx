@@ -16,6 +16,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { PlacementRow } from "./colocacaoOrder";
+import { Switch } from "../../components/Switch";
 
 type SortableRowProps = {
   row: PlacementRow;
@@ -72,14 +73,12 @@ function SortablePlacementRow({
         <strong>{row.name}</strong>
       </td>
       <td className="externo-col-flags">
-        <label className="externo-flag">
-          <input
-            type="checkbox"
-            checked={row.is_drop}
-            onChange={(e) => onDropToggle(row.player_id, e.target.checked)}
-          />
+        <Switch
+          checked={row.is_drop}
+          onChange={(checked) => onDropToggle(row.player_id, checked)}
+        >
           Drop/WO
-        </label>
+        </Switch>
       </td>
       <td>
         <input

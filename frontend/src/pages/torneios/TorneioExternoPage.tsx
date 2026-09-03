@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { api } from "../../api/client";
+import { Switch } from "../../components/Switch";
 
 type UserHit = {
   id: number;
@@ -216,13 +217,13 @@ export function TorneioExternoPage() {
     <div className="admin-page">
       <header className="torneio-manage-header">
         <div>
+          <Link to="/torneios" className="torneio-back">
+            ← Torneios
+          </Link>
           <h1>Importar externo</h1>
           <p className="torneio-manage-meta">Resultados → FP · sem rodadas internas</p>
         </div>
         <div className="torneio-manage-primary">
-          <Link className="secondary" to="/torneios">
-            Torneios
-          </Link>
           <button
             className="primary"
             type="button"
@@ -507,27 +508,23 @@ export function TorneioExternoPage() {
                         )}
                       </td>
                       <td className="externo-col-flags">
-                        <label className="externo-flag">
-                          <input
-                            type="checkbox"
-                            checked={row.is_drop}
-                            onChange={(e) => updateRow(row.key, { is_drop: e.target.checked })}
-                          />
+                        <Switch
+                          checked={row.is_drop}
+                          onChange={(checked) => updateRow(row.key, { is_drop: checked })}
+                        >
                           Drop/WO
-                        </label>
-                        <label className="externo-flag">
-                          <input
-                            type="checkbox"
-                            checked={row.showDecklist}
-                            onChange={(e) =>
-                              updateRow(row.key, {
-                                showDecklist: e.target.checked,
-                                decklist: e.target.checked ? row.decklist : "",
-                              })
-                            }
-                          />
+                        </Switch>
+                        <Switch
+                          checked={row.showDecklist}
+                          onChange={(checked) =>
+                            updateRow(row.key, {
+                              showDecklist: checked,
+                              decklist: checked ? row.decklist : "",
+                            })
+                          }
+                        >
                           Decklist
-                        </label>
+                        </Switch>
                       </td>
                       <td className="externo-col-actions">
                         <button

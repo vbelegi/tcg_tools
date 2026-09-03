@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+import { Switch } from "./Switch";
+
 export type FilterToggle = {
   id: string;
   label: string;
@@ -59,14 +61,9 @@ export function ListFilterBar({
       {toggles.length > 0 && (
         <div className="list-filter-toggles">
           {toggles.map((toggle) => (
-            <label key={toggle.id} className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={toggle.checked}
-                onChange={(e) => toggle.onChange(e.target.checked)}
-              />
+            <Switch key={toggle.id} checked={toggle.checked} onChange={toggle.onChange}>
               {toggle.label}
-            </label>
+            </Switch>
           ))}
         </div>
       )}

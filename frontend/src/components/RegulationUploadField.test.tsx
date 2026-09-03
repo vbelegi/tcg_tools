@@ -48,6 +48,8 @@ describe("RegulationUploadField", () => {
     );
 
     expect(screen.getByLabelText("Regulamento (PDF)")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Escolher PDF" })).toBeInTheDocument();
+    expect(screen.getByText("Nenhum arquivo escolhido")).toBeInTheDocument();
     expect(screen.getByText(/não é um link/i)).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /Ver regulamento/ })).not.toBeInTheDocument();
   });

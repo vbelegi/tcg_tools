@@ -5,6 +5,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { api } from "../api/client";
 import { safeRedirectPath } from "../utils/safeRedirect";
 import { Modal } from "./Modal";
+import { Switch } from "./Switch";
 
 export type AuthModalMode = "login" | "register";
 
@@ -284,18 +285,15 @@ export function AuthModal({ open, mode, onModeChange, onClose, nextPath }: AuthM
           </div>
         )}
         {mode === "register" && (
-          <label className="auth-privacy-check">
-            <input
-              type="checkbox"
-              checked={acceptPrivacy}
-              onChange={(e) => setAcceptPrivacy(e.target.checked)}
-              required
-            />
-            <span>
-              Li e aceito os <Link to="/termos" onClick={onClose}>Termos de uso</Link> e a{" "}
-              <Link to="/privacidade" onClick={onClose}>Política de privacidade</Link>
-            </span>
-          </label>
+          <Switch
+            className="auth-privacy-check"
+            checked={acceptPrivacy}
+            onChange={setAcceptPrivacy}
+            required
+          >
+            Li e aceito os <Link to="/termos" onClick={onClose}>Termos de uso</Link> e a{" "}
+            <Link to="/privacidade" onClick={onClose}>Política de privacidade</Link>
+          </Switch>
         )}
       </form>
     </Modal>

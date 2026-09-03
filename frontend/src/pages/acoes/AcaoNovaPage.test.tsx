@@ -37,6 +37,10 @@ describe("AcaoNovaPage", () => {
     renderPage();
 
     expect(await screen.findByLabelText("Exibir no calendário")).toBeChecked();
+    expect(screen.getByRole("link", { name: "← Ações Promocionais" })).toHaveAttribute(
+      "href",
+      "/acoes",
+    );
     expect(screen.getByLabelText("Pública")).not.toBeChecked();
     expect(screen.getByText(/não pode ser alterado depois/)).toBeInTheDocument();
     await waitFor(() => {

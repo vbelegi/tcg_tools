@@ -1,7 +1,8 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 import { api } from "../api/client";
 import type { PromoAction, PromoRegulation } from "../api/types";
+import { FilePicker } from "./FilePicker";
 
 type Props = {
   actionId: number;
@@ -11,7 +12,6 @@ type Props = {
 };
 
 export function RegulationUploadField({ actionId, current, history = [], onUploaded }: Props) {
-  const inputRef = useRef<HTMLInputElement>(null);
   const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState("");
 
@@ -25,7 +25,6 @@ export function RegulationUploadField({ actionId, current, history = [], onUploa
       setError((e as Error).message);
     } finally {
       setProgress(null);
-      if (inputRef.current) inputRef.current.value = "";
     }
   };
 
@@ -39,16 +38,12 @@ export function RegulationUploadField({ actionId, current, history = [], onUploa
         preserva a anterior.
       </p>
       <div className="regulation-field-actions">
-        <input
-          ref={inputRef}
+        <FilePicker
           id={`regulamento-${actionId}`}
-          type="file"
           accept=".pdf,application/pdf"
           disabled={progress !== null}
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) void upload(file);
-          }}
+          buttonLabel="Escolher PDF"
+          onFile={(file) => void upload(file)}
         />
         {current && (
           <a href={current.url} target="_blank" rel="noreferrer">

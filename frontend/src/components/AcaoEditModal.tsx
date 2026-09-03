@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { api } from "../api/client";
 import type { PromoAction } from "../api/types";
 import { Modal } from "./Modal";
+import { Switch } from "./Switch";
 
 type Props = {
   open: boolean;
@@ -137,20 +138,14 @@ export function AcaoEditModal({ open, action, onClose, onSaved }: Props) {
           />
         </div>
         <div className="form-row">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={showInCalendar}
-              onChange={(e) => setShowInCalendar(e.target.checked)}
-            />
+          <Switch checked={showInCalendar} onChange={setShowInCalendar}>
             Exibir no calendário
-          </label>
+          </Switch>
         </div>
         <div className="form-row">
-          <label className="checkbox-label">
-            <input type="checkbox" checked={action.published} disabled />
+          <Switch checked={action.published} onChange={() => undefined} disabled>
             Pública
-          </label>
+          </Switch>
           <p className="field-hint">A publicação é feita pelo botão Publicar no topo da página.</p>
         </div>
         {error && <p className="error">{error}</p>}

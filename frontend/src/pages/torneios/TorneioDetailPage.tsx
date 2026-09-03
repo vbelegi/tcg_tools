@@ -7,6 +7,7 @@ import { Modal } from "../../components/Modal";
 import { PlayerPickerModal } from "../../components/PlayerPickerModal";
 import { RoundMatchesTable } from "../../components/RoundMatchesTable";
 import { SeFormatOptions, type SeBoConfig } from "../../components/SeFormatOptions";
+import { Switch } from "../../components/Switch";
 import { TorneioDraftEditPanel } from "../../components/TorneioDraftEditPanel";
 import { api } from "../../api/client";
 import { playersMissingSeed, seedRequirementMessage } from "../../utils/seeds";
@@ -530,15 +531,14 @@ export function TorneioDetailPage() {
             {isManual && <span className="badge">sem rodadas</span>}
           </p>
           {isDraft && isStaff && (
-            <label className="torneio-reg-toggle">
-              <input
-                type="checkbox"
-                checked={Boolean(torneio.registration_open)}
-                onChange={(e) => toggleRegistration.mutate(e.target.checked)}
-                disabled={toggleRegistration.isPending}
-              />
-              <span>Inscrições abertas para jogadores</span>
-            </label>
+            <Switch
+              className="torneio-reg-toggle"
+              checked={Boolean(torneio.registration_open)}
+              onChange={(checked) => toggleRegistration.mutate(checked)}
+              disabled={toggleRegistration.isPending}
+            >
+              Inscrições abertas para jogadores
+            </Switch>
           )}
         </div>
         {isDraft && isStaff && !isManual && (
