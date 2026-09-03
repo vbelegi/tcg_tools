@@ -4,11 +4,17 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.13.0] - 2026-09-03
+
 ### Added
 
 - **Ações promocionais:** tipo Sorteio de Direito de Compra Físico, inscrição por QR (10 min, uso único), regulamento em PDF versionado, sorteio persistido e CSV de contemplados
 - **Ações promocionais:** e-mail transacional a todos os inscritos (incluindo pendentes de verificação) quando a ação muda, ganha novo regulamento ou é publicada já com participantes
 - **Calendário:** faixa contínua no período das ações publicadas com `show_in_calendar` (sobreposição no mês; rascunhos fora do feed mesmo para staff)
+
+### Changed
+
+- **UI:** interruptor no lugar de checkbox; upload de PDF com botão da suíte; voltar nas telas de criação
 
 ### Database
 
