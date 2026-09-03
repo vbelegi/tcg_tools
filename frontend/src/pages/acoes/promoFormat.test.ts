@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatDate, formatPeriod, phaseLabel, promoPhase, todayIso } from "./promoFormat";
+import { formatCountdown, formatDate, formatDateTime, formatPeriod, phaseLabel, promoPhase, todayIso } from "./promoFormat";
 
 describe("promoFormat", () => {
   it("formats ISO dates as pt-BR", () => {
@@ -25,5 +25,12 @@ describe("promoFormat", () => {
     expect(phaseLabel("scheduled")).toBe("em breve");
     expect(phaseLabel("running")).toBe("em andamento");
     expect(phaseLabel("ended")).toBe("encerrada");
+  });
+
+  it("formats a countdown and UTC timestamps", () => {
+    expect(formatCountdown(600)).toBe("10:00");
+    expect(formatCountdown(59)).toBe("00:59");
+    expect(formatCountdown(0)).toBe("00:00");
+    expect(formatDateTime("2026-09-03T12:04:00Z")).toBe("03/09/2026 12:04");
   });
 });

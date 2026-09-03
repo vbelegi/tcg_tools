@@ -37,6 +37,12 @@ describe("formatApiError", () => {
     ];
     expect(formatApiError(detail)).toContain("valid dictionary");
   });
+
+  it("reads message from a named-reason object", () => {
+    expect(
+      formatApiError({ reason: "ended", message: "A ação já foi encerrada." }),
+    ).toBe("A ação já foi encerrada.");
+  });
 });
 
 describe("api request helper", () => {

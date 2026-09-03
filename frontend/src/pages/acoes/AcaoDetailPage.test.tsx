@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AcaoDetailPage } from "./AcaoDetailPage";
 import { api } from "../../api/client";
+import { todayIso } from "./promoFormat";
 
 vi.mock("../../api/client", () => ({
   api: {
@@ -12,16 +13,26 @@ vi.mock("../../api/client", () => ({
     getPromoAction: vi.fn(),
     publishPromoAction: vi.fn(),
     uploadPromoRegulation: vi.fn(),
+    updatePromoAction: vi.fn(),
+    listPromoParticipants: vi.fn(),
+    listPromoLogs: vi.fn(),
+    createPromoEnrollmentToken: vi.fn(),
   },
 }));
+
+const shiftDays = (days: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return todayIso(d);
+};
 
 const action = {
   id: 1,
   name: "Pré-venda Booster Box",
   type: "raffle_purchase_right",
   type_label: "Sorteio de Direito de Compra Físico",
-  start_date: "2026-09-01",
-  end_date: "2026-09-15",
+  start_date: shiftDays(-2),
+  end_date: shiftDays(12),
   description: "Direito de compra do produto limitado.",
   published: true,
   show_in_calendar: true,
@@ -82,6 +93,8 @@ describe("AcaoDetailPage", () => {
     expect(screen.queryByRole("button", { name: "Publicar" })).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Regulamento (PDF)")).not.toBeInTheDocument();
     expect(screen.queryByText(/necessário ter uma conta/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Editar Ação" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Inscrever Novo Participante" })).not.toBeInTheDocument();
   });
 
   it("shows a green participation box when the player is confirmed", async () => {
@@ -147,6 +160,33 @@ describe("AcaoDetailPage", () => {
     expect(await screen.findByRole("button", { name: "Publicar" })).toBeInTheDocument();
     expect(screen.getByLabelText("Regulamento (PDF)")).toBeInTheDocument();
     expect(screen.getByText("rascunho")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Editar Ação" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Inscrever Novo Participante" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Exibir Lista de Participantes" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Logs da Ação" })).not.toBeInTheDocument();
+  });
+
+  it("shows logs to admin and blocks a new QR after the action ended", async () => {
+    vi.mocked(api.authMe).mockResolvedValue({
+      id: 1,
+      email: "admin@local",
+      display_name: "Admin",
+      role: "admin",
+      status: "active",
+    });
+    vi.mocked(api.getPromoAction).mockResolvedValue({
+      ...action,
+      start_date: shiftDays(-20),
+      end_date: shiftDays(-2),
+      participant_count: 2,
+      regulation_versions: [],
+    });
+
+    renderPage();
+
+    expect(await screen.findByRole("button", { name: "Logs da Ação" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Inscrever Novo Participante" })).toBeDisabled();
+    expect(screen.getByText(/não é possível gerar um novo QR/i)).toBeInTheDocument();
   });
 
   it("shows a friendly message when the action is not visible", async () => {

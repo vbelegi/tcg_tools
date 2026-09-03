@@ -9,9 +9,9 @@ from fastapi import APIRouter, Cookie, Depends, File, HTTPException, Query, Requ
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
-from app.api.deps import RequireStaff, get_optional_user
+from app.api.deps import RequireAdmin, RequireStaff, get_optional_user
 from app.api.uploads import read_upload_limited
 from app.api.v1.event_visibility import is_staff_user
 from app.api.v1.promo_visibility import can_view_promo, visible_promo_query
@@ -36,7 +36,7 @@ from app.core.promo.regulations import (
 from app.core.promo.types import get_handler, is_known_type, known_types
 from app.core.rate_limit import rate_limit_dependency
 from app.db.session import get_db
-from app.models import PromoAction, PromoParticipant, User
+from app.models import PromoAction, PromoParticipant, StaffAuditLog, User
 
 router = APIRouter(prefix="/acoes", tags=["acoes"])
 _enroll_limit = rate_limit_dependency("promo_enroll", limit=30, window_sec=60)
@@ -168,6 +168,14 @@ def _validate_period(start: date, end: date) -> None:
         raise HTTPException(
             status_code=400, detail="A data de término não pode ser anterior à data de início."
         )
+
+
+def _utc_iso(value: datetime | None) -> str | None:
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        return value.isoformat() + "Z"
+    return value.isoformat()
 
 
 def _get_action(db: Session, action_id: int) -> PromoAction:
@@ -407,9 +415,68 @@ def create_action_enrollment_token(
     return {
         "path": promo_enroll_path(raw),
         "url": promo_enroll_url(raw),
-        "expires_at": row.expires_at.isoformat() if row.expires_at else None,
+        "expires_at": _utc_iso(row.expires_at),
         "expires_in_seconds": int(ENROLL_TTL.total_seconds()),
     }
+
+
+@router.get("/{action_id}/participants")
+def list_action_participants(action_id: int, _: RequireStaff, db: Session = Depends(get_db)):
+    """Staff-only: display names and status. Never e-mail or phone."""
+    _get_action(db, action_id)
+    rows = (
+        db.query(PromoParticipant)
+        .options(joinedload(PromoParticipant.user))
+        .filter(PromoParticipant.promo_id == action_id)
+        .order_by(PromoParticipant.registered_at.asc(), PromoParticipant.id.asc())
+        .all()
+    )
+    return [
+        {
+            "id": row.id,
+            "display_name": row.user.display_name if row.user is not None else "—",
+            "status": row.status,
+            "registered_at": _utc_iso(row.registered_at),
+        }
+        for row in rows
+    ]
+
+
+@router.get("/{action_id}/logs")
+def list_action_logs(
+    action_id: int,
+    _: RequireAdmin,
+    db: Session = Depends(get_db),
+    limit: int = Query(default=200, ge=1, le=500),
+):
+    _get_action(db, action_id)
+    candidates = (
+        db.query(StaffAuditLog)
+        .filter(StaffAuditLog.action.like("promo.%"))
+        .order_by(StaffAuditLog.created_at.desc(), StaffAuditLog.id.desc())
+        .limit(2000)
+        .all()
+    )
+    rows = [row for row in candidates if (row.meta or {}).get("promo_id") == action_id][:limit]
+    actor_ids = {row.actor_user_id for row in rows if row.actor_user_id}
+    names = {}
+    if actor_ids:
+        names = {
+            user.id: user.display_name
+            for user in db.query(User).filter(User.id.in_(actor_ids)).all()
+        }
+    return [
+        {
+            "id": row.id,
+            "action": row.action,
+            "actor_user_id": row.actor_user_id,
+            "actor_display_name": names.get(row.actor_user_id) if row.actor_user_id else None,
+            "created_at": _utc_iso(row.created_at),
+            "ip": row.ip,
+            "meta": row.meta,
+        }
+        for row in rows
+    ]
 
 
 @router.get("/enroll/{raw_token}")

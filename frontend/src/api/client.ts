@@ -6,9 +6,11 @@ import type {
   Preset,
   PresetsResponse,
   PromoAction,
+  PromoActionLog,
   PromoActionType,
   PromoEnrollResult,
   PromoEnrollmentToken,
+  PromoParticipant,
   Round,
   Standing,
   TabelaLinha,
@@ -44,6 +46,10 @@ export function formatApiError(detail: unknown, fallback = "Erro na requisição
       })
       .filter(Boolean);
     if (parts.length) return parts.join("; ");
+  }
+  if (detail && typeof detail === "object" && "message" in detail) {
+    const message = (detail as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) return message;
   }
   return fallback;
 }
@@ -693,6 +699,11 @@ export const api = {
 
   completePromoEnroll: () =>
     enrollRequest("/acoes/enroll/complete", { method: "POST" }),
+
+  listPromoParticipants: (id: number) =>
+    request<PromoParticipant[]>(`/acoes/${id}/participants`),
+
+  listPromoLogs: (id: number) => request<PromoActionLog[]>(`/acoes/${id}/logs`),
 
 };
 

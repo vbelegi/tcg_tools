@@ -1,7 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 
 import { api } from "../../api/client";
+import { AcaoEditModal } from "../../components/AcaoEditModal";
+import { AcaoLogsModal } from "../../components/AcaoLogsModal";
+import { EnrollmentQrModal } from "../../components/EnrollmentQrModal";
+import { ParticipantsModal } from "../../components/ParticipantsModal";
 import { RegulationUploadField } from "../../components/RegulationUploadField";
 import type { PromoAction } from "../../api/types";
 import { formatPeriod, phaseLabel, promoPhase } from "./promoFormat";
@@ -18,6 +23,11 @@ export function AcaoDetailPage() {
     retry: false,
   });
   const canManage = me && (me.role === "admin" || me.role === "staff");
+  const isAdmin = me?.role === "admin";
+  const [editOpen, setEditOpen] = useState(false);
+  const [logsOpen, setLogsOpen] = useState(false);
+  const [participantsOpen, setParticipantsOpen] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
 
   const {
     data: action,
@@ -65,6 +75,12 @@ export function AcaoDetailPage() {
   }
 
   const phase = promoPhase(action);
+  const ended = phase === "ended";
+  const full =
+    action.max_participants != null &&
+    action.participant_count != null &&
+    action.participant_count >= action.max_participants;
+  const canIssueQr = canManage && !ended && !full;
 
   return (
     <div className="promo-detail">
@@ -85,15 +101,27 @@ export function AcaoDetailPage() {
             )}
           </p>
         </div>
-        {canManage && !action.published && (
-          <button
-            className="primary"
-            type="button"
-            onClick={() => publish.mutate()}
-            disabled={publish.isPending}
-          >
-            {publish.isPending ? "Publicando…" : "Publicar"}
-          </button>
+        {canManage && (
+          <div className="promo-staff-actions">
+            {!action.published && (
+              <button
+                className="primary"
+                type="button"
+                onClick={() => publish.mutate()}
+                disabled={publish.isPending}
+              >
+                {publish.isPending ? "Publicando…" : "Publicar"}
+              </button>
+            )}
+            <button className="secondary" type="button" onClick={() => setEditOpen(true)}>
+              Editar Ação
+            </button>
+            {isAdmin && (
+              <button className="secondary" type="button" onClick={() => setLogsOpen(true)}>
+                Logs da Ação
+              </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -148,6 +176,25 @@ export function AcaoDetailPage() {
       {canManage && (
         <section className="promo-manage">
           <h2>Gerenciamento</h2>
+          <div className="promo-staff-actions">
+            <button className="secondary" type="button" onClick={() => setParticipantsOpen(true)}>
+              Exibir Lista de Participantes
+            </button>
+            <button
+              className="primary"
+              type="button"
+              onClick={() => setQrOpen(true)}
+              disabled={!canIssueQr}
+            >
+              Inscrever Novo Participante
+            </button>
+          </div>
+          {ended && (
+            <p className="field-hint">A inscrição encerrou nesta data. Não é possível gerar um novo QR.</p>
+          )}
+          {!ended && full && (
+            <p className="field-hint">Limite de participantes atingido.</p>
+          )}
           <RegulationUploadField
             actionId={action.id}
             current={action.regulation}
@@ -155,6 +202,26 @@ export function AcaoDetailPage() {
             onUploaded={applyUpdate}
           />
         </section>
+      )}
+
+      {canManage && (
+        <>
+          <AcaoEditModal
+            open={editOpen}
+            action={action}
+            onClose={() => setEditOpen(false)}
+            onSaved={applyUpdate}
+          />
+          <ParticipantsModal
+            open={participantsOpen}
+            actionId={action.id}
+            onClose={() => setParticipantsOpen(false)}
+          />
+          <EnrollmentQrModal open={qrOpen} actionId={action.id} onClose={() => setQrOpen(false)} />
+        </>
+      )}
+      {isAdmin && (
+        <AcaoLogsModal open={logsOpen} actionId={action.id} onClose={() => setLogsOpen(false)} />
       )}
     </div>
   );

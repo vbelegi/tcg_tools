@@ -231,6 +231,23 @@ export interface PromoEnrollmentToken {
   expires_in_seconds: number;
 }
 
+export interface PromoParticipant {
+  id: number;
+  display_name: string;
+  status: "pending_verification" | "confirmed";
+  registered_at: string | null;
+}
+
+export interface PromoActionLog {
+  id: number;
+  action: string;
+  actor_user_id: number | null;
+  actor_display_name: string | null;
+  created_at: string | null;
+  ip: string | null;
+  meta: Record<string, unknown> | null;
+}
+
 export interface PlayerProfile {
   id: number;
   display_name: string;
