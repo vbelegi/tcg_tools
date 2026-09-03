@@ -4,6 +4,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Layout:** área principal preenche telas médias/grandes (até 1440px) e centraliza em ultrawide; mobile (≤900px) inalterado
+
 ## [1.11.1] - 2026-09-01
 
 ### Fixed

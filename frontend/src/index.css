@@ -119,11 +119,13 @@ a:hover {
 
 .main-content {
   flex: 1;
-  padding: 2rem;
-  max-width: 960px;
   min-width: 0;
   width: 100%;
   box-sizing: border-box;
+  /* Fill the area beside the sidebar; soft cap on ultrawide so lines stay readable */
+  max-width: min(100%, 1440px);
+  margin-inline: auto;
+  padding: 2rem clamp(1.25rem, 2.5vw, 2.75rem);
 }
 
 .mobile-nav-toggle {
