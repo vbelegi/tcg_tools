@@ -57,8 +57,12 @@ def test_invite_api_returns_claim_url(api_client: TestClient, db_session: Sessio
     r = api_client.post(f"/api/v1/users/{user.id}/invite")
     assert r.status_code == 200
     body = r.json()
-    assert body["claim_path"] == f"/convite/{body['token']}"
-    assert body["claim_url"] == f"https://torneios.example.com/convite/{body['token']}"
+    assert "token" not in body
+    assert body["claim_path"].startswith("/convite/")
+    token = body["claim_path"].removeprefix("/convite/")
+    assert token
+    assert body["claim_path"] == f"/convite/{token}"
+    assert body["claim_url"] == f"https://torneios.example.com/convite/{token}"
     get_settings.cache_clear()
 
 

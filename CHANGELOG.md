@@ -4,6 +4,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.12.1] - 2026-09-03
+
+### Fixed
+
+- **Testes:** `test_invite_api_returns_claim_url` alinhado à API sem campo `token` (só `claim_path` / `claim_url`)
+
 ## [1.12.0] - 2026-09-03
 
 ### Added
