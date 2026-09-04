@@ -36,6 +36,22 @@ export function TorneioResultadoPage() {
   const isGuest = meFetched && !me;
 
   const [decklists, setDecklists] = useState<Record<number, string>>({});
+  const [deckMeta, setDeckMeta] = useState<
+    Record<
+      number,
+      {
+        source: string;
+        source_id: string;
+        source_url: string;
+        name: string | null;
+        format: string | null;
+        price_low_brl: number | null;
+      }
+    >
+  >({});
+  const [importUrl, setImportUrl] = useState<Record<number, string>>({});
+  const [importError, setImportError] = useState<Record<number, string>>({});
+  const [importingId, setImportingId] = useState<number | null>(null);
   const [decklistsSaved, setDecklistsSaved] = useState(false);
   const [exportError, setExportError] = useState("");
   const [raffleExcludedIds, setRaffleExcludedIds] = useState<number[]>([]);
@@ -64,20 +80,90 @@ export function TorneioResultadoPage() {
     enabled: Boolean(torneio),
   });
 
+  useEffect(() => {
+    if (!classificacao?.standings) return;
+    const texts: Record<number, string> = {};
+    const meta: typeof deckMeta = {};
+    for (const s of classificacao.standings) {
+      texts[s.player_id] = s.decklist ?? "";
+      if (s.decklist_source && s.decklist_source_id && s.decklist_source_url) {
+        meta[s.player_id] = {
+          source: s.decklist_source,
+          source_id: s.decklist_source_id,
+          source_url: s.decklist_source_url,
+          name: s.decklist_name ?? null,
+          format: s.decklist_format ?? null,
+          price_low_brl:
+            s.decklist_price_low_brl == null ? null : Number(s.decklist_price_low_brl),
+        };
+      }
+    }
+    setDecklists(texts);
+    setDeckMeta(meta);
+  }, [classificacao]);
+
   const saveDecklists = useMutation({
     mutationFn: () =>
       api.updateDecklists(
         eventId,
-        Object.entries(decklists).map(([player_id, decklist]) => ({
-          player_id: Number(player_id),
-          decklist: decklist || null,
-        })),
+        Object.entries(decklists).map(([player_id, decklist]) => {
+          const pid = Number(player_id);
+          const meta = deckMeta[pid];
+          return {
+            player_id: pid,
+            decklist: decklist || null,
+            ...(meta
+              ? {
+                  decklist_source: meta.source,
+                  decklist_source_id: meta.source_id,
+                  decklist_source_url: meta.source_url,
+                  decklist_name: meta.name,
+                  decklist_format: meta.format,
+                  decklist_price_low_brl: meta.price_low_brl,
+                }
+              : {}),
+          };
+        }),
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["classificacao", eventId] });
       setDecklistsSaved(true);
     },
   });
+
+  const importDeck = async (playerId: number) => {
+    const url = (importUrl[playerId] || "").trim();
+    if (!url) {
+      setImportError((e) => ({ ...e, [playerId]: "Cole a URL do deck na LigaMagic." }));
+      return;
+    }
+    setImportingId(playerId);
+    setImportError((e) => ({ ...e, [playerId]: "" }));
+    try {
+      const preview = await api.previewDeckImport(url);
+      const price =
+        preview.price_low_brl == null ? null : Number(preview.price_low_brl);
+      setDecklists((d) => ({ ...d, [playerId]: preview.plain_text }));
+      setDeckMeta((m) => ({
+        ...m,
+        [playerId]: {
+          source: preview.source,
+          source_id: preview.source_deck_id,
+          source_url: preview.source_url,
+          name: preview.name,
+          format: preview.format,
+          price_low_brl: Number.isFinite(price as number) ? (price as number) : null,
+        },
+      }));
+    } catch (err) {
+      setImportError((e) => ({
+        ...e,
+        [playerId]: err instanceof Error ? err.message : "Falha ao importar",
+      }));
+    } finally {
+      setImportingId(null);
+    }
+  };
 
   const handleExport = async () => {
     setExportError("");
@@ -239,22 +325,88 @@ export function TorneioResultadoPage() {
                         {s.is_drop ? (
                           "—"
                         ) : isStaff ? (
-                          <input
-                            className="resultado-deck-input"
-                            placeholder="Nome ou URL"
-                            defaultValue={s.decklist ?? ""}
-                            onChange={(e) =>
-                              setDecklists({ ...decklists, [s.player_id]: e.target.value })
-                            }
-                          />
+                          <div className="resultado-deck-edit">
+                            <textarea
+                              className="resultado-deck-input"
+                              rows={3}
+                              placeholder="Lista em texto ou importe da LigaMagic"
+                              value={decklists[s.player_id] ?? ""}
+                              onChange={(e) =>
+                                setDecklists({ ...decklists, [s.player_id]: e.target.value })
+                              }
+                            />
+                            <div className="resultado-deck-import">
+                              <input
+                                type="url"
+                                className="resultado-deck-input"
+                                placeholder="URL LigaMagic"
+                                value={importUrl[s.player_id] ?? ""}
+                                onChange={(e) =>
+                                  setImportUrl({ ...importUrl, [s.player_id]: e.target.value })
+                                }
+                              />
+                              <button
+                                type="button"
+                                className="secondary"
+                                disabled={importingId === s.player_id}
+                                onClick={() => importDeck(s.player_id)}
+                              >
+                                {importingId === s.player_id ? "Importando…" : "Importar"}
+                              </button>
+                            </div>
+                            {importError[s.player_id] ? (
+                              <p className="error" style={{ margin: "0.25rem 0 0" }}>
+                                {importError[s.player_id]}
+                              </p>
+                            ) : null}
+                            {deckMeta[s.player_id] ? (
+                              <p className="field-hint" style={{ margin: "0.25rem 0 0" }}>
+                                {deckMeta[s.player_id].name
+                                  ? `${deckMeta[s.player_id].name}`
+                                  : "Importado"}
+                                {deckMeta[s.player_id].format
+                                  ? ` · ${deckMeta[s.player_id].format}`
+                                  : ""}
+                                {deckMeta[s.player_id].price_low_brl != null
+                                  ? ` · R$ ${Number(deckMeta[s.player_id].price_low_brl).toFixed(2)} (menor)`
+                                  : ""}
+                              </p>
+                            ) : null}
+                            {s.decklist ? (
+                              <p style={{ margin: "0.35rem 0 0" }}>
+                                <Link
+                                  className="secondary"
+                                  to={`/torneios/${eventId}/jogadores/${s.player_id}/deck`}
+                                >
+                                  Ver deck
+                                </Link>
+                              </p>
+                            ) : null}
+                          </div>
                         ) : s.decklist ? (
-                          s.decklist.startsWith("http") ? (
-                            <a href={s.decklist} target="_blank" rel="noreferrer">
-                              Link
-                            </a>
-                          ) : (
-                            s.decklist
-                          )
+                          <div>
+                            {(s.decklist_name ||
+                              s.decklist_format ||
+                              s.decklist_price_low_brl != null) && (
+                              <p className="field-hint" style={{ marginTop: 0 }}>
+                                {[
+                                  s.decklist_name,
+                                  s.decklist_format,
+                                  s.decklist_price_low_brl != null
+                                    ? `R$ ${Number(s.decklist_price_low_brl).toFixed(2)}`
+                                    : null,
+                                ]
+                                  .filter(Boolean)
+                                  .join(" · ")}
+                              </p>
+                            )}
+                            <Link
+                              className="secondary resultado-deck-link"
+                              to={`/torneios/${eventId}/jogadores/${s.player_id}/deck`}
+                            >
+                              Ver deck
+                            </Link>
+                          </div>
                         ) : (
                           "—"
                         )}

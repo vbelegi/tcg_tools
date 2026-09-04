@@ -9,6 +9,7 @@ from app.config import get_settings
 from app.db.base import Base
 from app.models import Event, Match, Player, Round, Session, User  # noqa: F401
 from app.models import FoursePointsLedger, InviteToken, EmailVerificationToken  # noqa: F401
+from app.models import ScryfallCardCache  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:

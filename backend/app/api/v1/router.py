@@ -7,6 +7,7 @@ from app.api.v1 import (
     audit,
     auth,
     calendar,
+    decks,
     health,
     media,
     premiacao,
@@ -21,6 +22,7 @@ router.include_router(media.router)
 router.include_router(auth.router)
 router.include_router(users.router)
 router.include_router(audit.router)
+router.include_router(decks.router)
 router.include_router(calendar.router)
 router.include_router(tcg_games.router)
 router.include_router(premiacao.router)

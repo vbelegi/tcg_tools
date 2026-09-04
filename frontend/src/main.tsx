@@ -32,6 +32,7 @@ import { TorneioColocacaoPage } from "./pages/torneios/TorneioColocacaoPage";
 import { TorneioExternoPage } from "./pages/torneios/TorneioExternoPage";
 import { TorneioNovoPage } from "./pages/torneios/TorneioNovoPage";
 import { TorneioResultadoPage } from "./pages/torneios/TorneioResultadoPage";
+import { TorneioDeckPage } from "./pages/torneios/TorneioDeckPage";
 import { TorneioRodadaPage } from "./pages/torneios/TorneioRodadaPage";
 import { TorneiosListPage } from "./pages/torneios/TorneiosListPage";
 import { UsuariosPage } from "./pages/UsuariosPage";
@@ -65,6 +66,7 @@ createRoot(document.getElementById("root")!).render(
             <Route path="torneios" element={<TorneiosListPage />} />
             <Route path="torneios/:id" element={<TorneioDetailPage />} />
             <Route path="torneios/:id/resultado" element={<TorneioResultadoPage />} />
+            <Route path="torneios/:id/jogadores/:playerId/deck" element={<TorneioDeckPage />} />
             <Route path="conta/senha" element={<Navigate to="/" replace />} />
             <Route path="conta/verificar-email" element={<VerificarEmailContaPage />} />
             <Route path="termos" element={<TermosPage />} />

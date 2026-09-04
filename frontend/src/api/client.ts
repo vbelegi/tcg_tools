@@ -2,6 +2,7 @@ import type {
   CalcularResponse,
   Match,
   Player,
+  PlayerDeck,
   PlayerProfile,
   Preset,
   PresetsResponse,
@@ -689,14 +690,42 @@ export const api = {
 
     request<{ standings: Standing[] }>(`/torneios/${id}/classificacao`),
 
-  updateDecklists: (id: number, updates: { player_id: number; decklist: string | null }[]) =>
+  getPlayerDeck: (eventId: number, playerId: number) =>
+    request<PlayerDeck>(`/torneios/${eventId}/jogadores/${playerId}/deck`),
 
+  updateDecklists: (
+    id: number,
+    updates: {
+      player_id: number;
+      decklist: string | null;
+      decklist_source?: string | null;
+      decklist_source_id?: string | null;
+      decklist_source_url?: string | null;
+      decklist_name?: string | null;
+      decklist_format?: string | null;
+      decklist_price_low_brl?: number | null;
+    }[],
+  ) =>
     request<void>(`/torneios/${id}/classificacao`, {
-
       method: "PATCH",
-
       body: JSON.stringify({ updates }),
+    }),
 
+  previewDeckImport: (url: string) =>
+    request<{
+      source: string;
+      source_deck_id: string;
+      source_url: string;
+      name: string | null;
+      format: string | null;
+      plain_text: string;
+      card_count: number;
+      price_low_brl: number | null;
+      price_currency: string;
+      warnings: string[];
+    }>("/decks/import/preview", {
+      method: "POST",
+      body: JSON.stringify({ url }),
     }),
 
   getPremiacao: (id: number) => request<object>(`/torneios/${id}/premiacao`),
