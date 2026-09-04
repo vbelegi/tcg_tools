@@ -8,7 +8,7 @@ from fastapi import Cookie, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.auth import SESSION_COOKIE, get_user_for_token
-from app.core.auth.roles import ROLE_LEVEL, has_min_role, role_value
+from app.core.auth.roles import ROLE_LEVEL, has_min_role
 from app.db.session import get_db
 from app.models import User, UserRole
 
@@ -38,18 +38,6 @@ def require_min_role(minimum: str) -> Callable[..., User]:
 
     def _dep(user: User = Depends(get_current_user)) -> User:
         if not has_min_role(user, minimum):
-            raise HTTPException(status_code=403, detail="Permissão insuficiente.")
-        return user
-
-    return _dep
-
-
-def require_roles(*roles: str) -> Callable[..., User]:
-    """Exact-role check (legacy). Prefer require_min_role for hierarchy."""
-    allowed = set(roles)
-
-    def _dep(user: User = Depends(get_current_user)) -> User:
-        if role_value(user.role) not in allowed:
             raise HTTPException(status_code=403, detail="Permissão insuficiente.")
         return user
 

@@ -14,7 +14,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 ### Changed
 
 - **Docs:** PLATFORM_USERS_FP, OPERADOR, PRIVACIDADE, README, V2_WEB, RUNBOOK, INSTALACAO e TROUBLESHOOTING alinhados aos PRs 1–4 (papéis, contato, ações, filtros, logs)
-- **Papéis:** Super Admin conta como staff/admin+ em visibilidade de torneios/ações e FP de perfil
+- **Papéis:** Super Admin conta como staff/admin+ em visibilidade de torneios/ações e FP de perfil; removido `require_roles` (legado de match exato)
 
 ### Database
 

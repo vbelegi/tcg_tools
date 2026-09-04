@@ -80,6 +80,42 @@ describe("Layout", () => {
     expect(screen.queryByText("Alterar senha")).not.toBeInTheDocument();
   });
 
+  it("shows admin nav including Logs when authenticated as superadmin", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo) => {
+        const url = String(input);
+        if (url.includes("/auth/me")) {
+          return new Response(
+            JSON.stringify({
+              id: 1,
+              email: "admin@local",
+              display_name: "Super Admin",
+              role: "superadmin",
+              status: "active",
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          );
+        }
+        return new Response("{}", { status: 200 });
+      }),
+    );
+    const qc = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    render(
+      <QueryClientProvider client={qc}>
+        <MemoryRouter>
+          <Layout />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    await waitFor(() => expect(screen.getByText("Premiação")).toBeInTheDocument());
+    expect(screen.getByText("Usuários")).toBeInTheDocument();
+    expect(screen.getByText("Logs")).toBeInTheDocument();
+    expect(screen.getByText("TCGs")).toBeInTheDocument();
+  });
+
   it("renders mobile menu toggle on small viewport", async () => {
     const qc = new QueryClient({
       defaultOptions: { queries: { retry: false } },

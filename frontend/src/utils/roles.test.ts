@@ -33,5 +33,6 @@ describe("roles", () => {
   it("limits creatable roles", () => {
     expect(creatableRoles("staff")).toEqual(["player"]);
     expect(creatableRoles("admin")).toEqual(["player", "staff"]);
+    expect(creatableRoles("superadmin")).toEqual(["player", "staff", "admin", "superadmin"]);
   });
 });
