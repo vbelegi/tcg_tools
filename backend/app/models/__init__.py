@@ -16,6 +16,7 @@ from sqlalchemy import (
     Integer,
     JSON,
     LargeBinary,
+    Numeric,
     String,
     Text,
     UniqueConstraint,
@@ -153,6 +154,13 @@ class Player(Base):
     dropped_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     registration_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     decklist: Mapped[str | None] = mapped_column(Text, nullable=True)
+    decklist_source: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    decklist_source_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    decklist_source_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    decklist_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    decklist_format: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    decklist_price_low_brl: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)
+    decklist_imported_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     attendance: Mapped[str] = mapped_column(String(16), nullable=False, default=Attendance.checked_in.value)
     registration_source: Mapped[str] = mapped_column(
         String(16), nullable=False, default=RegistrationSource.staff.value
@@ -495,3 +503,24 @@ class PromoDrawResult(Base):
     winner_user_ids: Mapped[list[int]] = mapped_column(JSON, nullable=False)
 
     action: Mapped[PromoAction] = relationship(back_populates="draw_result")
+
+
+class ScryfallCardCache(Base):
+    """Cached Scryfall lookups by normalized English card name."""
+
+    __tablename__ = "scryfall_card_cache"
+
+    name_key: Mapped[str] = mapped_column(String(200), primary_key=True)
+    found: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    scryfall_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    printed_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    type_line: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    layout: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    printed_name_back: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    image_normal: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    image_small: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    image_large: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    image_normal_back: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    image_small_back: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    image_large_back: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    fetched_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)

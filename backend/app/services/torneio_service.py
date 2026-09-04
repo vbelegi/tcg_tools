@@ -32,6 +32,8 @@ from app.core.torneios.state_machine import (
     validate_start,
     validate_start_next_round,
 )
+from app.core.deck_import.plain_text import parse_plain_decklist, unique_card_names
+from app.core.scryfall.resolve import resolve_card_names
 from app.models import Event, Match, Player, Round
 from app.models import PairingMode
 from app.repositories.event_repository import EventRepository
@@ -40,6 +42,24 @@ from app.repositories.protocols import EventRepositoryProtocol
 
 class TorneioError(ValueError):
     pass
+
+
+def _standing_with_deck_meta(row: dict[str, Any], player: Player | None) -> dict[str, Any]:
+    out = dict(row)
+    if player is None:
+        return out
+    out["decklist"] = player.decklist
+    out["decklist_source"] = player.decklist_source
+    out["decklist_source_id"] = player.decklist_source_id
+    out["decklist_source_url"] = player.decklist_source_url
+    out["decklist_name"] = player.decklist_name
+    out["decklist_format"] = player.decklist_format
+    price = player.decklist_price_low_brl
+    out["decklist_price_low_brl"] = float(price) if price is not None else None
+    out["decklist_imported_at"] = (
+        player.decklist_imported_at.isoformat() if player.decklist_imported_at else None
+    )
+    return out
 
 
 class TorneioService:
@@ -989,45 +1009,132 @@ class TorneioService:
 
     def get_classificacao(self, event_id: int) -> list[dict[str, Any]]:
         event = self._require_event(event_id)
+        players_by_id = {p.id: p for p in event.players}
         if (
             event.status == "finished"
             and event.premiacao_resultado
             and event.premiacao_resultado.get("schema_version", 1) >= 2
             and "standings_snapshot" in event.premiacao_resultado
         ):
-            return event.premiacao_resultado["standings_snapshot"]
-
-        state = self._repo.to_tournament_state(event)
-        decklists = {p.id: p.decklist for p in event.players}
-        if event.format == "single_elimination" and not self._is_legacy_finished(event):
-            standings = compute_se_standings(state, decklists)
+            rows = list(event.premiacao_resultado["standings_snapshot"])
         else:
-            standings = compute_standings(state, decklists)
-        return [
-            {
-                "rank": s.rank,
-                "player_id": s.player_id,
-                "name": s.name,
-                "points": s.points,
-                "omw": s.omw,
-                "gw": s.gw,
-                "ogw": s.ogw,
-                "decklist": s.decklist,
-                "is_drop": s.is_drop,
-                "rank_label": s.rank_label,
-            }
-            for s in standings
-        ]
+            state = self._repo.to_tournament_state(event)
+            decklists = {p.id: p.decklist for p in event.players}
+            if event.format == "single_elimination" and not self._is_legacy_finished(event):
+                standings = compute_se_standings(state, decklists)
+            else:
+                standings = compute_standings(state, decklists)
+            rows = [
+                {
+                    "rank": s.rank,
+                    "player_id": s.player_id,
+                    "name": s.name,
+                    "points": s.points,
+                    "omw": s.omw,
+                    "gw": s.gw,
+                    "ogw": s.ogw,
+                    "decklist": s.decklist,
+                    "is_drop": s.is_drop,
+                    "rank_label": s.rank_label,
+                }
+                for s in standings
+            ]
+        return [_standing_with_deck_meta(row, players_by_id.get(int(row["player_id"]))) for row in rows]
 
-    def update_decklists(self, event_id: int, updates: list[dict[str, Any]]) -> None:
+    def update_decklists(self, event_id: int, updates: list[dict[str, Any]]) -> list[str]:
+        """Persist decklists; return unique card names to warm in Scryfall cache."""
         event = self._require_event(event_id)
         if event.status != "finished":
             raise TorneioError("Decklists só após finalizar.")
+        now = datetime.utcnow()
+        names_to_warm: list[str] = []
         for u in updates:
             player = next((p for p in event.players if p.id == u["player_id"]), None)
-            if player:
-                player.decklist = u.get("decklist")
+            if not player:
+                continue
+            raw = u.get("decklist")
+            text = (str(raw).strip() if raw is not None else "") or None
+            player.decklist = text
+            if not text:
+                player.decklist_source = None
+                player.decklist_source_id = None
+                player.decklist_source_url = None
+                player.decklist_name = None
+                player.decklist_format = None
+                player.decklist_price_low_brl = None
+                player.decklist_imported_at = None
+                continue
+            if u.get("decklist_source"):
+                player.decklist_source = u.get("decklist_source")
+                player.decklist_source_id = u.get("decklist_source_id")
+                player.decklist_source_url = u.get("decklist_source_url")
+                player.decklist_name = u.get("decklist_name")
+                player.decklist_format = u.get("decklist_format")
+                price = u.get("decklist_price_low_brl")
+                player.decklist_price_low_brl = float(price) if price is not None else None
+                player.decklist_imported_at = now
+            names_to_warm.extend(unique_card_names(parse_plain_decklist(text)))
         self._commit()
+        return list(dict.fromkeys(names_to_warm))
+
+    def get_player_deck(self, event_id: int, player_id: int) -> dict[str, Any]:
+        event = self._require_event(event_id)
+        player = next((p for p in event.players if p.id == player_id), None)
+        if player is None:
+            raise TorneioError("Jogador não encontrado.")
+        if not player.decklist:
+            raise TorneioError("Jogador sem decklist.")
+
+        lines = parse_plain_decklist(player.decklist)
+        resolved = resolve_card_names(self._db, unique_card_names(lines))
+
+        sections: dict[str, list[dict[str, Any]]] = {
+            "commander": [],
+            "main": [],
+            "sideboard": [],
+        }
+        for line in lines:
+            card = resolved.get(line.name)
+            sections.setdefault(line.section, []).append(
+                {
+                    "qty": line.qty,
+                    "name": line.name,
+                    "found": bool(card and card.found),
+                    "printed_name": card.printed_name if card else None,
+                    "printed_name_back": card.printed_name_back if card else None,
+                    "type_line": card.type_line if card else None,
+                    "type_category": card.type_category if card else "other",
+                    "image_normal": card.image_normal if card else None,
+                    "image_small": card.image_small if card else None,
+                    "image_large": card.image_large if card else None,
+                    "image_normal_back": card.image_normal_back if card else None,
+                    "image_small_back": card.image_small_back if card else None,
+                    "image_large_back": card.image_large_back if card else None,
+                    "has_back_face": bool(card and card.image_normal_back),
+                    "scryfall_id": card.scryfall_id if card else None,
+                }
+            )
+
+        price = player.decklist_price_low_brl
+        return {
+            "event_id": event.id,
+            "event_name": event.name,
+            "event_status": event.status,
+            "player_id": player.id,
+            "player_name": player.name,
+            "decklist_source": player.decklist_source,
+            "decklist_source_id": player.decklist_source_id,
+            "decklist_source_url": player.decklist_source_url,
+            "decklist_name": player.decklist_name,
+            "decklist_format": player.decklist_format,
+            "decklist_price_low_brl": float(price) if price is not None else None,
+            "decklist_imported_at": (
+                player.decklist_imported_at.isoformat() if player.decklist_imported_at else None
+            ),
+            "plain_text": player.decklist,
+            "sections": sections,
+            "card_count": sum(line.qty for line in lines),
+        }
 
     def get_premiacao(self, event_id: int) -> dict[str, Any]:
         event = self._require_event(event_id)

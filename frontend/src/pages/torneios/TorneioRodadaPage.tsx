@@ -191,10 +191,14 @@ export function TorneioRodadaPage() {
 
   const completar = useMutation({
     mutationFn: () => api.completarRodada(eventId),
-    onSuccess: () => {
+    onSuccess: (t) => {
       setCompletarModalOpen(false);
       setHighlightIncomplete(false);
-      qc.invalidateQueries({ queryKey: ["torneio", eventId] });
+      // Seed cache before navigate so DetailPage does not bounce back via
+      // stale hasActiveRound (!between_rounds) from the pre-complete snapshot.
+      qc.setQueryData(["torneio", eventId], t);
+      void qc.invalidateQueries({ queryKey: ["torneio", eventId] });
+      void qc.invalidateQueries({ queryKey: ["rodada", eventId] });
       navigate(`/torneios/${eventId}`);
     },
     onError: (e) => {
@@ -352,7 +356,7 @@ export function TorneioRodadaPage() {
             </p>
           </details>
         </div>
-        {isActive && (
+        {isActive ? (
           <div className="torneio-manage-primary">
             <button
               className="primary"
@@ -372,6 +376,16 @@ export function TorneioRodadaPage() {
                 {pending.length} partida(s) sem placar salvo
               </p>
             )}
+          </div>
+        ) : (
+          <div className="torneio-manage-primary">
+            <button
+              className="primary"
+              type="button"
+              onClick={() => navigate(`/torneios/${eventId}`)}
+            >
+              Continuar no torneio
+            </button>
           </div>
         )}
       </header>

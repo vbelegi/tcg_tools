@@ -4,13 +4,14 @@ from __future__ import annotations
 
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.api.deps import RequireAdmin, RequireStaff, get_current_user, get_optional_user
 from app.api.v1.event_visibility import filter_calendar_tournaments, is_staff_user
 from app.core.auth.roles import has_min_role
+from app.core.scryfall.resolve import warm_card_names
 from app.db.session import get_db
 from app.models import Player, User, UserRole
 from app.schemas.torneio import (
@@ -517,14 +518,39 @@ def classificacao(
 def patch_classificacao(
     event_id: int,
     body: ClassificacaoPatch,
+    background_tasks: BackgroundTasks,
     _: RequireStaff,
     svc: TorneioService = Depends(get_torneio_service),
 ):
     try:
-        svc.update_decklists(event_id, [u.model_dump() for u in body.updates])
+        names = svc.update_decklists(event_id, [u.model_dump() for u in body.updates])
+        if names:
+            background_tasks.add_task(warm_card_names, names)
         return {"standings": svc.get_classificacao(event_id)}
     except TorneioError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.get("/{event_id}/jogadores/{player_id}/deck")
+def get_player_deck(
+    event_id: int,
+    player_id: int,
+    svc: TorneioService = Depends(get_torneio_service),
+    viewer: User | None = Depends(get_optional_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        event = svc.get_event(event_id)
+        _ensure_can_view_event(
+            viewer,
+            event_id=event_id,
+            status=event.get("status", ""),
+            registration_open=bool(event.get("registration_open")),
+            db=db,
+        )
+        return svc.get_player_deck(event_id, player_id)
+    except TorneioError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 @router.get("/{event_id}/premiacao")

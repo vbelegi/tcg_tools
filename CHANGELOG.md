@@ -7,6 +7,27 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 ### Added
 
 - **Decks:** preview de import LigaMagic (Magic EN) — `POST /api/v1/decks/import/preview` (lista plain text + preço menor BRL; maybeboard ignorado)
+- **Decks:** snapshot persistido no jogador do torneio (meta + texto); import na tela de Resultado (staff)
+- **Decks:** página pública do deck (`/torneios/:id/jogadores/:playerId/deck`) com imagens Scryfall (cache + warm em background após salvar + resolve lazy na abertura); seções Commander/Deck/Sideboard; botão **Ver na LigaMagic**; data do snapshot; zoom hover/modal
+- **Decks:** Resultado (leitura) com botão **Ver deck** (link LigaMagic só na página do deck)
+
+### Fixed
+
+- **Torneios:** após concluir rodada, o hub deixa de redirecionar de volta à rodada por cache stale (`between_rounds`); CTA de escape na rodada concluída
+- **Decks:** preview LigaMagic — `price_low_brl` como número no JSON; UI formata preço com `Number(...).toFixed` (evita crash com Decimal string)
+- **Decks:** meta da decklist no Resultado inclui formato LigaMagic (ex.: Duel Commander) junto com nome e preço
+- **Decks:** cache Scryfall não grava “miss” em falha de API; reconsulta linhas sem `type_line` e preserva imagens se o Scryfall estiver indisponível
+- **Decks:** Adventure/MDFC (`Nome // Face`) consultam Scryfall pela face da frente e re-tentam misses antigos com ` // `
+- **Decks:** parser LigaMagic captura Sideboard após `cards total` e para antes das views alternativas (cor/CMC/raridade); Maybeboard continua ignorado
+- **Decks:** zoom (hover/modal) só na arte da carta; o nome permanece selecionável para copiar
+- **Decks:** cartas com verso (MDFC/transform) — botão para virar a arte (cache Scryfall com face traseira)
+
+### Database
+
+- Migration `018`: colunas de metadados de decklist em `players`
+- Migration `019`: tabela `scryfall_card_cache` (nome EN → URLs de imagem)
+- Migration `020`: `type_line` + `image_large` no cache Scryfall
+- Migration `021`: `layout` + imagens / nome da face verso no cache Scryfall
 
 ## [1.16.1] - 2026-09-04
 

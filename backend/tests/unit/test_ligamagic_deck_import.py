@@ -67,3 +67,37 @@ def test_parse_fixture_snapshot():
     assert "Path to Exile" in snap.plain_text
     assert "Maybeboard" not in snap.plain_text
     assert "Sheltered by Ghosts" not in snap.plain_text
+
+
+def test_parse_keeps_sideboard_after_color_and_total_headers():
+    """Type listing + cards total + Sideboard; alt views after must not duplicate."""
+    html = """
+    <span class="lj b">Test Deck</span>
+    <a href="?filtro_formato=1">Duel Commander</a>
+    <div class='price-head lower'>R$ 10,00</div>
+    <div class='deck-type'>Comandante <i>(1)</i></div>
+    <div class='deck-qty'>1&nbsp;</div><div class='deck-card'><a href="/?view=cards/card&card=Sol%20Ring">Sol Ring</a>
+    <div class='deck-type'>Criaturas <i>(1)</i></div>
+    <div class='deck-qty'>1&nbsp;</div><div class='deck-card'><a href="/?view=cards/card&card=Birds%20of%20Paradise">Birds of Paradise</a>
+    <div class='deck-type'>White</div>
+    <div class='deck-qty'>1&nbsp;</div><div class='deck-card'><a href="/?view=cards/card&card=Plains">Plains</a>
+    <div class='deck-type'>60 cards total</div>
+    <div class='deck-type'>Sideboard <i>(2)</i></div>
+    <div class='deck-qty'>1&nbsp;</div><div class='deck-card'><a href="/?view=cards/card&card=Swords%20to%20Plowshares">Swords to Plowshares</a>
+    <div class='deck-qty'>1&nbsp;</div><div class='deck-card'><a href="/?view=cards/card&card=Path%20to%20Exile">Path to Exile</a>
+    <div class='deck-type'>Azul <i>(41)</i></div>
+    <div class='deck-qty'>4&nbsp;</div><div class='deck-card'><a href="/?view=cards/card&card=Counterspell">Counterspell</a>
+    <div class='deck-type'>Maybeboard <i>(1)</i></div>
+    <div class='deck-qty'>1&nbsp;</div><div class='deck-card'><a href="/?view=cards/card&card=Ignore%20Me">Ignore Me</a>
+    """
+    snap = parse_ligamagic_html(html, deck_id="1", source_url=canonical_en_url("1"))
+    by_sec: dict[str, list[str]] = {}
+    for line in snap.lines:
+        by_sec.setdefault(line.section, []).append(line.name)
+    assert by_sec.get("commander") == ["Sol Ring"]
+    assert by_sec.get("main") == ["Birds of Paradise", "Plains"]
+    assert by_sec.get("sideboard") == ["Swords to Plowshares", "Path to Exile"]
+    assert snap.card_count == 5
+    assert "Counterspell" not in snap.plain_text
+    assert "Ignore Me" not in snap.plain_text
+    assert "Sideboard" in snap.plain_text

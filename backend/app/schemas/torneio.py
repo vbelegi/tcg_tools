@@ -131,6 +131,13 @@ class DropRequest(BaseModel):
 class DecklistUpdate(BaseModel):
     player_id: int
     decklist: str | None = None
+    decklist_source: str | None = None
+    decklist_source_id: str | None = None
+    decklist_source_url: str | None = None
+    decklist_name: str | None = None
+    decklist_format: str | None = None
+    decklist_price_low_brl: float | None = None
+    decklist_imported_at: str | None = None  # ISO; server may overwrite
 
 
 class ClassificacaoPatch(BaseModel):

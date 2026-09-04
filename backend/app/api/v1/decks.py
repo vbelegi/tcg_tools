@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from decimal import Decimal
-
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
@@ -27,7 +25,8 @@ class DeckImportPreviewResponse(BaseModel):
     format: str | None
     plain_text: str
     card_count: int
-    price_low_brl: Decimal | None
+    # float in JSON (Decimal would serialize as string and break FE .toFixed)
+    price_low_brl: float | None
     price_currency: str
     warnings: list[str]
 
@@ -52,7 +51,7 @@ def preview_deck_import(
         format=snap.format,
         plain_text=snap.plain_text,
         card_count=snap.card_count,
-        price_low_brl=snap.price_low_brl,
+        price_low_brl=float(snap.price_low_brl) if snap.price_low_brl is not None else None,
         price_currency=snap.price_currency,
         warnings=snap.warnings,
     )

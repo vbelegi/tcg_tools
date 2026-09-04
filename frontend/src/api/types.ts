@@ -153,6 +153,60 @@ export interface Standing {
 
   rank_label?: string | null;
 
+  decklist_source?: string | null;
+
+  decklist_source_id?: string | null;
+
+  decklist_source_url?: string | null;
+
+  decklist_name?: string | null;
+
+  decklist_format?: string | null;
+
+  decklist_price_low_brl?: number | null;
+
+  decklist_imported_at?: string | null;
+
+}
+
+export interface PlayerDeckCard {
+  qty: number;
+  name: string;
+  found: boolean;
+  printed_name: string | null;
+  printed_name_back?: string | null;
+  type_line?: string | null;
+  type_category?: string | null;
+  image_normal: string | null;
+  image_small: string | null;
+  image_large?: string | null;
+  image_normal_back?: string | null;
+  image_small_back?: string | null;
+  image_large_back?: string | null;
+  has_back_face?: boolean;
+  scryfall_id: string | null;
+}
+
+export interface PlayerDeck {
+  event_id: number;
+  event_name: string;
+  event_status: string;
+  player_id: number;
+  player_name: string;
+  decklist_source: string | null;
+  decklist_source_id: string | null;
+  decklist_source_url: string | null;
+  decklist_name: string | null;
+  decklist_format: string | null;
+  decklist_price_low_brl: number | null;
+  decklist_imported_at: string | null;
+  plain_text: string;
+  sections: {
+    commander: PlayerDeckCard[];
+    main: PlayerDeckCard[];
+    sideboard: PlayerDeckCard[];
+  };
+  card_count: number;
 }
 
 export interface ProfileHistoryRow {

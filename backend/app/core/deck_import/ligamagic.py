@@ -13,9 +13,10 @@ EN_LANG = "2"
 CANONICAL_URL = "https://www.ligamagic.com.br/?view=dks/deck&id={id}&lang={lang}"
 
 SECTION_COMMANDER = frozenset({"comandante", "commander"})
-SECTION_SIDEBOARD = frozenset({"sideboard", "side board", "reserva"})
+SECTION_SIDEBOARD = frozenset({"sideboard", "side board", "reserva", "side", "sb"})
 SECTION_MAYBE = frozenset({"maybeboard", "maybe board", "considerados"})
-SECTION_STOP_REPEAT = frozenset(
+# Alternate page views that re-list the same cards (by color / rarity).
+SECTION_ALT_VIEW = frozenset(
     {
         "branco",
         "white",
@@ -31,8 +32,20 @@ SECTION_STOP_REPEAT = frozenset(
         "multicolour",
         "incolor",
         "colorless",
+        "comum",
+        "common",
+        "incomum",
+        "uncommon",
+        "rara",
+        "rare",
+        "mítica",
+        "mitica",
+        "mythic",
+        "mythic rare",
     }
 )
+# Back-compat alias used in older comments/tests.
+SECTION_STOP_REPEAT = SECTION_ALT_VIEW
 
 
 class DeckImportError(ValueError):
@@ -98,14 +111,18 @@ def _section_kind(header: str) -> str | None:
         return None
     if base in SECTION_MAYBE or base.startswith("maybe"):
         return "maybe"
-    if base.startswith("cmc") or "cards total" in base:
-        return "stop"
-    if base in SECTION_STOP_REPEAT:
-        return "stop"
+    if "cards total" in base:
+        # Main listing finished; Sideboard usually follows on LigaMagic.
+        return "cards_total"
+    if base.startswith("cmc"):
+        return "alt_view"
+    if base in SECTION_ALT_VIEW:
+        return "alt_view"
     if base in SECTION_COMMANDER:
         return "commander"
     if base in SECTION_SIDEBOARD:
         return "sideboard"
+    # Criaturas / Mágicas / Artefatos / Encantamentos / Terrenos / Deck …
     return "main"
 
 
@@ -151,6 +168,7 @@ def parse_ligamagic_html(
 
     lines: list[DeckLine] = []
     current = "main"
+    seen_cards_total = False
 
     pattern = re.compile(
         r"<div class='deck-type[^']*'>(.*?)</div>"
@@ -166,8 +184,16 @@ def parse_ligamagic_html(
             if kind == "maybe":
                 warnings.append("Maybeboard ignorado no snapshot.")
                 break
-            if kind == "stop":
-                break
+            if kind == "cards_total":
+                seen_cards_total = True
+                continue
+            if kind == "alt_view":
+                # Color / CMC / rarity blocks re-list the same cards after the
+                # primary type listing (and usually after Sideboard).
+                if seen_cards_total or current == "sideboard":
+                    break
+                current = "main"
+                continue
             if kind in {"commander", "sideboard", "main"}:
                 current = kind
             continue
