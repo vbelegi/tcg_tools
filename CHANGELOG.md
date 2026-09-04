@@ -4,6 +4,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.16.0] - 2026-09-04
+
 ### Added
 
 - **Super Admin:** hierarquia `player < staff < admin < superadmin`; `admin@local` vira Super Admin (migration `017`)
