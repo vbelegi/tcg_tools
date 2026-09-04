@@ -9,7 +9,8 @@ from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.api.deps import RequireAdmin, RequireStaff, get_current_user, get_optional_user
-from app.api.v1.event_visibility import filter_calendar_tournaments
+from app.api.v1.event_visibility import filter_calendar_tournaments, is_staff_user
+from app.core.auth.roles import has_min_role
 from app.db.session import get_db
 from app.models import Player, User, UserRole
 from app.schemas.torneio import (
@@ -32,12 +33,8 @@ def get_torneio_service(db: Session = Depends(get_db)) -> TorneioService:
     return TorneioService(db)
 
 
-def _role_value(user: User) -> str:
-    return user.role.value if hasattr(user.role, "value") else str(user.role)
-
-
 def _is_staff_user(user: User) -> bool:
-    return _role_value(user) in {UserRole.admin.value, UserRole.staff.value}
+    return is_staff_user(user)
 
 
 def _registered_event_ids(db: Session, user_id: int) -> set[int]:
@@ -304,7 +301,7 @@ def self_inscribe(
     svc: TorneioService = Depends(get_torneio_service),
     user: User = Depends(get_current_user),
 ):
-    if user.role not in {UserRole.player.value, UserRole.admin.value, UserRole.staff.value}:
+    if not has_min_role(user, UserRole.player.value):
         raise HTTPException(status_code=403, detail="Permissão insuficiente.")
     try:
         player = svc.self_register(event_id, user)
