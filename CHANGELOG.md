@@ -4,6 +4,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.15.0] - 2026-09-03
+
 ### Added
 
 - **Conta:** troca de e-mail em dois passos (senha + confirmação no novo endereço; aviso/cancelamento no antigo); contas não verificadas trocam direto e reenviam verificação
