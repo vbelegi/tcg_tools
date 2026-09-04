@@ -7,12 +7,13 @@ O sistema roda em **https://torneios.fourse.com.br** (VPS Docker). Deploy e oper
 ### Checklist pós-deploy ou release
 
 1. `curl -fsS https://torneios.seudominio.com/api/v1/health` → `{"status":"ok",...}`
-2. Login **admin@local** + senha definida na VPS
+2. Login **admin@local** (Super Admin) + senha definida na VPS
 3. Calcular premiação (teste) e criar torneio Suíço de validação
 4. Iniciar, resultados, finalizar, export JSON
-5. Gerar convite em `/usuarios` — link com domínio público
-6. Upload de avatar e perfil público
-7. Backup MySQL (`deploy/backup-db.sh`) + offsite (`deploy/backup-offsite.sh` / cron)
+5. Gerar convite em `/usuarios` — link com domínio público; testar troca de papel (modal + senha)
+6. Upload de avatar e perfil público; troca de e-mail no perfil (dev)
+7. `/auditoria` lista ações recentes; `/acoes` cria ação promocional de teste (staff)
+8. Backup MySQL (`deploy/backup-db.sh`) + offsite (`deploy/backup-offsite.sh` / cron)
 
 ## Desenvolvimento (clone do repositório)
 

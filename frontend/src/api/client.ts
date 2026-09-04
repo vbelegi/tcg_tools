@@ -335,11 +335,47 @@ export const api = {
       { method: "POST" },
     ),
 
-  updateUserRole: (userId: number, role: "staff" | "player") =>
+  updateUserRole: (userId: number, role: string, current_password: string) =>
     request<{ id: number; role: string }>(`/users/${userId}/role`, {
       method: "PATCH",
-      body: JSON.stringify({ role }),
+      body: JSON.stringify({ role, current_password }),
     }),
+
+  listAuditLogs: (opts?: {
+    action?: string;
+    actor_user_id?: number;
+    target_user_id?: number;
+    from?: string;
+    to?: string;
+    limit?: number;
+    offset?: number;
+  }) => {
+    const params = new URLSearchParams();
+    if (opts?.action) params.set("action", opts.action);
+    if (opts?.actor_user_id != null) params.set("actor_user_id", String(opts.actor_user_id));
+    if (opts?.target_user_id != null) params.set("target_user_id", String(opts.target_user_id));
+    if (opts?.from) params.set("from", opts.from);
+    if (opts?.to) params.set("to", opts.to);
+    if (opts?.limit != null) params.set("limit", String(opts.limit));
+    if (opts?.offset != null) params.set("offset", String(opts.offset));
+    const qs = params.toString();
+    return request<{
+      total: number;
+      limit: number;
+      offset: number;
+      items: Array<{
+        id: number;
+        action: string;
+        actor_user_id: number | null;
+        actor_display_name: string | null;
+        target_user_id: number | null;
+        target_display_name: string | null;
+        meta: Record<string, unknown> | null;
+        ip: string | null;
+        created_at: string | null;
+      }>;
+    }>(`/audit-logs${qs ? `?${qs}` : ""}`);
+  },
 
   ranking: () =>
     request<

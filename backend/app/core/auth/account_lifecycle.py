@@ -35,9 +35,6 @@ def delete_user_account(db: DbSession, user: User) -> User:
     """Irreversibly scrub PII; keep tombstone for tournament history as Anônimo."""
     if user.status == UserStatus.deleted.value:
         raise AuthError("Conta já excluída.")
-    if user.role == "admin" and user.email == "admin@local":
-        # Allow delete of non-bootstrap admins; block only if sole bootstrap — soft check by email
-        pass
 
     uid = user.id
     _anonymize_player_names(db, uid)

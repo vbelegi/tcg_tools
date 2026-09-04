@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 
 import { api } from "../../api/client";
+import { isAdminRole, isStaffRole } from "../../utils/roles";
 import { AcaoEditModal } from "../../components/AcaoEditModal";
 import { AcaoLogsModal } from "../../components/AcaoLogsModal";
 import { EnrollmentQrModal } from "../../components/EnrollmentQrModal";
@@ -24,8 +25,8 @@ export function AcaoDetailPage() {
     queryFn: () => api.authMe(),
     retry: false,
   });
-  const canManage = me && (me.role === "admin" || me.role === "staff");
-  const isAdmin = me?.role === "admin";
+  const canManage = me && isStaffRole(me.role);
+  const isAdmin = me && isAdminRole(me.role);
   const [editOpen, setEditOpen] = useState(false);
   const [logsOpen, setLogsOpen] = useState(false);
   const [participantsOpen, setParticipantsOpen] = useState(false);

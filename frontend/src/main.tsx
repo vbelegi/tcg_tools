@@ -9,6 +9,7 @@ import { AcaoNovaPage } from "./pages/acoes/AcaoNovaPage";
 import { AcaoParticipacaoPage } from "./pages/acoes/AcaoParticipacaoPage";
 import { AcoesListPage } from "./pages/acoes/AcoesListPage";
 import { AgendaPage } from "./pages/AgendaPage";
+import { AuditLogsPage } from "./pages/AuditLogsPage";
 import { CalendarPage } from "./pages/CalendarPage";
 import { ClaimInvitePage } from "./pages/ClaimInvitePage";
 import { Home } from "./pages/Home";
@@ -87,6 +88,7 @@ createRoot(document.getElementById("root")!).render(
             <Route element={<Layout />}>
               <Route path="torneios/externo" element={<TorneioExternoPage />} />
               <Route path="usuarios" element={<UsuariosPage />} />
+              <Route path="auditoria" element={<AuditLogsPage />} />
               <Route path="tcgs" element={<TcgGamesPage />} />
             </Route>
           </Route>

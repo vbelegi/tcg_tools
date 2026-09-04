@@ -56,6 +56,7 @@ class UserRole(str, enum.Enum):
     admin = "admin"
     staff = "staff"
     player = "player"
+    superadmin = "superadmin"
 
 
 class UserStatus(str, enum.Enum):

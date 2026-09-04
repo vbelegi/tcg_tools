@@ -3,6 +3,15 @@ import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "../api/client";
+import { ChangeRoleModal } from "../components/ChangeRoleModal";
+import {
+  AppRole,
+  ROLE_LABELS,
+  assignableRoles,
+  canEditUserRole,
+  creatableRoles,
+  isSuperadminRole,
+} from "../utils/roles";
 
 function inviteAbsoluteUrl(claimPath: string, claimUrl?: string | null): string {
   if (claimUrl?.trim()) return claimUrl.trim();
@@ -19,6 +28,12 @@ export function UsuariosPage() {
   const [role, setRole] = useState("player");
   const [inviteMsg, setInviteMsg] = useState("");
   const [error, setError] = useState("");
+  const [roleTarget, setRoleTarget] = useState<{
+    id: number;
+    display_name: string;
+    role: string;
+  } | null>(null);
+  const [roleModalError, setRoleModalError] = useState("");
 
   const { data = [], isLoading } = useQuery({
     queryKey: ["users", q],
@@ -31,14 +46,26 @@ export function UsuariosPage() {
     retry: false,
   });
 
+  const createRoleOptions = creatableRoles(me?.role);
+  const changeRoleOptions = assignableRoles(me?.role);
+
   const roleChange = useMutation({
-    mutationFn: ({ id, role }: { id: number; role: "staff" | "player" }) =>
-      api.updateUserRole(id, role),
+    mutationFn: ({
+      id,
+      role: nextRole,
+      current_password,
+    }: {
+      id: number;
+      role: AppRole;
+      current_password: string;
+    }) => api.updateUserRole(id, nextRole, current_password),
     onSuccess: async () => {
       setError("");
+      setRoleModalError("");
+      setRoleTarget(null);
       await qc.invalidateQueries({ queryKey: ["users"] });
     },
-    onError: (e) => setError((e as Error).message),
+    onError: (e) => setRoleModalError((e as Error).message),
   });
 
   const create = useMutation({
@@ -159,9 +186,11 @@ export function UsuariosPage() {
             <div className="form-row">
               <label>Papel</label>
               <select value={role} onChange={(e) => setRole(e.target.value)}>
-                <option value="player">player</option>
-                <option value="staff">staff</option>
-                <option value="admin">admin</option>
+                {createRoleOptions.map((r) => (
+                  <option key={r} value={r}>
+                    {ROLE_LABELS[r] ?? r}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -199,92 +228,123 @@ export function UsuariosPage() {
               </tr>
             </thead>
             <tbody>
-              {data.map((u) => (
-                <tr key={u.id}>
-                  <td className="resultado-player-cell">
-                    <Link to={`/jogadores/${u.id}`}>{u.display_name}</Link>
-                  </td>
-                  <td>{u.email}</td>
-                  <td>{u.phone}</td>
-                  <td>
-                    {u.role === "admin" || u.id === me?.id ? (
-                      <span className="badge">{u.role}</span>
-                    ) : (
-                      <select
-                        className="role-select"
-                        value={u.role === "staff" ? "staff" : "player"}
-                        disabled={roleChange.isPending}
-                        onChange={(e) =>
-                          roleChange.mutate({
-                            id: u.id,
-                            role: e.target.value as "staff" | "player",
-                          })
-                        }
-                        aria-label={`Papel de ${u.display_name}`}
-                      >
-                        <option value="player">player</option>
-                        <option value="staff">staff</option>
-                      </select>
-                    )}
-                  </td>
-                  <td>
-                    <span className={u.status === "incomplete" ? "badge badge-warn" : "badge badge-ok"}>
-                      {u.status}
-                    </span>
-                  </td>
-                  <td className="admin-col-actions">
-                    {u.status === "incomplete" && (
-                      <button
-                        className="secondary"
-                        type="button"
-                        onClick={() => invite.mutate(u.id)}
-                      >
-                        {invite.isPending ? "…" : "Convite"}
-                      </button>
-                    )}
-                    {u.status === "active" && u.id !== me?.id && (
-                      <button
-                        className="secondary"
-                        type="button"
-                        onClick={() => {
-                          if (
-                            window.confirm(
-                              `Gerar link de redefinição de senha para ${u.display_name}? Sessões ativas serão encerradas.`,
-                            )
-                          ) {
-                            passwordReset.mutate(u.id);
-                          }
-                        }}
-                        disabled={passwordReset.isPending}
-                      >
-                        Reset senha
-                      </button>
-                    )}
-                    {u.role !== "admin" && u.id !== me?.id && (
-                      <button
-                        className="secondary"
-                        type="button"
-                        onClick={() => {
-                          if (
-                            window.confirm(
-                              `Excluir conta de ${u.display_name}? Histórico de torneios ficará como Anônimo.`,
-                            )
-                          ) {
-                            deleteUser.mutate(u.id);
-                          }
-                        }}
-                        disabled={deleteUser.isPending}
-                      >
-                        Excluir
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {data.map((u) => {
+                const self = u.id === me?.id;
+                const editable = canEditUserRole(me?.role, u.role, self);
+                const canDelete =
+                  !self &&
+                  (isSuperadminRole(me?.role)
+                    ? u.role !== "superadmin" || data.filter((x) => x.role === "superadmin").length > 1
+                    : u.role !== "admin" && u.role !== "superadmin");
+                return (
+                  <tr key={u.id}>
+                    <td className="resultado-player-cell">
+                      <Link to={`/jogadores/${u.id}`}>{u.display_name}</Link>
+                    </td>
+                    <td>{u.email}</td>
+                    <td>{u.phone}</td>
+                    <td>
+                      <span className="badge">{ROLE_LABELS[u.role] ?? u.role}</span>
+                      {editable && (
+                        <button
+                          type="button"
+                          className="secondary"
+                          style={{ marginLeft: "0.5rem" }}
+                          onClick={() => {
+                            setRoleModalError("");
+                            setRoleTarget({
+                              id: u.id,
+                              display_name: u.display_name,
+                              role: u.role,
+                            });
+                          }}
+                        >
+                          Alterar
+                        </button>
+                      )}
+                    </td>
+                    <td>
+                      <span className={u.status === "incomplete" ? "badge badge-warn" : "badge badge-ok"}>
+                        {u.status}
+                      </span>
+                    </td>
+                    <td className="admin-col-actions">
+                      {u.status === "incomplete" && (
+                        <button
+                          className="secondary"
+                          type="button"
+                          onClick={() => invite.mutate(u.id)}
+                        >
+                          {invite.isPending ? "…" : "Convite"}
+                        </button>
+                      )}
+                      {u.status === "active" && u.id !== me?.id && (
+                        <button
+                          className="secondary"
+                          type="button"
+                          onClick={() => {
+                            if (
+                              window.confirm(
+                                `Gerar link de redefinição de senha para ${u.display_name}? Sessões ativas serão encerradas.`,
+                              )
+                            ) {
+                              passwordReset.mutate(u.id);
+                            }
+                          }}
+                          disabled={passwordReset.isPending}
+                        >
+                          Reset senha
+                        </button>
+                      )}
+                      {canDelete && (
+                        <button
+                          className="secondary"
+                          type="button"
+                          onClick={() => {
+                            if (
+                              window.confirm(
+                                `Excluir conta de ${u.display_name}? Histórico de torneios ficará como Anônimo.`,
+                              )
+                            ) {
+                              deleteUser.mutate(u.id);
+                            }
+                          }}
+                          disabled={deleteUser.isPending}
+                        >
+                          Excluir
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </section>
+
+      <ChangeRoleModal
+        open={roleTarget != null}
+        displayName={roleTarget?.display_name ?? ""}
+        currentRole={roleTarget?.role ?? "player"}
+        allowedRoles={changeRoleOptions}
+        pending={roleChange.isPending}
+        error={roleModalError}
+        onClose={() => {
+          if (!roleChange.isPending) {
+            setRoleTarget(null);
+            setRoleModalError("");
+          }
+        }}
+        onConfirm={(nextRole, currentPassword) => {
+          if (!roleTarget) return;
+          roleChange.mutate({
+            id: roleTarget.id,
+            role: nextRole,
+            current_password: currentPassword,
+          });
+        }}
+      />
     </div>
   );
 }

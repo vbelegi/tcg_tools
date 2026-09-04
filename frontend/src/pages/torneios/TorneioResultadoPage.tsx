@@ -5,6 +5,7 @@ import { Link, useParams } from "react-router-dom";
 import { PremiacaoBandsTable } from "../../components/PremiacaoBandsTable";
 import { RaffleControls } from "../../components/RaffleControls";
 import { api } from "../../api/client";
+import { isStaffRole } from "../../utils/roles";
 import { creditosSanityMismatch, sumCreditosFromRows } from "../../utils/premiacao";
 
 const TIEBREAKER_TOOLTIP = [
@@ -31,7 +32,7 @@ export function TorneioResultadoPage() {
     queryFn: () => api.authMe(),
     retry: false,
   });
-  const isStaff = Boolean(me && (me.role === "admin" || me.role === "staff"));
+  const isStaff = Boolean(me && isStaffRole(me.role));
   const isGuest = meFetched && !me;
 
   const [decklists, setDecklists] = useState<Record<number, string>>({});

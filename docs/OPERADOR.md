@@ -97,7 +97,9 @@ Use quando digitou placar errado **depois** de concluir a rodada:
 - **Desempate (Suíço):** Pts → OMW% → GW% → OGW% → seed → ordem de inscrição (tooltip na tela Resultado).
 - **Seeds:** all-or-nothing — se um jogador tem seed, todos precisam; caso contrário o torneio não inicia.
 - **Atalhos:** Esc limpa/fecha modal; na rodada, foco na próxima partida e Ctrl+Enter para concluir; no sorteio encadeado, Enter/Espaço = próximo. Inscrição é 1 a 1 via busca (sem colar lista de nomes).
-- **Login:** e-mail + senha (`admin@local`). Alterar senha: **Meu Perfil**. Papéis: admin, staff, player — ver `docs/PLATFORM_USERS_FP.md`.
+- **Login:** e-mail + senha (`admin@local` = Super Admin). Alterar senha / e-mail / celular: **Meu Perfil**. Papéis: player, staff, admin, Super Admin — ver `docs/PLATFORM_USERS_FP.md`.
+- **Listas:** em **Torneios** e **Agenda**, use busca e datas no topo; o **Calendário** navega só por mês.
+- **Ações promocionais:** menu **Ações Promocionais** — inscrição por QR, regulamento PDF, sorteio após o período (staff).
 - **Inscrições:** check-in obrigatório antes de iniciar; pendentes bloqueiam o start. Drop/WO = 0 FP.
 - **Marca:** identidade visual Fourse (roxo/laranja); rodapé “Powered by FOURSE”.
 - **Sorteio:** modo “todos de uma vez” ou **encadeado** (1 a 1 sem repetir). No resultado do torneio, dá para excluir jogadores da pool (ex.: campeão) sem afetar a classificação.

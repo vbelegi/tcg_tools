@@ -264,13 +264,19 @@ def auth_delete_me(
     if body.confirm.strip().upper() != "EXCLUIR":
         raise HTTPException(status_code=400, detail='Confirme digitando EXCLUIR.')
     from app.core.auth.passwords import verify_password
+    from app.core.auth.roles import count_active_superadmins, is_admin_plus, is_superadmin
 
     if not verify_password(body.password, user.password_hash):
         raise HTTPException(status_code=400, detail="Senha incorreta.")
-    if user.role == UserRole.admin.value:
+    if is_superadmin(user) and count_active_superadmins(db) <= 1:
+        raise HTTPException(status_code=400, detail="Não é possível excluir o único Super Admin.")
+    if is_admin_plus(user) and not is_superadmin(user):
         admins = (
             db.query(User)
-            .filter(User.role == UserRole.admin.value, User.status == UserStatus.active.value)
+            .filter(
+                User.role.in_([UserRole.admin.value, UserRole.superadmin.value]),
+                User.status == UserStatus.active.value,
+            )
             .count()
         )
         if admins <= 1:

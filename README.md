@@ -20,7 +20,7 @@ scripts\setup.ps1
 scripts\Iniciar TCG Tools.bat
 ```
 
-Dados em `./data/` (SQLite). Defina a senha do admin (`admin@local`):
+Dados em `./data/` (SQLite). Defina a senha do Super Admin bootstrap (`admin@local`):
 
 ```powershell
 $env:TCGTOOLS_DATA_DIR='.\data'; cd backend; py -3.13 -m app.scripts.set_admin_password --password admin123
@@ -78,9 +78,11 @@ tcg_tools/
 ## Funcionalidades
 
 - **Premiação:** calcular split, tabela, presets, export CSV
-- **Torneios:** Suíço e Eliminatória, pairings, FP, torneios externos
+- **Torneios:** Suíço e Eliminatória, pairings, FP, torneios externos; busca/filtros na lista
+- **Agenda / Calendário:** eventos e faixas de ações promocionais
+- **Ações promocionais:** inscrição por QR, regulamento PDF, sorteio
 - **Sorteador:** sorteio em lote ou encadeado
-- **Usuários:** admin/staff/player, convites, perfis públicos
+- **Usuários:** papéis player/staff/admin/Super Admin; convites; troca de e-mail; logs de auditoria
 - **Decklists:** opcional após finalizar torneio
 
 ## Documentação

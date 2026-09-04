@@ -49,7 +49,7 @@ docker compose ps
 curl -fsS https://torneios.seudominio.com/api/v1/health
 ```
 
-Login inicial: **admin@local** + senha do bootstrap. Remova `TCGTOOLS_BOOTSTRAP_ADMIN_PASSWORD` do `.env` após o primeiro login.
+Login inicial: **admin@local** (papel **Super Admin**) + senha do bootstrap. Remova `TCGTOOLS_BOOTSTRAP_ADMIN_PASSWORD` do `.env` após o primeiro login.
 
 ## Atualizar produção (release)
 

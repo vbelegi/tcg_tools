@@ -66,7 +66,7 @@ Ao criar um evento, o preset escolhido é copiado para `events.premiacao_preset`
 | `TCGTOOLS_PRESETS_FILE` | Caminho alternativo ao JSON de presets |
 | `TCGTOOLS_EXPORTS_DIR` | Pasta de CSV exportados (default: `{data_dir}/exports`) |
 | `TCGTOOLS_DATA_DIR` | Pasta de dados (SQLite, exports, logs) |
-| `TCGTOOLS_PUBLIC_BASE_URL` | URL pública (convites, verificação de e-mail, cookies Secure em HTTPS) |
+| `TCGTOOLS_PUBLIC_BASE_URL` | URL pública (convites, verificação, troca de e-mail, cookies Secure em HTTPS) |
 | `TCGTOOLS_EMAIL_ENABLED` | `true` em produção para enviar e-mails |
 | `TCGTOOLS_EMAIL_FROM` | Remetente (ex.: `Fourse <noreply@fourse.com.br>`) |
 | `TCGTOOLS_EMAIL_REPLY_TO` | Reply-To (ex.: `contato@fourse.com.br`) |

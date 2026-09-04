@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "../api/client";
 import { safeRedirectPath } from "../utils/safeRedirect";
+import { isAdminRole, isStaffRole } from "../utils/roles";
 import { EmailVerificationBanner } from "./EmailVerificationBanner";
 import { AuthModal, type AuthModalMode } from "./AuthModal";
 import { SiteFooter } from "./SiteFooter";
@@ -55,8 +56,8 @@ export function Layout() {
     },
   });
 
-  const isStaff = me && (me.role === "admin" || me.role === "staff");
-  const isAdmin = me?.role === "admin";
+  const isStaff = me && isStaffRole(me.role);
+  const isAdmin = me && isAdminRole(me.role);
 
   const fromState = useMemo(
     () => (location.state as { from?: string } | null)?.from,
@@ -137,6 +138,7 @@ export function Layout() {
           {isAdmin && (
             <>
               <NavLink to="/usuarios">Usuários</NavLink>
+              <NavLink to="/auditoria">Logs</NavLink>
               <NavLink to="/tcgs">TCGs</NavLink>
             </>
           )}
