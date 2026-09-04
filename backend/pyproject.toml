@@ -14,13 +14,13 @@ dependencies = [
     "bcrypt>=4.2.0",
     "pillow>=11.0.0",
     "pymysql>=1.1.0",
+    "httpx>=0.28.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8.3.0",
     "pytest-cov>=6.0.0",
-    "httpx>=0.28.0",
 ]
 
 [tool.setuptools.packages.find]
