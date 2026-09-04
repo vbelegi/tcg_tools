@@ -4,6 +4,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.16.1] - 2026-09-04
+
 ### Fixed
 
 - **Calendário:** grade com colunas iguais (sem distorção por chips); detalhe do dia abaixo do mês (sticky); destaque visual em dias com evento
