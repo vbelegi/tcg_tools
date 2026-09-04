@@ -183,11 +183,12 @@ export function CalendarPage() {
               const dayItems = day != null ? (byDay.get(day) ?? []) : [];
               const bands = day != null ? (promoBands.get(day) ?? []) : [];
               const selected = day != null && day === selectedDay;
+              const hasEvents = day != null && (dayItems.length > 0 || bands.length > 0);
               return (
                 <button
                   key={idx}
                   type="button"
-                  className={`calendar-day${day == null ? " empty" : ""}${selected ? " selected" : ""}`}
+                  className={`calendar-day${day == null ? " empty" : ""}${hasEvents ? " has-events" : ""}${selected ? " selected" : ""}`}
                   disabled={day == null}
                   onClick={() => day != null && setSelectedDay(day)}
                   data-testid={day != null ? `calendar-day-${day}` : undefined}
