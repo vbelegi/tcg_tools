@@ -158,3 +158,14 @@ def test_audit_logs_list(api_client: TestClient, db_session: Session):
     body = r.json()
     assert body["total"] >= 1
     assert any(i["action"] == "user.role_change" for i in body["items"])
+
+    by_target = api_client.get(f"/api/v1/audit-logs?target_user_id={player.id}")
+    assert by_target.status_code == 200, by_target.text
+    assert by_target.json()["total"] >= 1
+    assert all(i["target_user_id"] == player.id for i in by_target.json()["items"])
+
+    admin = db_session.query(User).filter(User.email == "admin@local").one()
+    by_actor = api_client.get(f"/api/v1/audit-logs?actor_user_id={admin.id}&action=user.role_change")
+    assert by_actor.status_code == 200, by_actor.text
+    assert by_actor.json()["total"] >= 1
+    assert all(i["actor_user_id"] == admin.id for i in by_actor.json()["items"])

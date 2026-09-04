@@ -153,6 +153,17 @@ export const api = {
       { method: "POST", body: JSON.stringify({}) },
     ),
 
+  resendEmailChange: () =>
+    request<{
+      ok: boolean;
+      pending: boolean;
+      message: string;
+      user: { email: string; pending_email?: string | null };
+    }>("/auth/me/email-change/resend", {
+      method: "POST",
+      body: JSON.stringify({}),
+    }),
+
   confirmEmailChange: (token: string) =>
     request<{ email: string; email_verified: boolean; pending_email?: string | null }>(
       "/auth/email-change/confirm",

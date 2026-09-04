@@ -149,6 +149,54 @@ def test_email_change_cancel_authenticated(api_client: TestClient, db_session: S
     assert user.email == "cancel.auth@example.com"
 
 
+def test_email_change_resend(api_client: TestClient, db_session: Session):
+    reset_rate_limits_for_tests()
+    user = register_player(
+        db_session,
+        display_name="Resend Email",
+        email="resend.auth@example.com",
+        phone="+5511999887716",
+        password="password1234",
+        birth_date=date(1995, 1, 1),
+    )
+    user.email_verified_at = datetime.utcnow()
+    db_session.commit()
+    _login(api_client, user.email)
+
+    started = api_client.post(
+        "/api/v1/auth/me/email-change",
+        json={"current_password": "password1234", "new_email": "resend.auth.new@example.com"},
+    )
+    assert started.status_code == 200, started.text
+    assert started.json()["pending"] is True
+
+    first_token = (
+        db_session.query(EmailChangeToken)
+        .filter(EmailChangeToken.user_id == user.id, EmailChangeToken.used_at.is_(None))
+        .one()
+    )
+    old_hash = first_token.token
+
+    resent = api_client.post("/api/v1/auth/me/email-change/resend")
+    assert resent.status_code == 200, resent.text
+    body = resent.json()
+    assert body["pending"] is True
+    assert body["user"]["pending_email"] == "resend.auth.new@example.com"
+
+    active = (
+        db_session.query(EmailChangeToken)
+        .filter(EmailChangeToken.user_id == user.id, EmailChangeToken.used_at.is_(None))
+        .all()
+    )
+    assert len(active) == 1
+    assert active[0].token != old_hash
+
+    none_pending = api_client.post("/api/v1/auth/me/email-change/cancel")
+    assert none_pending.status_code == 200
+    again = api_client.post("/api/v1/auth/me/email-change/resend")
+    assert again.status_code == 400
+
+
 def test_email_change_cancel_via_token(api_client: TestClient, db_session: Session):
     reset_rate_limits_for_tests()
     user = register_player(

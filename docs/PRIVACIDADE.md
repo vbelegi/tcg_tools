@@ -32,7 +32,7 @@ Padrão: 180 dias sem claim. Agendar via cron na VPS se desejado.
 
 ## Auditoria staff
 
-Tabela `staff_audit_logs` (somente append). UI: **`/auditoria`** (admin+), filtros por ação e período.
+Tabela `staff_audit_logs` (somente append). UI: **`/auditoria`** (admin+), filtros por ação, período, ID do ator e ID do alvo.
 
 Ações típicas:
 

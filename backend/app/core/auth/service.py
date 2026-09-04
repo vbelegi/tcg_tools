@@ -535,6 +535,34 @@ def request_email_change(
     return raw, row, True
 
 
+def resend_email_change(db: DbSession, user: User) -> tuple[str, EmailChangeToken]:
+    """Rotate pending email-change token and return a fresh raw token for mail links."""
+    if user.status != UserStatus.active.value:
+        raise AuthError("Conta não está ativa.")
+    pending = get_pending_email_change(db, user.id)
+    if pending is None:
+        raise AuthError("Não há troca de e-mail pendente.")
+    email_n = pending.new_email
+    _assert_email_available_for_change(db, email_n, user.id)
+    now = _now()
+    db.query(EmailChangeToken).filter(
+        EmailChangeToken.user_id == user.id,
+        EmailChangeToken.used_at.is_(None),
+    ).delete()
+    raw = generate_session_token()
+    row = EmailChangeToken(
+        token=hash_session_token(raw),
+        user_id=user.id,
+        new_email=email_n,
+        created_at=now,
+        expires_at=now + timedelta(hours=EMAIL_CHANGE_HOURS),
+    )
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return raw, row
+
+
 def cancel_email_change(db: DbSession, user: User) -> None:
     db.query(EmailChangeToken).filter(
         EmailChangeToken.user_id == user.id,

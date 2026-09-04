@@ -4,18 +4,32 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
 import { ListFilterBar } from "../components/ListFilterBar";
 
+function parseOptionalId(raw: string): number | undefined {
+  const t = raw.trim();
+  if (!t) return undefined;
+  const n = Number(t);
+  return Number.isInteger(n) && n > 0 ? n : undefined;
+}
+
 export function AuditLogsPage() {
   const [action, setAction] = useState("");
+  const [actorId, setActorId] = useState("");
+  const [targetId, setTargetId] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [offset, setOffset] = useState(0);
   const limit = 50;
 
+  const actorUserId = parseOptionalId(actorId);
+  const targetUserId = parseOptionalId(targetId);
+
   const { data, isLoading, error } = useQuery({
-    queryKey: ["audit-logs", action, from, to, offset],
+    queryKey: ["audit-logs", action, actorUserId, targetUserId, from, to, offset],
     queryFn: () =>
       api.listAuditLogs({
         action: action.trim() || undefined,
+        actor_user_id: actorUserId,
+        target_user_id: targetUserId,
         from: from || undefined,
         to: to || undefined,
         limit,
@@ -27,6 +41,9 @@ export function AuditLogsPage() {
   const items = data?.items ?? [];
   const canPrev = offset > 0;
   const canNext = offset + limit < total;
+  const idFilterError =
+    (actorId.trim() !== "" && actorUserId == null) ||
+    (targetId.trim() !== "" && targetUserId == null);
 
   return (
     <div className="admin-page">
@@ -38,6 +55,7 @@ export function AuditLogsPage() {
       </header>
 
       {error ? <p className="error">{(error as Error).message}</p> : null}
+      {idFilterError ? <p className="error">IDs de ator/alvo devem ser números inteiros positivos.</p> : null}
 
       <ListFilterBar
         searchValue={action}
@@ -60,6 +78,38 @@ export function AuditLogsPage() {
         }}
         resultCount={total}
       />
+
+      <div className="admin-form-grid" style={{ marginTop: "0.75rem" }}>
+        <div className="form-row">
+          <label htmlFor="audit-actor-id">ID do ator</label>
+          <input
+            id="audit-actor-id"
+            type="text"
+            inputMode="numeric"
+            value={actorId}
+            placeholder="opcional"
+            onChange={(e) => {
+              setActorId(e.target.value);
+              setOffset(0);
+            }}
+          />
+        </div>
+        <div className="form-row">
+          <label htmlFor="audit-target-id">ID do alvo</label>
+          <input
+            id="audit-target-id"
+            type="text"
+            inputMode="numeric"
+            value={targetId}
+            placeholder="opcional"
+            onChange={(e) => {
+              setTargetId(e.target.value);
+              setOffset(0);
+            }}
+          />
+        </div>
+      </div>
+      <p className="field-hint">Os IDs aparecem na tabela (ator/alvo). Deixe em branco para não filtrar.</p>
 
       {isLoading && <p>Carregando...</p>}
 
@@ -85,10 +135,16 @@ export function AuditLogsPage() {
                   </td>
                   <td>
                     {row.actor_display_name ?? (row.actor_user_id != null ? `#${row.actor_user_id}` : "—")}
+                    {row.actor_user_id != null ? (
+                      <span className="field-hint"> #{row.actor_user_id}</span>
+                    ) : null}
                   </td>
                   <td>
                     {row.target_display_name ??
                       (row.target_user_id != null ? `#${row.target_user_id}` : "—")}
+                    {row.target_user_id != null ? (
+                      <span className="field-hint"> #{row.target_user_id}</span>
+                    ) : null}
                   </td>
                   <td>{row.ip ?? "—"}</td>
                   <td>

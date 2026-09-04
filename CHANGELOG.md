@@ -8,7 +8,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 - **Super Admin:** hierarquia `player < staff < admin < superadmin`; `admin@local` vira Super Admin (migration `017`)
 - **Usuários:** alteração de papel via modal com confirmação de senha; Super Admin concede/revoga `admin` e `superadmin`
-- **Auditoria:** tela `/auditoria` (admin+) listando `staff_audit_logs` com filtros
+- **Auditoria:** tela `/auditoria` (admin+) listando `staff_audit_logs` com filtros de ação, período, ator e alvo
+- **Conta:** botão **Reenviar** na troca de e-mail pendente (`POST /auth/me/email-change/resend`)
 
 ### Changed
 

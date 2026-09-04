@@ -155,6 +155,19 @@ export function PlayerProfilePage() {
     },
   });
 
+  const resendEmailChange = useMutation({
+    mutationFn: () => api.resendEmailChange(),
+    onSuccess: async (res) => {
+      setContactMsg(res.message);
+      setError("");
+      await qc.invalidateQueries({ queryKey: ["auth-me"] });
+    },
+    onError: (e) => {
+      setContactMsg("");
+      setError((e as Error).message);
+    },
+  });
+
   const exportMyData = useMutation({
     mutationFn: async () => {
       const data = await api.exportMe();
@@ -620,17 +633,27 @@ export function PlayerProfilePage() {
               <input type="email" value={me.email} readOnly disabled />
             </div>
             {me.pending_email ? (
-              <p className="field-hint">
-                Aguardando confirmação em <strong>{me.pending_email}</strong>.{" "}
+              <div className="profile-privacy-actions" style={{ marginBottom: "0.75rem" }}>
+                <p className="field-hint" style={{ margin: 0, flex: 1 }}>
+                  Aguardando confirmação em <strong>{me.pending_email}</strong>.
+                </p>
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={() => resendEmailChange.mutate()}
+                  disabled={resendEmailChange.isPending || cancelEmailChange.isPending}
+                >
+                  {resendEmailChange.isPending ? "Reenviando…" : "Reenviar"}
+                </button>
                 <button
                   type="button"
                   className="secondary"
                   onClick={() => cancelEmailChange.mutate()}
-                  disabled={cancelEmailChange.isPending}
+                  disabled={cancelEmailChange.isPending || resendEmailChange.isPending}
                 >
                   Cancelar troca
                 </button>
-              </p>
+              </div>
             ) : null}
             {!showEmailChange ? (
               <button
