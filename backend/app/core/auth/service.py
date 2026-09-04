@@ -46,14 +46,14 @@ def get_user_by_email(db: DbSession, email: str) -> User | None:
 def get_admin(db: DbSession) -> User | None:
     return (
         db.query(User)
-        .filter(User.role == UserRole.admin.value)
+        .filter(User.role.in_([UserRole.admin.value, UserRole.superadmin.value]))
         .order_by(User.id.asc())
         .first()
     )
 
 
 def upsert_admin_password(db: DbSession, password: str) -> User:
-    """Installer/bootstrap: ensure an active admin with the given password."""
+    """Installer/bootstrap: ensure an active Super Admin (admin@local) with the given password."""
     validate_password_plain(password)
     now = _now()
     pwd_hash = hash_password(password)
@@ -66,7 +66,7 @@ def upsert_admin_password(db: DbSession, password: str) -> User:
             email=ADMIN_EMAIL,
             display_name="Admin",
             username="admin",
-            role=UserRole.admin.value,
+            role=UserRole.superadmin.value,
             status=UserStatus.active.value,
             password_hash=pwd_hash,
             email_verified_at=now,
@@ -77,7 +77,7 @@ def upsert_admin_password(db: DbSession, password: str) -> User:
     else:
         user.email = ADMIN_EMAIL
         user.display_name = user.display_name or "Admin"
-        user.role = UserRole.admin.value
+        user.role = UserRole.superadmin.value
         user.status = UserStatus.active.value
         user.password_hash = pwd_hash
         user.email_verified_at = now
@@ -533,6 +533,34 @@ def request_email_change(
     db.commit()
     db.refresh(row)
     return raw, row, True
+
+
+def resend_email_change(db: DbSession, user: User) -> tuple[str, EmailChangeToken]:
+    """Rotate pending email-change token and return a fresh raw token for mail links."""
+    if user.status != UserStatus.active.value:
+        raise AuthError("Conta não está ativa.")
+    pending = get_pending_email_change(db, user.id)
+    if pending is None:
+        raise AuthError("Não há troca de e-mail pendente.")
+    email_n = pending.new_email
+    _assert_email_available_for_change(db, email_n, user.id)
+    now = _now()
+    db.query(EmailChangeToken).filter(
+        EmailChangeToken.user_id == user.id,
+        EmailChangeToken.used_at.is_(None),
+    ).delete()
+    raw = generate_session_token()
+    row = EmailChangeToken(
+        token=hash_session_token(raw),
+        user_id=user.id,
+        new_email=email_n,
+        created_at=now,
+        expires_at=now + timedelta(hours=EMAIL_CHANGE_HOURS),
+    )
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return raw, row
 
 
 def cancel_email_change(db: DbSession, user: User) -> None:

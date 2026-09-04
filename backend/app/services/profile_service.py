@@ -10,8 +10,9 @@ from sqlalchemy.orm import Session as DbSession, joinedload
 
 from app.core.auth.avatars import user_avatar_url
 from app.core.auth.fourse_points import ranking, user_fp_total
+from app.core.auth.roles import is_admin_plus
 from app.core.auth.service import public_user_dict
-from app.models import Event, FoursePointsLedger, Player, User, UserRole
+from app.models import Event, FoursePointsLedger, Player, User
 
 
 MONTHS_PT = [
@@ -33,7 +34,7 @@ MONTHS_PT = [
 def can_view_fp(viewer: User | None, subject: User) -> bool:
     if viewer is None:
         return False
-    return viewer.id == subject.id or viewer.role == UserRole.admin.value
+    return viewer.id == subject.id or is_admin_plus(viewer)
 
 
 def _tcg_payload(ev: Event) -> dict[str, Any] | None:

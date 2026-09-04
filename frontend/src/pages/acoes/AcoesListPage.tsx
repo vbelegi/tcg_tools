@@ -3,6 +3,7 @@ import { useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { api } from "../../api/client";
+import { isStaffRole } from "../../utils/roles";
 import { ListFilterBar } from "../../components/ListFilterBar";
 import { formatPeriod, phaseLabel, promoPhase } from "./promoFormat";
 
@@ -16,7 +17,7 @@ export function AcoesListPage() {
     queryFn: () => api.authMe(),
     retry: false,
   });
-  const canManage = me && (me.role === "admin" || me.role === "staff");
+  const canManage = me && isStaffRole(me.role);
 
   const { data, isLoading } = useQuery({
     queryKey: ["acoes", me?.id ?? "guest", q, onlyActive],

@@ -10,6 +10,7 @@ import { SeFormatOptions, type SeBoConfig } from "../../components/SeFormatOptio
 import { Switch } from "../../components/Switch";
 import { TorneioDraftEditPanel } from "../../components/TorneioDraftEditPanel";
 import { api } from "../../api/client";
+import { isAdminRole, isStaffRole } from "../../utils/roles";
 import { playersMissingSeed, seedRequirementMessage } from "../../utils/seeds";
 
 const PHONE_HINT = "DDD + número (10 a 13 dígitos), ex.: 11987654321";
@@ -33,8 +34,8 @@ export function TorneioDetailPage() {
     queryFn: () => api.authMe(),
     retry: false,
   });
-  const isStaff = me && (me.role === "admin" || me.role === "staff");
-  const isAdmin = me?.role === "admin";
+  const isStaff = me && isStaffRole(me.role);
+  const isAdmin = me && isAdminRole(me.role);
   const isGuest = meFetched && !me;
   const [playerName, setPlayerName] = useState("");
   const [playerSeed, setPlayerSeed] = useState("");

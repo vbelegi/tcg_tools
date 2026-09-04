@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
 import { api } from "../api/client";
+import { isAdminRole, isStaffRole } from "../utils/roles";
 import { resolveAvatarUrl } from "../utils/tcgIcons";
 
 type HomeLink = {
@@ -17,8 +18,8 @@ export function Home() {
     queryFn: () => api.authMe(),
     retry: false,
   });
-  const isStaff = Boolean(me && (me.role === "admin" || me.role === "staff"));
-  const isAdmin = me?.role === "admin";
+  const isStaff = Boolean(me && isStaffRole(me.role));
+  const isAdmin = me && isAdminRole(me.role);
 
   const { data: ranking = [] } = useQuery({
     queryKey: ["ranking", "home"],

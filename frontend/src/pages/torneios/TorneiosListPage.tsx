@@ -3,6 +3,7 @@ import { useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { api } from "../../api/client";
+import { isAdminRole, isStaffRole } from "../../utils/roles";
 import { ListFilterBar } from "../../components/ListFilterBar";
 
 export function TorneiosListPage() {
@@ -17,7 +18,7 @@ export function TorneiosListPage() {
     queryFn: () => api.authMe(),
     retry: false,
   });
-  const canManage = me && (me.role === "admin" || me.role === "staff");
+  const canManage = me && isStaffRole(me.role);
   const isGuest = meFetched && !me;
 
   const { data, isLoading } = useQuery({
@@ -78,7 +79,7 @@ export function TorneiosListPage() {
         <h1>Torneios</h1>
         {canManage && (
           <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            {me.role === "admin" && (
+            {isAdminRole(me.role) && (
               <Link to="/torneios/externo" className="secondary">
                 Importar externo
               </Link>

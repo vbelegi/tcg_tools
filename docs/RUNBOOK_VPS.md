@@ -155,7 +155,7 @@ Após configurar cron local + offsite, execute um **restore de teste** em horár
 
 ## Senha do admin
 
-Conta bootstrap: **admin@local**.
+Conta bootstrap: **admin@local** (papel **Super Admin** após migration `017` / bootstrap atual).
 
 ```bash
 cd /opt/tcg_tools

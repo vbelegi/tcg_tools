@@ -556,6 +556,23 @@ export interface paths {
         patch: operations["update_user_role_api_v1_users__user_id__role_patch"];
         trace?: never;
     };
+    "/api/v1/audit-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Audit Logs */
+        get: operations["list_audit_logs_api_v1_audit_logs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/calendar": {
         parameters: {
             query?: never;
@@ -1931,9 +1948,14 @@ export interface components {
         UpdateUserRoleBody: {
             /**
              * Role
-             * @description staff or player
+             * @description Target role
              */
             role: string;
+            /**
+             * Current Password
+             * @description Actor password confirmation
+             */
+            current_password: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -3028,6 +3050,45 @@ export interface operations {
                 "application/json": components["schemas"]["UpdateUserRoleBody"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_audit_logs_api_v1_audit_logs_get: {
+        parameters: {
+            query?: {
+                action?: string | null;
+                actor_user_id?: number | null;
+                target_user_id?: number | null;
+                from?: string | null;
+                to?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {

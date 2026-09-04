@@ -5,6 +5,7 @@ import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { ConfirmModal } from "../../components/ConfirmModal";
 import { PlayerPickerModal } from "../../components/PlayerPickerModal";
 import { api } from "../../api/client";
+import { isStaffRole } from "../../utils/roles";
 import type { Match } from "../../api/types";
 import { formatPlayerRecord, playerRecordTitle, type PlayerRecordWld } from "../../utils/playerRecord";
 import { incompleteMatches, isMatchIncomplete, matchSummaryLabel } from "../../utils/matches";
@@ -131,7 +132,7 @@ export function TorneioRodadaPage() {
     queryFn: () => api.authMe(),
     retry: false,
   });
-  const isStaff = Boolean(me && (me.role === "admin" || me.role === "staff"));
+  const isStaff = Boolean(me && isStaffRole(me.role));
 
   const { data: torneio } = useQuery({
     queryKey: ["torneio", eventId],

@@ -17,6 +17,17 @@ from app.core.auth import AuthError, create_incomplete_user, create_password_res
 from app.core.auth.account_lifecycle import delete_user_account
 from app.core.auth.invite_delivery import provision_invite_and_email
 from app.core.auth.invites import invite_claim_path, invite_claim_url, password_reset_path, password_reset_url
+from app.core.auth.passwords import verify_password
+from app.core.auth.roles import (
+    ADMIN_PLUS,
+    ALL_ROLES,
+    assignable_roles_for,
+    count_active_superadmins,
+    creatable_roles_for,
+    is_admin_plus,
+    is_superadmin,
+    role_value,
+)
 from app.core.email.outbound import send_password_reset_email
 from app.core.auth.fourse_points import ranking
 from app.core.privacy import can_contact_for_marketing
@@ -112,10 +123,9 @@ def create_user(
     request: Request,
     db: Session = Depends(get_db),
 ):
-    if body.role not in {UserRole.player.value, UserRole.staff.value, UserRole.admin.value}:
-        raise HTTPException(status_code=400, detail="Papel inválido.")
-    if actor.role != UserRole.admin.value and body.role != UserRole.player.value:
-        raise HTTPException(status_code=403, detail="Staff só pode criar jogadores.")
+    allowed = set(creatable_roles_for(actor))
+    if body.role not in allowed:
+        raise HTTPException(status_code=403, detail="Sem permissão para criar conta com este papel.")
     try:
         user = create_incomplete_user(
             db,
@@ -228,8 +238,12 @@ def admin_delete_user(
     user = db.query(User).filter(User.id == user_id).one_or_none()
     if user is None:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
-    if user.role == UserRole.admin.value:
+    target_role = role_value(user.role)
+    if target_role in ADMIN_PLUS and not is_superadmin(actor):
         raise HTTPException(status_code=400, detail="Exclusão de administrador não permitida por esta via.")
+    if target_role == UserRole.superadmin.value:
+        if count_active_superadmins(db) <= 1:
+            raise HTTPException(status_code=400, detail="Não é possível excluir o único Super Admin.")
     try:
         delete_user_account(db, user)
     except AuthError as exc:
@@ -320,14 +334,15 @@ def public_profile(user_id: int, db: Session = Depends(get_db), viewer: User | N
         raise HTTPException(status_code=404, detail="Jogador não encontrado.")
     if user.status not in (UserStatus.active.value, UserStatus.incomplete.value):
         is_owner = bool(viewer and viewer.id == user.id)
-        is_admin = bool(viewer and viewer.role == UserRole.admin.value)
+        is_admin = bool(viewer and is_admin_plus(viewer))
         if not (is_owner or is_admin):
             raise HTTPException(status_code=404, detail="Jogador não encontrado.")
     return build_public_profile(db, user, viewer)
 
 
 class UpdateUserRoleBody(BaseModel):
-    role: str = Field(description="staff or player")
+    role: str = Field(description="Target role")
+    current_password: str = Field(description="Actor password confirmation")
 
 
 @router.patch("/users/{user_id}/role")
@@ -338,18 +353,32 @@ def update_user_role(
     request: Request,
     db: Session = Depends(get_db),
 ):
-    if body.role not in {UserRole.staff.value, UserRole.player.value}:
-        raise HTTPException(status_code=400, detail="Papel inválido. Use staff ou player.")
+    if body.role not in ALL_ROLES:
+        raise HTTPException(status_code=400, detail="Papel inválido.")
     if actor.id == user_id:
         raise HTTPException(status_code=403, detail="Não é possível alterar o próprio papel.")
+    if not verify_password(body.current_password, actor.password_hash):
+        raise HTTPException(status_code=400, detail="Senha atual incorreta.")
+
     user = db.query(User).filter(User.id == user_id).one_or_none()
     if user is None or user.status == UserStatus.deleted.value:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
-    if user.role == UserRole.admin.value:
+
+    allowed = set(assignable_roles_for(actor))
+    if body.role not in allowed:
+        raise HTTPException(status_code=403, detail="Sem permissão para conceder este papel.")
+
+    old = role_value(user.role)
+    if old in ADMIN_PLUS and not is_superadmin(actor):
         raise HTTPException(status_code=400, detail="Papel de administrador não pode ser alterado aqui.")
-    if user.role == body.role:
+
+    if old == UserRole.superadmin.value and body.role != UserRole.superadmin.value:
+        if count_active_superadmins(db) <= 1:
+            raise HTTPException(status_code=400, detail="Não é possível rebaixar o único Super Admin.")
+
+    if old == body.role:
         return private_user_dict(user)
-    old = user.role
+
     user.role = body.role
     db.commit()
     db.refresh(user)

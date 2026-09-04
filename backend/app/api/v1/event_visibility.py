@@ -4,15 +4,16 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
+from app.core.auth.roles import has_min_role, role_value as _role_value
 from app.models import Player, User, UserRole
 
 
 def role_value(user: User) -> str:
-    return user.role.value if hasattr(user.role, "value") else str(user.role)
+    return _role_value(user.role)
 
 
 def is_staff_user(user: User | None) -> bool:
-    return user is not None and role_value(user) in {UserRole.admin.value, UserRole.staff.value}
+    return user is not None and has_min_role(user, UserRole.staff.value)
 
 
 def is_public_list_event(event: dict) -> bool:

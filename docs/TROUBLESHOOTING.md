@@ -25,7 +25,7 @@ Use `scripts\Iniciar TCG Tools.bat` ou `py -3.13 -m uvicorn ...`.
 
 ### Tela pede login ou API retorna 401
 
-O app exige login com e-mail (bootstrap **admin@local**) e senha. Sem senha gravada, o login falha.
+O app exige login com e-mail (bootstrap **admin@local**, Super Admin) e senha. Sem senha gravada, o login falha.
 
 **Desenvolvimento:**
 

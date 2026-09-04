@@ -101,4 +101,37 @@ describe("Home", () => {
     expect(screen.getByRole("link", { name: /meu perfil/i })).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText("Belegi")).toBeInTheDocument());
   });
+
+  it("shows staff and admin shortcuts when authenticated as superadmin", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo) => {
+        const url = String(input);
+        if (url.includes("/auth/me")) {
+          return new Response(
+            JSON.stringify({
+              id: 1,
+              email: "admin@local",
+              display_name: "Super Admin",
+              role: "superadmin",
+              status: "active",
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          );
+        }
+        if (url.includes("/ranking")) {
+          return new Response(JSON.stringify([]), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+        return new Response("{}", { status: 200 });
+      }),
+    );
+    renderHome();
+    await waitFor(() => expect(screen.getByRole("link", { name: /premiação/i })).toBeInTheDocument());
+    expect(screen.getByRole("link", { name: /sorteador/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /usuários/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /tcgs/i })).toBeInTheDocument();
+  });
 });

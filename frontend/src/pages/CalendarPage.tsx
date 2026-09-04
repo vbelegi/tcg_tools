@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
 import { api } from "../api/client";
+import { isStaffRole } from "../utils/roles";
 import type { Torneio } from "../api/types";
 import { formatPeriod } from "./acoes/promoFormat";
 import {
@@ -65,7 +66,7 @@ export function CalendarPage() {
     queryFn: () => api.authMe(),
     retry: false,
   });
-  const isStaff = Boolean(me && (me.role === "admin" || me.role === "staff"));
+  const isStaff = Boolean(me && isStaffRole(me.role));
 
   const { data, isLoading } = useQuery({
     queryKey: ["calendar", cursor.year, cursor.month],

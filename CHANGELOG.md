@@ -4,6 +4,22 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- **Super Admin:** hierarquia `player < staff < admin < superadmin`; `admin@local` vira Super Admin (migration `017`)
+- **Usuários:** alteração de papel via modal com confirmação de senha; Super Admin concede/revoga `admin` e `superadmin`
+- **Auditoria:** tela `/auditoria` (admin+) listando `staff_audit_logs` com filtros de ação, período, ator e alvo
+- **Conta:** botão **Reenviar** na troca de e-mail pendente (`POST /auth/me/email-change/resend`)
+
+### Changed
+
+- **Docs:** PLATFORM_USERS_FP, OPERADOR, PRIVACIDADE, README, V2_WEB, RUNBOOK, INSTALACAO e TROUBLESHOOTING alinhados aos PRs 1–4 (papéis, contato, ações, filtros, logs)
+- **Papéis:** Super Admin conta como staff/admin+ em visibilidade de torneios/ações e FP de perfil; removido `require_roles` (legado de match exato)
+
+### Database
+
+- Migration `017`: promove `admin@local` de `admin` para `superadmin`
+
 ## [1.15.0] - 2026-09-03
 
 ### Added

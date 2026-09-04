@@ -2,6 +2,7 @@ import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
 import { api } from "../api/client";
+import { isAdminRole, isStaffRole } from "../utils/roles";
 
 function useAuthMe() {
   return useQuery({
@@ -35,7 +36,7 @@ export function RequireStaff() {
   if (isError || !data) {
     return loginRedirect(location.pathname, location.search);
   }
-  if (data.role !== "admin" && data.role !== "staff") {
+  if (!isStaffRole(data.role)) {
     return <Navigate to="/" replace />;
   }
   return <Outlet />;
@@ -49,7 +50,7 @@ export function RequireAdmin() {
   if (isError || !data) {
     return loginRedirect(location.pathname, location.search);
   }
-  if (data.role !== "admin") {
+  if (!isAdminRole(data.role)) {
     return <Navigate to="/" replace />;
   }
   return <Outlet />;

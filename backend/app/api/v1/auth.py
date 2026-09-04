@@ -31,6 +31,7 @@ from app.core.auth import (
     private_user_dict,
     register_player,
     request_email_change,
+    resend_email_change,
     revoke_session,
     verify_email,
 )
@@ -264,13 +265,19 @@ def auth_delete_me(
     if body.confirm.strip().upper() != "EXCLUIR":
         raise HTTPException(status_code=400, detail='Confirme digitando EXCLUIR.')
     from app.core.auth.passwords import verify_password
+    from app.core.auth.roles import count_active_superadmins, is_admin_plus, is_superadmin
 
     if not verify_password(body.password, user.password_hash):
         raise HTTPException(status_code=400, detail="Senha incorreta.")
-    if user.role == UserRole.admin.value:
+    if is_superadmin(user) and count_active_superadmins(db) <= 1:
+        raise HTTPException(status_code=400, detail="Não é possível excluir o único Super Admin.")
+    if is_admin_plus(user) and not is_superadmin(user):
         admins = (
             db.query(User)
-            .filter(User.role == UserRole.admin.value, User.status == UserStatus.active.value)
+            .filter(
+                User.role.in_([UserRole.admin.value, UserRole.superadmin.value]),
+                User.status == UserStatus.active.value,
+            )
             .count()
         )
         if admins <= 1:
@@ -552,6 +559,45 @@ def auth_request_email_change(
         "ok": True,
         "pending": False,
         "message": "E-mail atualizado. Enviamos um novo link de verificação.",
+        "user": _me_dict(db, user),
+    }
+
+
+@router.post("/me/email-change/resend")
+def auth_resend_email_change(
+    request: Request,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+    _: None = Depends(_auth_email_change_ip_limit),
+):
+    if user.status == UserStatus.deleted.value:
+        raise HTTPException(status_code=404, detail="Conta não encontrada.")
+    check_rate_limit_scope("auth_email_change_resend_user", str(user.id), limit=3, window_sec=3600)
+    try:
+        raw, row = resend_email_change(db, user)
+    except AuthError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    try:
+        send_email_change_confirm(row.new_email, raw)
+        send_email_change_notice(user, raw, row.new_email)
+    except Exception:
+        logger.exception("Failed to resend email-change mails user_id=%s", user.id)
+        raise HTTPException(
+            status_code=500, detail="Não foi possível reenviar o e-mail. Tente mais tarde."
+        ) from None
+    log_staff_action(
+        db,
+        actor=user,
+        action="account.email_change",
+        target_user_id=user.id,
+        meta={"status": "resent", "to": mask_email(row.new_email)},
+        request=request,
+    )
+    db.refresh(user)
+    return {
+        "ok": True,
+        "pending": True,
+        "message": "Reenviamos o link de confirmação ao novo e-mail.",
         "user": _me_dict(db, user),
     }
 
