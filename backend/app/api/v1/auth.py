@@ -35,6 +35,7 @@ from app.core.auth import (
     revoke_session,
     verify_email,
 )
+from app.core.auth.service import ensure_unique_display_name
 from app.core.auth.account_lifecycle import delete_user_account
 from app.core.auth.cookies import clear_session_cookie, set_session_cookie
 from app.core.auth.passwords import MIN_PASSWORD_LEN, normalize_email
@@ -171,6 +172,7 @@ def auth_update_me(
             name = body.display_name.strip()
             if not name:
                 raise HTTPException(status_code=400, detail="Nome inválido.")
+            name = ensure_unique_display_name(db, name, exclude_user_id=user.id)
             user.display_name = name
         if body.phone is not None:
             _, phone_n = ensure_unique_email_phone(

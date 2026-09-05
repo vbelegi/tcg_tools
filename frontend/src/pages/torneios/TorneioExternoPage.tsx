@@ -3,6 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { api } from "../../api/client";
+import {
+  LigaMagicDeckImportFields,
+  type DecklistImportMeta,
+} from "../../components/LigaMagicDeckImportFields";
 import { Switch } from "../../components/Switch";
 
 type UserHit = {
@@ -21,6 +25,7 @@ type PlacementRow = {
   phone: string;
   create_account: boolean;
   decklist: string;
+  deckMeta: DecklistImportMeta | null;
   is_drop: boolean;
   showDecklist: boolean;
   showIncomplete: boolean;
@@ -42,6 +47,7 @@ function emptyRow(placement: number): PlacementRow {
     phone: "",
     create_account: false,
     decklist: "",
+    deckMeta: null,
     is_drop: false,
     showDecklist: false,
     showIncomplete: false,
@@ -178,6 +184,16 @@ export function TorneioExternoPage() {
             phone: r.create_account ? r.phone.trim() : undefined,
             create_account: r.create_account,
             decklist: r.decklist.trim() || undefined,
+            ...(r.deckMeta
+              ? {
+                  decklist_source: r.deckMeta.source,
+                  decklist_source_id: r.deckMeta.source_id,
+                  decklist_source_url: r.deckMeta.source_url,
+                  decklist_name: r.deckMeta.name,
+                  decklist_format: r.deckMeta.format,
+                  decklist_price_low_brl: r.deckMeta.price_low_brl,
+                }
+              : {}),
             is_drop: r.is_drop,
           };
         });
@@ -496,13 +512,13 @@ export function TorneioExternoPage() {
                         )}
                         {row.showDecklist && (
                           <div className="form-row externo-decklist">
-                            <label htmlFor={`deck-${row.key}`}>Decklist</label>
-                            <textarea
-                              id={`deck-${row.key}`}
-                              rows={3}
-                              value={row.decklist}
-                              onChange={(e) => updateRow(row.key, { decklist: e.target.value })}
-                              placeholder="Opcional"
+                            <label>Decklist</label>
+                            <LigaMagicDeckImportFields
+                              decklist={row.decklist}
+                              onDecklistChange={(text) => updateRow(row.key, { decklist: text })}
+                              meta={row.deckMeta}
+                              onMetaChange={(deckMeta) => updateRow(row.key, { deckMeta })}
+                              textareaRows={3}
                             />
                           </div>
                         )}
@@ -520,6 +536,7 @@ export function TorneioExternoPage() {
                             updateRow(row.key, {
                               showDecklist: checked,
                               decklist: checked ? row.decklist : "",
+                              deckMeta: checked ? row.deckMeta : null,
                             })
                           }
                         >

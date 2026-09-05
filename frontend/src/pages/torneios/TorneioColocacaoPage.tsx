@@ -31,6 +31,7 @@ export function TorneioColocacaoPage() {
         placement: String(idx + 1),
         is_drop: false,
         decklist: p.decklist ?? "",
+        deckMeta: null,
       })),
     );
   }, [torneio?.id, torneio?.players]);
@@ -53,6 +54,16 @@ export function TorneioColocacaoPage() {
           placement: r.is_drop ? 999 : placement,
           is_drop: r.is_drop,
           decklist: r.decklist.trim() || null,
+          ...(r.deckMeta
+            ? {
+                decklist_source: r.deckMeta.source,
+                decklist_source_id: r.deckMeta.source_id,
+                decklist_source_url: r.deckMeta.source_url,
+                decklist_name: r.deckMeta.name,
+                decklist_format: r.deckMeta.format,
+                decklist_price_low_brl: r.deckMeta.price_low_brl,
+              }
+            : {}),
         };
       });
       const ranked = placements.filter((p) => !p.is_drop);

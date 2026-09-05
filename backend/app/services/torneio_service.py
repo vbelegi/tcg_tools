@@ -62,6 +62,38 @@ def _standing_with_deck_meta(row: dict[str, Any], player: Player | None) -> dict
     return out
 
 
+def _apply_player_decklist(
+    player: Player,
+    data: dict[str, Any],
+    *,
+    now: datetime | None = None,
+) -> list[str]:
+    """Apply plain decklist + optional LigaMagic meta. Returns card names to warm."""
+    raw = data.get("decklist")
+    text = (str(raw).strip() if raw is not None else "") or None
+    player.decklist = text
+    if not text:
+        player.decklist_source = None
+        player.decklist_source_id = None
+        player.decklist_source_url = None
+        player.decklist_name = None
+        player.decklist_format = None
+        player.decklist_price_low_brl = None
+        player.decklist_imported_at = None
+        return []
+    if data.get("decklist_source"):
+        stamp = now or datetime.utcnow()
+        player.decklist_source = data.get("decklist_source")
+        player.decklist_source_id = data.get("decklist_source_id")
+        player.decklist_source_url = data.get("decklist_source_url")
+        player.decklist_name = data.get("decklist_name")
+        player.decklist_format = data.get("decklist_format")
+        price = data.get("decklist_price_low_brl")
+        player.decklist_price_low_brl = float(price) if price is not None else None
+        player.decklist_imported_at = stamp
+    return unique_card_names(parse_plain_decklist(text))
+
+
 class TorneioService:
     def __init__(self, db: Session, repo: EventRepositoryProtocol | None = None) -> None:
         self._db = db
@@ -855,7 +887,7 @@ class TorneioService:
         self,
         event_id: int,
         placements: list[dict[str, Any]],
-    ) -> Event:
+    ) -> tuple[Event, list[str]]:
         from app.core.auth.fourse_points import compute_fp_awards, replace_event_fp_ledger
 
         event = self._require_event(event_id)
@@ -919,6 +951,8 @@ class TorneioService:
         standings_snapshot: list[dict[str, Any]] = []
         members: list[BandMember] = []
         fp_placements: list[dict[str, Any]] = []
+        names_to_warm: list[str] = []
+        now = datetime.utcnow()
 
         sorted_rows = sorted(
             rows_by_player.values(),
@@ -928,8 +962,7 @@ class TorneioService:
             player = players_by_id[int(row["player_id"])]
             is_drop = bool(row.get("is_drop"))
             if "decklist" in row:
-                raw_deck = row.get("decklist")
-                player.decklist = (str(raw_deck).strip() if raw_deck is not None else "") or None
+                names_to_warm.extend(_apply_player_decklist(player, row, now=now))
             placement = int(row["placement"])
             standings_snapshot.append(
                 {
@@ -979,7 +1012,7 @@ class TorneioService:
         self._commit()
         awards = compute_fp_awards(n=n, config=preset, placements=fp_placements)
         replace_event_fp_ledger(self._db, event.id, awards)
-        return event
+        return event, list(dict.fromkeys(names_to_warm))
 
     def _award_fourse_points(self, event: Event, standings) -> None:
         from app.core.auth.fourse_points import compute_fp_awards, replace_event_fp_ledger
@@ -1052,28 +1085,7 @@ class TorneioService:
             player = next((p for p in event.players if p.id == u["player_id"]), None)
             if not player:
                 continue
-            raw = u.get("decklist")
-            text = (str(raw).strip() if raw is not None else "") or None
-            player.decklist = text
-            if not text:
-                player.decklist_source = None
-                player.decklist_source_id = None
-                player.decklist_source_url = None
-                player.decklist_name = None
-                player.decklist_format = None
-                player.decklist_price_low_brl = None
-                player.decklist_imported_at = None
-                continue
-            if u.get("decklist_source"):
-                player.decklist_source = u.get("decklist_source")
-                player.decklist_source_id = u.get("decklist_source_id")
-                player.decklist_source_url = u.get("decklist_source_url")
-                player.decklist_name = u.get("decklist_name")
-                player.decklist_format = u.get("decklist_format")
-                price = u.get("decklist_price_low_brl")
-                player.decklist_price_low_brl = float(price) if price is not None else None
-                player.decklist_imported_at = now
-            names_to_warm.extend(unique_card_names(parse_plain_decklist(text)))
+            names_to_warm.extend(_apply_player_decklist(player, u, now=now))
         self._commit()
         return list(dict.fromkeys(names_to_warm))
 
@@ -1298,7 +1310,7 @@ class TorneioService:
         placements: list[dict[str, Any]],
         created_by_user_id: int | None = None,
         tcg_game_id: int | None = None,
-    ) -> Event:
+    ) -> tuple[Event, list[str]]:
         """Admin import of an external tournament for FP + public history."""
         from app.core.auth import AuthError, create_incomplete_user
         from app.core.auth.invite_delivery import provision_invite_and_email
@@ -1337,6 +1349,8 @@ class TorneioService:
         standings_snapshot: list[dict[str, Any]] = []
         members: list[BandMember] = []
         fp_placements: list[dict[str, Any]] = []
+        names_to_warm: list[str] = []
+        now = datetime.utcnow()
         order = 0
         for row in sorted(placements, key=lambda r: (bool(r.get("is_drop")), int(r["placement"]))):
             order += 1
@@ -1368,7 +1382,7 @@ class TorneioService:
                 attendance=Attendance.checked_in.value,
                 registration_source=RegistrationSource.staff.value,
             )
-            player.decklist = row.get("decklist")
+            names_to_warm.extend(_apply_player_decklist(player, row, now=now))
             is_drop = bool(row.get("is_drop"))
             standings_snapshot.append(
                 {
@@ -1397,25 +1411,26 @@ class TorneioService:
                 fp_placements.append(
                     {
                         "user_id": user_id,
-                        "placement": None if is_drop else row["placement"],
+                        "placement": None if is_drop else int(row["placement"]),
                         "is_drop": is_drop,
                     }
                 )
 
-        n = sum(1 for r in placements if not r.get("is_drop"))
+        non_drop = [r for r in placements if not r.get("is_drop")]
+        n = len(non_drop)
         event.fp_n_at_start = n
         config = {k: v for k, v in preset.items() if k != "label"}
         event.premiacao_resultado = build_premiacao_resultado(
-            format=format,
+            format=event.format,
             n=n,
             config=config,
             third_place_match=False,
             members=members,
             standings_snapshot=standings_snapshot,
-            entry_fee=entry_fee,
+            entry_fee=event.entry_fee,
         )
         event.status = "finished"
         self._commit()
         awards = compute_fp_awards(n=n, config=preset, placements=fp_placements)
         replace_event_fp_ledger(self._db, event.id, awards)
-        return event
+        return event, list(dict.fromkeys(names_to_warm))

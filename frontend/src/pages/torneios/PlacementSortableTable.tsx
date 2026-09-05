@@ -17,12 +17,17 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import type { PlacementRow } from "./colocacaoOrder";
 import { Switch } from "../../components/Switch";
+import {
+  LigaMagicDeckImportFields,
+  type DecklistImportMeta,
+} from "../../components/LigaMagicDeckImportFields";
 
 type SortableRowProps = {
   row: PlacementRow;
   onPlacementChange: (playerId: number, placement: string) => void;
   onDropToggle: (playerId: number, isDrop: boolean) => void;
   onDecklistChange: (playerId: number, decklist: string) => void;
+  onDeckMetaChange: (playerId: number, meta: DecklistImportMeta | null) => void;
 };
 
 function SortablePlacementRow({
@@ -30,6 +35,7 @@ function SortablePlacementRow({
   onPlacementChange,
   onDropToggle,
   onDecklistChange,
+  onDeckMetaChange,
 }: SortableRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: row.player_id,
@@ -81,10 +87,12 @@ function SortablePlacementRow({
         </Switch>
       </td>
       <td>
-        <input
-          value={row.decklist}
-          placeholder="Nome ou URL"
-          onChange={(e) => onDecklistChange(row.player_id, e.target.value)}
+        <LigaMagicDeckImportFields
+          decklist={row.decklist}
+          onDecklistChange={(text) => onDecklistChange(row.player_id, text)}
+          meta={row.deckMeta}
+          onMetaChange={(meta) => onDeckMetaChange(row.player_id, meta)}
+          textareaRows={2}
         />
       </td>
     </tr>
@@ -146,6 +154,7 @@ export function PlacementSortableTableBody({ rows, setRows }: PlacementTableBody
                 })
               }
               onDecklistChange={(id, decklist) => updateRow(id, { decklist })}
+              onDeckMetaChange={(id, deckMeta) => updateRow(id, { deckMeta })}
             />
           ))}
         </tbody>
