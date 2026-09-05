@@ -16,7 +16,7 @@ from app.core.deck_import.ligamagic import (
 
 logger = logging.getLogger(__name__)
 
-USER_AGENT = "TCGTools/1.16.1 (+https://github.com/vbelegi/tcg_tools; deck-import)"
+USER_AGENT = "TCGTools/1.17.0 (+https://github.com/vbelegi/tcg_tools; deck-import)"
 FETCH_TIMEOUT_SEC = 15.0
 
 

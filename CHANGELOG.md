@@ -4,6 +4,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.17.0] - 2026-09-05
+
 ### Added
 
 - **Decks:** preview de import LigaMagic (Magic EN) — `POST /api/v1/decks/import/preview` (lista plain text + preço menor BRL; maybeboard ignorado)
