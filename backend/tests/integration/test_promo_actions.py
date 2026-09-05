@@ -49,9 +49,10 @@ def _user(
     *,
     email: str,
     role: str = UserRole.player.value,
-    name: str = "Usuário",
+    name: str | None = None,
 ) -> User:
-    user = User(email=email, display_name=name, role=role, status=UserStatus.active.value)
+    display = (name or email.split("@", 1)[0]).strip() or "Usuário"
+    user = User(email=email, display_name=display, role=role, status=UserStatus.active.value)
     db.add(user)
     db.commit()
     db.refresh(user)

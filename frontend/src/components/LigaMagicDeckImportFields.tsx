@@ -45,7 +45,7 @@ export function LigaMagicDeckImportFields({
       onDecklistChange(preview.plain_text);
       onMetaChange({
         source: preview.source,
-        source_id: preview.source_id,
+        source_id: preview.source_deck_id,
         source_url: preview.source_url,
         name: preview.name,
         format: preview.format,
