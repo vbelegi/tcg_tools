@@ -76,6 +76,48 @@ def test_register_player_api(db_session: Session):
     app.dependency_overrides.clear()
 
 
+def test_register_duplicate_display_name_rejected(db_session: Session):
+    def _override_db():
+        yield db_session
+
+    app.dependency_overrides[get_db] = _override_db
+    client = TestClient(app)
+    body = {
+        "display_name": "Nome Unico",
+        "email": "unico1@example.com",
+        "phone": "+5511988776601",
+        "password": "abcdefgh12",
+        "birth_date": "1990-05-15",
+        "accept_privacy": True,
+    }
+    assert client.post("/api/v1/auth/register", json=body).status_code == 201
+    body2 = {
+        **body,
+        "display_name": "nome unico",
+        "email": "unico2@example.com",
+        "phone": "+5511988776602",
+    }
+    r = client.post("/api/v1/auth/register", json=body2)
+    assert r.status_code == 400, r.text
+    assert "já está em uso" in r.json()["detail"].lower()
+    app.dependency_overrides.clear()
+
+
+def test_ensure_unique_display_name_helper(db_session: Session):
+    from app.core.auth.service import create_incomplete_user, ensure_unique_display_name
+    from app.core.auth.passwords import AuthError
+
+    create_incomplete_user(
+        db_session,
+        display_name="Alice",
+        email="alice@example.com",
+        phone="+5511999990001",
+    )
+    with pytest.raises(AuthError, match="já está em uso"):
+        ensure_unique_display_name(db_session, "alice")
+    assert ensure_unique_display_name(db_session, "Bob") == "Bob"
+
+
 def test_register_minor_requires_guardian(db_session: Session):
     def _override_db():
         yield db_session

@@ -150,6 +150,7 @@ def create_torneio(
 def create_external(
     body: ExternalTorneioCreate,
     user: RequireAdmin,
+    background_tasks: BackgroundTasks,
     svc: TorneioService = Depends(get_torneio_service),
 ):
     try:
@@ -158,7 +159,7 @@ def create_external(
         game = svc._db.query(TcgGame).filter(TcgGame.id == body.tcg_game_id).one_or_none()
         if game is None or not game.active:
             raise HTTPException(status_code=422, detail="TCG inválido.")
-        event = svc.create_external_event(
+        event, names = svc.create_external_event(
             name=body.name,
             event_date=body.event_date,
             format=body.format,
@@ -169,6 +170,8 @@ def create_external(
             created_by_user_id=user.id,
             tcg_game_id=body.tcg_game_id,
         )
+        if names:
+            background_tasks.add_task(warm_card_names, names)
         return svc.get_event(event.id)
     except TorneioError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
@@ -468,13 +471,16 @@ def finalizar_colocacoes(
     event_id: int,
     body: ManualFinalizeRequest,
     _: RequireStaff,
+    background_tasks: BackgroundTasks,
     svc: TorneioService = Depends(get_torneio_service),
 ):
     try:
-        svc.finalize_manual_placements(
+        _event, names = svc.finalize_manual_placements(
             event_id,
             [p.model_dump() for p in body.placements],
         )
+        if names:
+            background_tasks.add_task(warm_card_names, names)
         return svc.get_event(event_id)
     except TorneioError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc

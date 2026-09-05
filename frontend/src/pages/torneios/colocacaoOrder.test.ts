@@ -3,10 +3,10 @@ import { describe, expect, it } from "vitest";
 import { reorderPlacementRows, type PlacementRow } from "./colocacaoOrder";
 
 const rows: PlacementRow[] = [
-  { player_id: 1, name: "A", placement: "1", is_drop: false, decklist: "" },
-  { player_id: 2, name: "B", placement: "2", is_drop: false, decklist: "" },
-  { player_id: 3, name: "C", placement: "3", is_drop: false, decklist: "" },
-  { player_id: 4, name: "D", placement: "", is_drop: true, decklist: "" },
+  { player_id: 1, name: "A", placement: "1", is_drop: false, decklist: "", deckMeta: null },
+  { player_id: 2, name: "B", placement: "2", is_drop: false, decklist: "", deckMeta: null },
+  { player_id: 3, name: "C", placement: "3", is_drop: false, decklist: "", deckMeta: null },
+  { player_id: 4, name: "D", placement: "", is_drop: true, decklist: "", deckMeta: null },
 ];
 
 describe("reorderPlacementRows", () => {

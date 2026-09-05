@@ -103,6 +103,12 @@ class ManualPlacement(BaseModel):
     placement: int = Field(ge=1)
     is_drop: bool = False
     decklist: str | None = None
+    decklist_source: str | None = None
+    decklist_source_id: str | None = None
+    decklist_source_url: str | None = None
+    decklist_name: str | None = None
+    decklist_format: str | None = None
+    decklist_price_low_brl: float | None = None
 
 
 class ManualFinalizeRequest(BaseModel):
@@ -152,6 +158,12 @@ class ExternalPlacement(BaseModel):
     phone: str | None = None
     create_account: bool = False
     decklist: str | None = None
+    decklist_source: str | None = None
+    decklist_source_id: str | None = None
+    decklist_source_url: str | None = None
+    decklist_name: str | None = None
+    decklist_format: str | None = None
+    decklist_price_low_brl: float | None = None
     is_drop: bool = False
 
 

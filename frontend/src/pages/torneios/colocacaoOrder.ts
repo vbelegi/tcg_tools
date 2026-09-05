@@ -1,10 +1,14 @@
+import type { DecklistImportMeta } from "../../components/LigaMagicDeckImportFields";
+
 export type PlacementRow = {
   player_id: number;
   name: string;
   placement: string;
   is_drop: boolean;
   decklist: string;
+  deckMeta: DecklistImportMeta | null;
 };
+
 
 /** Reorder ranked rows; drop rows stay at the end unchanged. */
 export function reorderPlacementRows(rows: PlacementRow[], fromIndex: number, toIndex: number): PlacementRow[] {

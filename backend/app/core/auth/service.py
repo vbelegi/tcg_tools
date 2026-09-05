@@ -180,6 +180,30 @@ def ensure_unique_email_phone(
     return email_n, phone_n
 
 
+def ensure_unique_display_name(
+    db: DbSession,
+    display_name: str,
+    *,
+    exclude_user_id: int | None = None,
+) -> str:
+    """Require a unique display name among non-deleted users (case-insensitive)."""
+    from sqlalchemy import func
+
+    name = (display_name or "").strip()
+    if not name:
+        raise AuthError("Nome de exibição é obrigatório.")
+    needle = name.casefold()
+    q = db.query(User).filter(
+        User.status != UserStatus.deleted.value,
+        func.lower(User.display_name) == needle,
+    )
+    if exclude_user_id is not None:
+        q = q.filter(User.id != exclude_user_id)
+    if q.first() is not None:
+        raise AuthError(f"Nome de exibição '{name}' já está em uso. Escolha outro.")
+    return name
+
+
 def age_years(birth: date, today: date | None = None) -> int:
     today = today or date.today()
     return today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day))
@@ -213,6 +237,7 @@ def create_incomplete_user(
     name = (display_name or "").strip()
     if not name:
         raise AuthError("Nome de exibição é obrigatório.")
+    name = ensure_unique_display_name(db, name)
     email_n, phone_n = ensure_unique_email_phone(db, email=email, phone=phone)
     assert phone_n is not None
     now = _now()
@@ -257,6 +282,7 @@ def register_player(
         raise AuthError("Nome de exibição é obrigatório.")
     if not accept_privacy:
         raise AuthError("É necessário aceitar os Termos de uso e a Política de privacidade.")
+    name = ensure_unique_display_name(db, name)
     validate_password_plain(password)
     email_n, phone_n = ensure_unique_email_phone(db, email=email, phone=phone)
     if not phone_n:

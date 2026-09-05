@@ -38,13 +38,13 @@ describe("EnrollmentQrModal", () => {
     expect(await screen.findByText("Validade: 10:00")).toBeInTheDocument();
     expect(screen.getByTestId("qr-mark")).toBeInTheDocument();
 
-    act(() => {
-      vi.advanceTimersByTime(1000);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1000);
     });
     expect(screen.getByText("Validade: 09:59")).toBeInTheDocument();
 
-    act(() => {
-      vi.advanceTimersByTime(599_000);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(599_000);
     });
     expect(screen.getByText("Link expirado. Gere outro QR.")).toBeInTheDocument();
   });

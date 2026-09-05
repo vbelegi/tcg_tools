@@ -13,6 +13,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- **Auth:** `display_name` único na plataforma (case-insensitive); cadastro, perfil e incomplete rejeitam colisão com mensagem clara
+- **Decks:** import LigaMagic também no Importar externo e em Registrar colocações (sem rodadas na plataforma)
 - **Torneios:** após concluir rodada, o hub deixa de redirecionar de volta à rodada por cache stale (`between_rounds`); CTA de escape na rodada concluída
 - **Decks:** preview LigaMagic — `price_low_brl` como número no JSON; UI formata preço com `Number(...).toFixed` (evita crash com Decimal string)
 - **Decks:** meta da decklist no Resultado inclui formato LigaMagic (ex.: Duel Commander) junto com nome e preço
@@ -28,6 +30,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 - Migration `019`: tabela `scryfall_card_cache` (nome EN → URLs de imagem)
 - Migration `020`: `type_line` + `image_large` no cache Scryfall
 - Migration `021`: `layout` + imagens / nome da face verso no cache Scryfall
+- Migration `022`: dedupe de `display_name` (`Nome_1`, `Nome_2`…) + índice único case-insensitive (não-deleted)
 
 ## [1.16.1] - 2026-09-04
 
