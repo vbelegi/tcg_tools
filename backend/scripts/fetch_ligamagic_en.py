@@ -8,7 +8,7 @@ url = "https://www.ligamagic.com.br/?view=dks/deck&id=10187992&lang=2"
 req = urllib.request.Request(
     url,
     headers={
-        "User-Agent": "TCGTools/1.17.0 (deck-import-dev)",
+        "User-Agent": "TCGTools/1.17.1 (deck-import-dev)",
         "Accept": "text/html",
         "Cookie": "dk-language=2",
     },

@@ -11,7 +11,7 @@ import httpx
 logger = logging.getLogger(__name__)
 
 SCRYFALL_COLLECTION = "https://api.scryfall.com/cards/collection"
-USER_AGENT = "TCGTools/1.17.0 (+https://github.com/vbelegi/tcg_tools; scryfall-cache)"
+USER_AGENT = "TCGTools/1.17.1 (+https://github.com/vbelegi/tcg_tools; scryfall-cache)"
 BATCH_SIZE = 75
 # Collection hard limit is 2/sec; leave headroom.
 BATCH_GAP_SEC = 0.55

@@ -48,14 +48,39 @@ def upgrade() -> None:
                     break
                 n += 1
 
-    op.execute(
-        sa.text(
-            "CREATE UNIQUE INDEX IF NOT EXISTS uq_users_display_name_ci "
-            "ON users (lower(display_name)) "
-            "WHERE status != 'deleted'"
+    dialect = conn.dialect.name
+    if dialect == "mysql":
+        # MySQL has no partial indexes; NULL keys are unique-friendly so deleted
+        # accounts can share ANONYMOUS_DISPLAY_NAME without colliding.
+        op.execute(
+            sa.text(
+                "ALTER TABLE users ADD COLUMN display_name_key VARCHAR(120) "
+                "GENERATED ALWAYS AS ("
+                "CASE WHEN status = 'deleted' THEN NULL ELSE LOWER(display_name) END"
+                ") STORED"
+            )
         )
-    )
+        op.execute(
+            sa.text(
+                "CREATE UNIQUE INDEX uq_users_display_name_ci ON users (display_name_key)"
+            )
+        )
+    else:
+        # SQLite / Postgres: partial unique index excludes deleted rows.
+        op.execute(
+            sa.text(
+                "CREATE UNIQUE INDEX IF NOT EXISTS uq_users_display_name_ci "
+                "ON users (lower(display_name)) "
+                "WHERE status != 'deleted'"
+            )
+        )
 
 
 def downgrade() -> None:
-    op.execute(sa.text("DROP INDEX IF EXISTS uq_users_display_name_ci"))
+    conn = op.get_bind()
+    dialect = conn.dialect.name
+    if dialect == "mysql":
+        op.execute(sa.text("DROP INDEX uq_users_display_name_ci ON users"))
+        op.execute(sa.text("ALTER TABLE users DROP COLUMN display_name_key"))
+    else:
+        op.execute(sa.text("DROP INDEX IF EXISTS uq_users_display_name_ci"))

@@ -4,6 +4,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.17.1] - 2026-09-05
+
+### Fixed
+
+- **Deploy:** migration `022` compatível com MySQL (índice único via coluna gerada; SQLite/Postgres mantêm índice parcial)
+
 ## [1.17.0] - 2026-09-05
 
 ### Added
