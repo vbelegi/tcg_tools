@@ -4,6 +4,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Deploy:** `httpx` (e deps) no `requirements-prod.lock` — imagem Docker não instalava o cliente HTTP usado por LigaMagic/Scryfall (`ModuleNotFoundError: httpx`)
+- **Deploy:** migration `022` no MySQL — dedupe pela collation da tabela (acentos), índice `UNIQUE(display_name, display_name_active)`, retry idempotente; `vps-deploy.sh` imprime logs do app se o health check falhar
+
 ## [1.17.1] - 2026-09-05
 
 ### Fixed

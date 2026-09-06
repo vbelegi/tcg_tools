@@ -50,4 +50,6 @@ done
 
 echo "Health check failed after deploy."
 docker compose ps
+echo "----- app logs (last 200 lines) -----"
+docker compose logs --tail=200 app || true
 exit 1

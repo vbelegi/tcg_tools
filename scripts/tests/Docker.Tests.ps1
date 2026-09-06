@@ -54,6 +54,12 @@ Describe "Docker packaging files" {
         $lock | Should -Match '(?i)pymysql=='
     }
 
+    It "prod lock includes httpx (LigaMagic/Scryfall)" {
+        $lock = Get-Content (Join-Path $script:RepoRoot "backend\requirements-prod.lock") -Raw
+        $lock | Should -Match '(?i)httpx=='
+        $lock | Should -Match '(?i)httpcore=='
+    }
+
     It "gitignore keeps .env out of git but allows .env.example" {
         $gi = Get-Content (Join-Path $script:RepoRoot ".gitignore") -Raw
         $gi | Should -Match '(?m)^\.env\s*$'

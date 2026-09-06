@@ -9,9 +9,9 @@ $Backend = Join-Path $Root "backend"
 $Out = if ($Output) { $Output } else { Join-Path $Backend "requirements-prod.lock" }
 
 $packages = @(
-    "alembic", "annotated-types", "anyio", "bcrypt", "click", "colorama", "fastapi", "greenlet",
-    "h11", "httptools", "idna", "Mako", "MarkupSafe", "pillow", "pymysql", "pydantic", "pydantic-core",
-    "pydantic-settings", "python-dotenv", "python-multipart", "SQLAlchemy", "starlette",
+    "alembic", "annotated-types", "anyio", "bcrypt", "certifi", "click", "colorama", "fastapi", "greenlet",
+    "h11", "httpcore", "httptools", "httpx", "idna", "Mako", "MarkupSafe", "pillow", "pymysql", "pydantic",
+    "pydantic-core", "pydantic-settings", "python-dotenv", "python-multipart", "SQLAlchemy", "starlette",
     "typing-extensions", "uvicorn", "watchfiles", "websockets"
 )
 
