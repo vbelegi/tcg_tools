@@ -4,6 +4,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.17.2] - 2026-09-07
+
 ### Fixed
 
 - **Deploy:** `httpx` (e deps) no `requirements-prod.lock` — imagem Docker não instalava o cliente HTTP usado por LigaMagic/Scryfall (`ModuleNotFoundError: httpx`)
