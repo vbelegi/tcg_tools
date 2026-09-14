@@ -10,7 +10,7 @@ O sistema roda em **https://torneios.fourse.com.br** (VPS Docker). Deploy e oper
 2. Login **admin@local** (Super Admin) + senha definida na VPS
 3. Calcular premiação (teste) e criar torneio Suíço de validação
 4. Iniciar, resultados, finalizar, export JSON
-5. Gerar convite em `/usuarios` — link com domínio público; testar troca de papel (modal + senha)
+5. Criar incomplete (torneio draft, import externo ou `/usuarios`) → conferir e-mail de convite com domínio público; reenvio em `/usuarios` se precisar; testar troca de papel (modal + senha)
 6. Upload de avatar e perfil público; troca de e-mail no perfil (dev)
 7. `/auditoria` lista ações recentes; `/acoes` cria ação promocional de teste (staff)
 8. Backup MySQL (`deploy/backup-db.sh`) + offsite (`deploy/backup-offsite.sh` / cron)

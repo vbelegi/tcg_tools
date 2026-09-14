@@ -258,6 +258,75 @@ def test_add_player_rejects_nameless_walk_in(api_client: TestClient):
     assert denied.status_code == 422
 
 
+def test_add_player_create_account_provisions_invite(api_client: TestClient, db_session: Session):
+    from app.models import InviteToken, User, UserStatus
+
+    created = api_client.post(
+        "/api/v1/torneios",
+        json={
+            "name": "Invite On Enroll",
+            "event_date": date.today().isoformat(),
+            "format": "swiss",
+            "max_rounds": 2,
+            "entry_fee": 10,
+            "best_of": 3,
+            "premiacao_preset_id": "standard",
+            "tcg_game_id": 1,
+        },
+    )
+    assert created.status_code == 200
+    eid = created.json()["id"]
+    added = api_client.post(
+        f"/api/v1/torneios/{eid}/jogadores",
+        json={
+            "name": "Novo Incomplete",
+            "email": "novo.invite@example.com",
+            "phone": "11987654321",
+            "create_account": True,
+        },
+    )
+    assert added.status_code == 200, added.text
+    user = (
+        db_session.query(User)
+        .filter(User.email == "novo.invite@example.com")
+        .one()
+    )
+    assert user.status == UserStatus.incomplete.value
+    invites = (
+        db_session.query(InviteToken)
+        .filter(InviteToken.user_id == user.id, InviteToken.used_at.is_(None))
+        .all()
+    )
+    assert len(invites) == 1
+
+
+def test_create_user_provisions_invite(api_client: TestClient, db_session: Session):
+    from app.models import InviteToken, User, UserStatus
+
+    r = api_client.post(
+        "/api/v1/users",
+        json={
+            "display_name": "Staff Incomplete",
+            "email": "staff.invite@example.com",
+            "phone": "11987654322",
+            "role": "player",
+        },
+    )
+    assert r.status_code == 201, r.text
+    user = (
+        db_session.query(User)
+        .filter(User.email == "staff.invite@example.com")
+        .one()
+    )
+    assert user.status == UserStatus.incomplete.value
+    invites = (
+        db_session.query(InviteToken)
+        .filter(InviteToken.user_id == user.id, InviteToken.used_at.is_(None))
+        .all()
+    )
+    assert len(invites) == 1
+
+
 def test_guest_sees_finished_and_open_registration(api_client: TestClient):
     closed = api_client.post(
         "/api/v1/torneios",

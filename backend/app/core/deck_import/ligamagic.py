@@ -203,7 +203,9 @@ def parse_ligamagic_html(
         if not qty_m:
             continue
         qty = int(qty_m.group(1))
-        href_name = unquote_plus(m.group(3) or "").strip()
+        # LigaMagic encodes accents as HTML entities inside the URL
+        # (e.g. K%26iacute%3Bli → K&iacute;li); unescape after unquote.
+        href_name = unescape(unquote_plus(m.group(3) or "")).strip()
         anchor = re.sub(r"<[^>]+>", "", unescape(m.group(4) or "")).strip()
         card_name = href_name or anchor
         if not card_name:

@@ -3,7 +3,6 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { api } from "../api/client";
-import { SiteFooter } from "../components/SiteFooter";
 import { Switch } from "../components/Switch";
 
 export function ClaimInvitePage() {
@@ -157,7 +156,6 @@ export function ClaimInvitePage() {
           {claim.isPending ? "Salvando…" : "Ativar conta"}
         </button>
       </form>
-      <SiteFooter />
     </div>
   );
 }
