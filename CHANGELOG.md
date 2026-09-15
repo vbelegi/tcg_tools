@@ -4,6 +4,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.17.3] - 2026-09-15
+
 ### Fixed
 
 - **Decks:** import LigaMagic decodifica entidades HTML no `card=` do href (ex.: `K&iacute;li` → `Kíli`) para o Scryfall achar a arte (#46)
