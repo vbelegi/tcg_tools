@@ -3,6 +3,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
+import { AuthShell } from "./components/AuthShell";
 import { RequireAdmin, RequireAuth, RequireStaff } from "./components/RequireAuth";
 import { AcaoDetailPage } from "./pages/acoes/AcaoDetailPage";
 import { AcaoNovaPage } from "./pages/acoes/AcaoNovaPage";
@@ -46,12 +47,14 @@ createRoot(document.getElementById("root")!).render(
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/convite/:token" element={<ClaimInvitePage />} />
-          <Route path="/redefinir-senha/:token" element={<ResetPasswordPage />} />
-          <Route path="/verificar-email/:token" element={<VerifyEmailPage />} />
-          <Route path="/confirmar-troca-email/:token" element={<ConfirmEmailChangePage />} />
-          <Route path="/cancelar-troca-email/:token" element={<CancelEmailChangePage />} />
-          <Route path="/esqueci-senha" element={<ForgotPasswordPage />} />
+          <Route element={<AuthShell />}>
+            <Route path="/convite/:token" element={<ClaimInvitePage />} />
+            <Route path="/redefinir-senha/:token" element={<ResetPasswordPage />} />
+            <Route path="/verificar-email/:token" element={<VerifyEmailPage />} />
+            <Route path="/confirmar-troca-email/:token" element={<ConfirmEmailChangePage />} />
+            <Route path="/cancelar-troca-email/:token" element={<CancelEmailChangePage />} />
+            <Route path="/esqueci-senha" element={<ForgotPasswordPage />} />
+          </Route>
           <Route element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="calendario" element={<CalendarPage />} />

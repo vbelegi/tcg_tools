@@ -39,7 +39,12 @@ describe("Layout", () => {
     expect(screen.queryByText("Premiação")).not.toBeInTheDocument();
     expect(screen.queryByText("Alterar senha")).not.toBeInTheDocument();
     expect(screen.getByText("Powered by")).toBeInTheDocument();
-    expect(screen.getByText("FOURSE")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "FOURSE" })).toBeInTheDocument();
+    expect(screen.getByText("Araraquara (SP)")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "(16) 3190-3190" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "contato@fourse.com.br" })).toBeInTheDocument();
+    expect(screen.queryByText("Endereço")).not.toBeInTheDocument();
+    expect(screen.queryByText("WhatsApp")).not.toBeInTheDocument();
     await waitFor(() => expect(screen.getByRole("button", { name: "Entrar" })).toBeInTheDocument());
   });
 

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { ConfirmModal } from "../../components/ConfirmModal";
 import { Modal } from "../../components/Modal";
@@ -28,7 +28,9 @@ export function TorneioDetailPage() {
   const { id } = useParams<{ id: string }>();
   const eventId = Number(id);
   const navigate = useNavigate();
+  const location = useLocation();
   const qc = useQueryClient();
+  const [importInviteNotice, setImportInviteNotice] = useState("");
   const { data: me, isFetched: meFetched } = useQuery({
     queryKey: ["auth-me"],
     queryFn: () => api.authMe(),
@@ -60,6 +62,7 @@ export function TorneioDetailPage() {
   const [seBoConfig, setSeBoConfig] = useState<SeBoConfig>({});
   const [seOptionsDirty, setSeOptionsDirty] = useState(false);
   const [playerAddedFlash, setPlayerAddedFlash] = useState(false);
+  const [playerAddedDetail, setPlayerAddedDetail] = useState("");
   const playerNameRef = useRef<HTMLInputElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const playerSeedRef = useRef<HTMLInputElement>(null);
@@ -114,6 +117,18 @@ export function TorneioDetailPage() {
   }, [playerAddedFlash]);
 
   useEffect(() => {
+    const state = location.state as { incompleteInvites?: number } | null;
+    const n = state?.incompleteInvites;
+    if (!n || n < 1) return;
+    setImportInviteNotice(
+      n === 1
+        ? "1 conta incomplete criada — convite enviado por e-mail."
+        : `${n} contas incomplete criadas — convites enviados por e-mail.`,
+    );
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.state, location.pathname, navigate]);
+
+  useEffect(() => {
     const t = window.setTimeout(() => setDebouncedSearch(userSearch.trim()), 280);
     return () => window.clearTimeout(t);
   }, [userSearch]);
@@ -163,7 +178,7 @@ export function TorneioDetailPage() {
         create_account: payload.create_account,
         user_id: payload.user_id,
       }),
-    onSuccess: async () => {
+    onSuccess: async (_data, variables) => {
       await qc.invalidateQueries({ queryKey: ["torneio", eventId] });
       setPlayerName("");
       setPlayerSeed("");
@@ -175,6 +190,11 @@ export function TorneioDetailPage() {
       setUserHits([]);
       setSearchDone(false);
       setError("");
+      setPlayerAddedDetail(
+        variables.create_account && variables.email
+          ? `Convite enviado para ${variables.email}.`
+          : "",
+      );
       setPlayerAddedFlash(true);
       focusSearchField();
     },
@@ -615,6 +635,11 @@ export function TorneioDetailPage() {
           {error}
         </p>
       )}
+      {importInviteNotice && (
+        <p className="success" role="status">
+          {importInviteNotice}
+        </p>
+      )}
       {torneio.config_warnings?.map((w) => (
         <p key={w} className="warning" role="status">
           {w}
@@ -768,7 +793,7 @@ export function TorneioDetailPage() {
               <div className="torneio-panel-head">
                 <h2>Adicionar inscrito</h2>
                 <p className="field-hint">
-                  Busque uma conta. Se não existir, crie incomplete (e-mail + celular).
+                  Busque uma conta. Se não existir, crie incomplete (e-mail + celular; convite por e-mail automático).
                 </p>
               </div>
               <div className="form-row">
@@ -938,7 +963,9 @@ export function TorneioDetailPage() {
 
               {playerAddedFlash && (
                 <div className="save-feedback success" role="status" aria-live="polite">
-                  Inscrito adicionado
+                  {playerAddedDetail
+                    ? `Inscrito adicionado. ${playerAddedDetail}`
+                    : "Inscrito adicionado"}
                 </div>
               )}
             </section>

@@ -4,6 +4,15 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Decks:** import LigaMagic decodifica entidades HTML no `card=` do href (ex.: `K&iacute;li` → `Kíli`) para o Scryfall achar a arte (#46)
+
+### Changed
+
+- **UI:** rodapé com contato da loja em linha discreta (sem labels), logo FOURSE e presença nas páginas de auth (#20)
+- **Auth/docs:** convite automático ao criar incomplete alinhado na documentação e feedback na UI (torneio, externo, usuários); testes de regressão do provisionamento
+
 ## [1.17.2] - 2026-09-07
 
 ### Fixed

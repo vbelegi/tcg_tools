@@ -101,3 +101,19 @@ def test_parse_keeps_sideboard_after_color_and_total_headers():
     assert "Counterspell" not in snap.plain_text
     assert "Ignore Me" not in snap.plain_text
     assert "Sideboard" in snap.plain_text
+
+
+def test_parse_unescapes_html_entities_in_card_href():
+    """LigaMagic puts entities in the card= query (e.g. Kíli → K%26iacute%3Bli)."""
+    html = """
+    <span class="lj b">LotR</span>
+    <a href="?filtro_formato=1">Duel Commander</a>
+    <div class='price-head lower'>R$ 1,00</div>
+    <div class='deck-type'>Comandante <i>(1)</i></div>
+    <div class='deck-qty'>1&nbsp;</div><div class='deck-card'><a href="/?view=cards/card&card=K%26iacute%3Bli%2C+the+Resourceful">K&iacute;li, the Resourceful</a>
+    <div class='deck-type'>60 cards total</div>
+    """
+    snap = parse_ligamagic_html(html, deck_id="2", source_url=canonical_en_url("2"))
+    assert snap.lines[0].name == "Kíli, the Resourceful"
+    assert "1 Kíli, the Resourceful" in snap.plain_text
+    assert "&iacute;" not in snap.plain_text

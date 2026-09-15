@@ -331,6 +331,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/me/email-change/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Auth Resend Email Change */
+        post: operations["auth_resend_email_change_api_v1_auth_me_email_change_resend_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/me/email-change/cancel": {
         parameters: {
             query?: never;
@@ -567,6 +584,23 @@ export interface paths {
         get: operations["list_audit_logs_api_v1_audit_logs_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/decks/import/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Deck Import */
+        post: operations["preview_deck_import_api_v1_decks_import_preview_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1078,6 +1112,23 @@ export interface paths {
         patch: operations["patch_classificacao_api_v1_torneios__event_id__classificacao_patch"];
         trace?: never;
     };
+    "/api/v1/torneios/{event_id}/jogadores/{player_id}/deck": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Player Deck */
+        get: operations["get_player_deck_api_v1_torneios__event_id__jogadores__player_id__deck_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/torneios/{event_id}/premiacao": {
         parameters: {
             query?: never;
@@ -1500,12 +1551,54 @@ export interface components {
             /** Guardian Relation */
             guardian_relation?: string | null;
         };
+        /** DeckImportPreviewBody */
+        DeckImportPreviewBody: {
+            /** Url */
+            url: string;
+        };
+        /** DeckImportPreviewResponse */
+        DeckImportPreviewResponse: {
+            /** Source */
+            source: string;
+            /** Source Deck Id */
+            source_deck_id: string;
+            /** Source Url */
+            source_url: string;
+            /** Name */
+            name: string | null;
+            /** Format */
+            format: string | null;
+            /** Plain Text */
+            plain_text: string;
+            /** Card Count */
+            card_count: number;
+            /** Price Low Brl */
+            price_low_brl: number | null;
+            /** Price Currency */
+            price_currency: string;
+            /** Warnings */
+            warnings: string[];
+        };
         /** DecklistUpdate */
         DecklistUpdate: {
             /** Player Id */
             player_id: number;
             /** Decklist */
             decklist?: string | null;
+            /** Decklist Source */
+            decklist_source?: string | null;
+            /** Decklist Source Id */
+            decklist_source_id?: string | null;
+            /** Decklist Source Url */
+            decklist_source_url?: string | null;
+            /** Decklist Name */
+            decklist_name?: string | null;
+            /** Decklist Format */
+            decklist_format?: string | null;
+            /** Decklist Price Low Brl */
+            decklist_price_low_brl?: number | null;
+            /** Decklist Imported At */
+            decklist_imported_at?: string | null;
         };
         /** DeleteMeBody */
         DeleteMeBody: {
@@ -1563,6 +1656,18 @@ export interface components {
             create_account: boolean;
             /** Decklist */
             decklist?: string | null;
+            /** Decklist Source */
+            decklist_source?: string | null;
+            /** Decklist Source Id */
+            decklist_source_id?: string | null;
+            /** Decklist Source Url */
+            decklist_source_url?: string | null;
+            /** Decklist Name */
+            decklist_name?: string | null;
+            /** Decklist Format */
+            decklist_format?: string | null;
+            /** Decklist Price Low Brl */
+            decklist_price_low_brl?: number | null;
             /**
              * Is Drop
              * @default false
@@ -1661,6 +1766,18 @@ export interface components {
             is_drop: boolean;
             /** Decklist */
             decklist?: string | null;
+            /** Decklist Source */
+            decklist_source?: string | null;
+            /** Decklist Source Id */
+            decklist_source_id?: string | null;
+            /** Decklist Source Url */
+            decklist_source_url?: string | null;
+            /** Decklist Name */
+            decklist_name?: string | null;
+            /** Decklist Format */
+            decklist_format?: string | null;
+            /** Decklist Price Low Brl */
+            decklist_price_low_brl?: number | null;
         };
         /** MatchUpdate */
         MatchUpdate: {
@@ -2610,6 +2727,37 @@ export interface operations {
             };
         };
     };
+    auth_resend_email_change_api_v1_auth_me_email_change_resend_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     auth_cancel_email_change_me_api_v1_auth_me_email_change_cancel_post: {
         parameters: {
             query?: never;
@@ -3097,6 +3245,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_deck_import_api_v1_decks_import_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeckImportPreviewBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeckImportPreviewResponse"];
                 };
             };
             /** @description Validation Error */
@@ -4394,6 +4577,40 @@ export interface operations {
                 "application/json": components["schemas"]["ClassificacaoPatch"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_player_deck_api_v1_torneios__event_id__jogadores__player_id__deck_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: number;
+                player_id: number;
+            };
+            cookie?: {
+                tcgtools_session?: string | null;
+            };
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {

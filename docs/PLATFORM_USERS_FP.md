@@ -92,7 +92,7 @@ Público: stats (torneios, títulos, top 8, melhor colocação), **Insights** he
 
 **Avatar:** upload próprio (`POST /auth/me/avatar`, máx. 512 KB; redimensiona para 256×256 WebP em `users.avatar_blob`). Leitura: `GET /api/v1/media/avatars/{user_id}`. Placeholder: `/avatars/default.png`. Edição de nome/contato: `PATCH /auth/me` (telefone) e endpoints de troca de e-mail (incl. **Reenviar** / cancelar pendência). **Alterar senha** só no próprio perfil (modal); removido do sidebar.
 
-**Inscrição (draft / staff):** um campo de busca (conta existente). Se não achar → criar **incomplete** (nome + e-mail + celular) e inscrever. Sem walk-in sem conta; um jogador por vez; seed em “opções avançadas”. Link de convite **não** é gerado nessa hora — admin gera depois em `/usuarios` (futuro: rotina automática).
+**Inscrição (draft / staff):** um campo de busca (conta existente). Se não achar → criar **incomplete** (nome + e-mail + celular) e inscrever — o sistema **gera o link de convite e envia por e-mail** na hora (`TCGTOOLS_PUBLIC_BASE_URL` + SMTP). Reenvio / copiar link em `/usuarios`. Sem walk-in sem conta; um jogador por vez; seed em “opções avançadas”.
 
 **Rodadas (staff):** com rodada ativa, a ficha redireciona para `/torneios/{id}/rodadas/{n}` (pairings compactos: `Nome · [0][1][2] · × · [0][1][2] · Nome`; best-of só no header; botões de placar com opções inválidas desabilitadas). Entre rodadas: primary **Iniciar próxima** / **Finalizar** no header; resumo compacto em scoreline; ativos em chips; drop e reabrir secundários; drop exige digitar o nome no 2º passo do modal.
 

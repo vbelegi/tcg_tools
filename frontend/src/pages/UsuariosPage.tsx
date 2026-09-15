@@ -71,10 +71,16 @@ export function UsuariosPage() {
   const create = useMutation({
     mutationFn: () => api.createUser({ display_name: displayName, email, phone, role }),
     onSuccess: async () => {
+      const createdEmail = email.trim();
       setDisplayName("");
       setEmail("");
       setPhone("");
       setError("");
+      setInviteMsg(
+        createdEmail
+          ? `Conta incomplete criada. Convite enviado para ${createdEmail}.`
+          : "Conta incomplete criada. Convite enviado por e-mail.",
+      );
       await qc.invalidateQueries({ queryKey: ["users"] });
     },
     onError: (e) => setError((e as Error).message),
@@ -139,7 +145,8 @@ export function UsuariosPage() {
         <div>
           <h1>Usuários</h1>
           <p className="torneio-manage-meta">
-            Contas incomplete · convite manual · {data.length} listado(s)
+            Contas incomplete · convite automático na criação · reenvio em Convite · {data.length}{" "}
+            listado(s)
           </p>
         </div>
         <div className="torneio-manage-primary">

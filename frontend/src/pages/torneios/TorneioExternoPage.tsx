@@ -209,7 +209,12 @@ export function TorneioExternoPage() {
         placements,
       });
     },
-    onSuccess: (t: { id: number }) => navigate(`/torneios/${t.id}`),
+    onSuccess: (t: { id: number }) => {
+      const incompleteInvites = filled.filter((r) => r.create_account).length;
+      navigate(`/torneios/${t.id}`, {
+        state: incompleteInvites > 0 ? { incompleteInvites } : undefined,
+      });
+    },
     onError: (e) => setError((e as Error).message),
   });
 
